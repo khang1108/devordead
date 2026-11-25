@@ -1,0 +1,165 @@
+.kb-filters {
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.kb-search {
+  flex: 1 1 220px;
+  max-width: 420px;
+}
+
+.kb-chips {
+  --gap: 8px;
+}
+
+.kb-chips .chip {
+  min-height: 44px;
+}
+
+.kb-chips .chip[aria-pressed="true"] {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+  color: var(--brand-text);
+}
+
+.kb-layout {
+  grid-template-columns: minmax(235px, 0.72fr) minmax(0, 1.6fr);
+  align-items: start;
+}
+
+.kb-tree-card {
+  padding: 20px 16px;
+}
+
+.kb-tree-card .card__head {
+  padding: 0 6px;
+}
+
+.kb-tree-card .card__head span {
+  white-space: nowrap;
+}
+
+.kb-tree,
+.kb-topics,
+.kb-competencies {
+  list-style: none;
+}
+
+.kb-tree > li + li {
+  margin-top: 4px;
+}
+
+.kb-domain,
+.kb-topic {
+  --gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  border-radius: var(--r-md);
+  text-align: left;
+}
+
+.kb-domain {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.kb-domain[aria-expanded="true"],
+.kb-domain:hover,
+.kb-topic:hover {
+  background: var(--surface-2);
+}
+
+.kb-chevron {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  margin-right: 4px;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  color: var(--brand-text);
+  transform: rotate(-45deg);
+}
+
+.kb-domain[aria-expanded="true"] .kb-chevron {
+  transform: rotate(45deg);
+}
+
+.kb-topics {
+  margin: 4px 0 4px 13px;
+  padding-left: 8px;
+  border-left: 1px solid var(--line);
+}
+
+.kb-topic {
+  color: var(--ink-2);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.kb-topic[aria-selected="true"] {
+  background: var(--brand-soft);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.kb-check {
+  color: var(--brand-text);
+}
+
+.kb-detail {
+  gap: 24px;
+}
+
+.kb-detail-header {
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.kb-detail-header h2 {
+  overflow-wrap: anywhere;
+}
+
+.kb-metrics {
+  --gap: 1px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--line);
+}
+
+.kb-metrics > div {
+  padding: 12px;
+  background: var(--bg);
+}
+
+.kb-metrics dd {
+  margin-top: 4px;
+}
+
+.kb-actions {
+  --gap: 8px;
+}
+
+.kb-actions .btn {
+  white-space: normal;
+}
+
+@media (max-width: 1024px) {
+  .kb-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .kb-detail {
+    padding: 16px;
+  }
+
+  .kb-actions .btn {
+    width: 100%;
+  }
+}

@@ -1,0 +1,131 @@
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  background: var(--bg);
+}
+
+.login-hero {
+  background: var(--bg-dark);
+  color: var(--on-dark);
+  padding: 48px 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 40px;
+}
+
+.login-hero__body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 540px;
+}
+
+.login-hero__title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.login-hero__accent {
+  color: var(--brand);
+}
+
+.login-hero__desc {
+  color: rgba(248, 250, 252, 0.8);
+  max-width: 46ch;
+}
+
+.login-hero__points {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(248, 250, 252, 0.14);
+  color: rgba(248, 250, 252, 0.85);
+}
+
+.login-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+}
+
+.login-card {
+  width: min(100%, 440px);
+}
+
+.login-forgot-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -4px;
+}
+
+.login-link-btn {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--brand-text);
+  padding: 4px 2px;
+  min-height: 32px;
+}
+
+.login-link-btn:hover {
+  text-decoration: underline;
+}
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--ink-3);
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: "";
+  flex: 1 1 0;
+  height: 1px;
+  background: var(--line);
+}
+
+.login-oauth-icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+.login-footer {
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.login-footer__meta {
+  color: var(--ink-3);
+}
+
+.login-footer__admin {
+  font-size: 13px;
+}
+
+@media (max-width: 960px) {
+  .login-page {
+    grid-template-columns: 1fr;
+  }
+
+  .login-hero {
+    padding: 32px 24px;
+    gap: 28px;
+  }
+
+  .login-panel {
+    padding: 28px 16px 40px;
+  }
+}

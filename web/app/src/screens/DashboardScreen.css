@@ -1,0 +1,147 @@
+.dash-intro {
+  padding: clamp(24px, 3vw, 40px);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background:
+    radial-gradient(ellipse at 100% 110%, var(--brand-soft), transparent 70%),
+    var(--surface);
+}
+
+.dash-intro .t-display-l {
+  font-size: clamp(28px, 3vw, 42px);
+  overflow-wrap: anywhere;
+}
+
+.dash-intro .page-header {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.dash-stats {
+  --gap: 16px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.dash-stats .stat {
+  gap: 10px;
+}
+
+.dash-columns {
+  --gap: 16px;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
+  align-items: stretch;
+}
+
+.dash-list {
+  list-style: none;
+}
+
+.dash-mastery {
+  --gap: 12px;
+}
+
+.dash-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  align-self: flex-start;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.dash-footer-link {
+  margin-top: auto;
+}
+
+.dash-practice {
+  min-height: 68px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--ink);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.dash-practice:hover {
+  border-color: var(--brand);
+  background: var(--bg);
+  text-decoration: none;
+}
+
+.dash-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--r-md);
+  background: var(--brand-soft);
+  color: var(--brand-text);
+  font: 700 15px/1 var(--font-mono);
+}
+
+.dash-item-text {
+  display: grid;
+  min-width: 0;
+}
+
+.dash-list-item + .dash-list-item {
+  border-top: 1px solid var(--line);
+}
+
+.dash-entry {
+  min-height: 54px;
+  padding: 6px 0;
+  color: var(--ink);
+}
+
+.dash-entry:hover {
+  color: var(--brand-text);
+  text-decoration: none;
+}
+
+.dash-entry:hover .t-strong {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.dash-score {
+  white-space: nowrap;
+  color: var(--ink-2);
+}
+
+.dash-score strong {
+  font-size: 15px;
+  color: var(--brand-text);
+}
+
+@media (min-width: 1025px) {
+  .dash-intro .page-header__text {
+    flex: 1 1 0;
+  }
+}
+
+@media (max-width: 1024px) {
+  .dash-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dash-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 400px) {
+  .dash-stats {
+    gap: 10px;
+  }
+
+  .dash-stats .stat {
+    padding: 14px;
+  }
+
+  .dash-intro,
+  .dash-columns .card {
+    padding: 16px;
+  }
+}

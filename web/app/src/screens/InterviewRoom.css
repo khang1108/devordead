@@ -1,0 +1,49 @@
+/* Dùng chung cho 09 HR, 10 Technical, 11 Hết giờ */
+.ir__body { grid-template-columns: minmax(0, 1fr) 380px; }
+.ir__side { display: flex; flex-direction: column; gap: 16px; min-height: 0; }
+.ir__hint { color: #9FB6C6; max-width: 520px; }
+.ir__plan { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.ir__plan-item { display: flex; align-items: center; gap: 10px; color: var(--ink); }
+.ir__plan-item.is-todo { color: var(--ink-2); }
+.ir__plan-item.is-now .t-body-s { font-weight: 600; }
+.ir__plan-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--line); flex: none; }
+.ir__plan-item.is-done .ir__plan-dot { background: var(--success); }
+.ir__plan-item.is-now .ir__plan-dot { background: var(--brand); box-shadow: 0 0 0 4px var(--brand-soft); }
+.ir__star { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.ir__star li { display: flex; align-items: center; gap: 12px; }
+.ir__star-letter { display: grid; place-items: center; flex: none; width: 34px; height: 34px; border-radius: var(--r-md); background: var(--surface); font: 800 16px/1 var(--font-display); color: var(--brand-strong); }
+.ir__transcript { flex: 1; min-height: 220px; max-height: 360px; }
+
+/* Technical: AI bên trái hẹp, editor bên phải */
+.it__body { grid-template-columns: 400px minmax(0, 1fr); }
+.it__left { display: flex; flex-direction: column; gap: 16px; min-height: 0; }
+.it__stage { padding: 28px 24px; gap: 16px; }
+.it__stage .ai-avatar { width: 110px; height: 110px; }
+.it__stage .ai-avatar__core { width: 66px; height: 66px; gap: 8px; }
+.it__stage .ai-avatar__core i { width: 7px; height: 24px; }
+.it__stage .room-stage__subtitle { font-size: 17px; }
+.it__right { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.it__editor { border-radius: var(--r-lg); overflow: hidden; background: var(--code-bg); display: flex; flex-direction: column; }
+.it__toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 14px; border-bottom: 1px solid #1B3C52; color: var(--code-ink); }
+.it__monaco { height: 340px; }
+.it__scores { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.it__score { display: flex; flex-direction: column; gap: 8px; }
+
+/* 11 · Hết giờ */
+.end { min-height: 100vh; display: grid; place-items: center; padding: 32px 16px; background: var(--bg-dark); }
+.end__card { width: min(880px, 100%); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0; padding: 0; overflow: hidden; }
+.end__main { padding: 36px; display: flex; flex-direction: column; gap: 18px; }
+.end__side { padding: 28px; background: var(--surface-2); display: flex; flex-direction: column; gap: 14px; border-left: 1px solid var(--line); }
+.end__checks { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.end__check { display: flex; align-items: center; gap: 10px; }
+.end__check-dot { display: grid; place-items: center; flex: none; width: 22px; height: 22px; border-radius: 50%; background: var(--success); color: #fff; font-size: 12px; font-weight: 700; }
+.end__check.is-pending .end__check-dot { background: var(--brand-soft); color: var(--brand-text); }
+.end__code { position: relative; max-height: 260px; overflow: auto; }
+.end__lock { position: absolute; top: 10px; right: 10px; }
+
+@media (max-width: 1100px) {
+  .ir__body, .it__body { grid-template-columns: 1fr; }
+  .it__scores { grid-template-columns: 1fr; }
+  .end__card { grid-template-columns: 1fr; }
+  .end__side { border-left: 0; border-top: 1px solid var(--line); }
+}

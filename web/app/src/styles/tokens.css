@@ -1,0 +1,45 @@
+/* Bảng màu "Sky" — trùng landing page (html[data-palette="sky"]) và biến trong file Figma "DevOrDead — App Screens".
+   Mọi cặp chữ/nền dùng cho chữ thường đều ≥ 4.5:1. */
+:root {
+  --bg: #F8FAFC;
+  --surface: #FFFFFF;
+  --surface-2: #F1F5F9;
+  --ink: #0F2D40;          /* chữ chính, 13.7:1 */
+  --ink-2: #4A6273;        /* chữ phụ, 6.1:1 */
+  --ink-3: #9AAEBB;        /* chỉ trang trí / placeholder */
+  --line: #DCE6EE;
+
+  --brand: #329DD2;        /* khối màu thương hiệu (không dùng làm chữ nhỏ) */
+  --brand-strong: #2484B5; /* chữ lớn màu thương hiệu */
+  --brand-text: #1F6F99;   /* chữ nhỏ màu thương hiệu, kể cả trên --brand-soft */
+  --brand-soft: #E3F2FA;
+
+  --accent: #EB3F33;       /* điểm nhấn hiếm: CTA chính, logo || */
+  --accent-text: #C9302A;
+  --accent-soft: #FDECEA;
+
+  --success: #17784B;
+  --success-soft: #E4F5EC;
+  --warning: #9A5B00;      /* cảnh báo, đồng hồ hard-stop */
+  --warning-soft: #FFF4DE;
+
+  --bg-dark: #0F2D40;
+  --on-dark: #F8FAFC;
+  --code-bg: #0B2233;
+  --code-ink: #D6E6F2;
+
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
+  --r-pill: 999px;
+
+  --font-display: "Unbounded", system-ui, sans-serif;
+  --font-body: "Be Vietnam Pro", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --shadow-1: 0 1px 2px rgba(15, 45, 64, 0.06), 0 6px 20px rgba(15, 45, 64, 0.05);
+  --shadow-2: 0 12px 40px rgba(15, 45, 64, 0.16);
+  --focus: 0 0 0 3px rgba(50, 157, 210, 0.45);
+
+  --sidebar-w: 248px;
+}

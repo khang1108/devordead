@@ -1,0 +1,142 @@
+.pb-filters {
+  gap: 14px;
+}
+
+.pb-filter-fields {
+  --gap: 12px;
+  grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr));
+}
+
+.pb-difficulties {
+  --gap: 8px;
+}
+
+.pb-difficulties > span {
+  margin-right: 4px;
+}
+
+.pb-difficulties .chip {
+  min-height: 44px;
+}
+
+.pb-difficulties .chip[aria-pressed="true"] {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+  color: var(--brand-text);
+}
+
+.pb-layout {
+  grid-template-columns: minmax(0, 1.9fr) minmax(290px, 1fr);
+  align-items: start;
+}
+
+.pb-layout-empty {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.pb-results-head {
+  padding: 16px 20px;
+}
+
+.pb-results-head .card__head span {
+  white-space: nowrap;
+}
+
+.pb-table-scroll {
+  overflow-x: auto;
+}
+
+.pb-table {
+  min-width: 526px;
+}
+
+.pb-table th,
+.pb-table td {
+  padding: 10px 8px;
+  font-size: 12px;
+}
+
+.pb-table th {
+  font-size: 11px;
+}
+
+.pb-table th:first-child,
+.pb-table td:first-child {
+  padding-left: 14px;
+}
+
+.pb-table th:last-child,
+.pb-table td:last-child {
+  padding-right: 14px;
+}
+
+.pb-table tbody tr[aria-selected="true"] td:first-child {
+  box-shadow: inset 3px 0 var(--brand);
+}
+
+.pb-table tbody tr[aria-selected="true"] .pb-row-button {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.pb-row-button {
+  width: 100%;
+  min-height: 44px;
+  color: var(--ink);
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.pb-preview {
+  padding: 20px;
+}
+
+.pb-preview-section {
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.pb-constraints {
+  padding-left: 18px;
+}
+
+.pb-example {
+  overflow-wrap: anywhere;
+}
+
+.pb-example span {
+  color: var(--on-dark);
+  font-weight: 700;
+}
+
+.pb-approved {
+  text-align: center;
+}
+
+@media (max-width: 1200px) {
+  .pb-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 540px) {
+  .pb-filter-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pb-filter-fields > :first-child {
+    grid-column: 1 / -1;
+  }
+
+  .pb-filter-fields .select {
+    padding-inline: 8px;
+  }
+}
+
+@media (max-width: 360px) {
+  .pb-filter-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

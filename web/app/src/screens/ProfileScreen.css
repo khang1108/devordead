@@ -1,0 +1,124 @@
+.prof-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.prof-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.prof-group__label {
+  color: var(--ink-2);
+}
+
+.prof-file-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px dashed var(--line);
+  border-radius: var(--r-md);
+  background: var(--bg);
+}
+
+.prof-file-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.prof-file-meta {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.prof-file-name {
+  font-weight: 600;
+  font-size: 13px;
+  word-break: break-word;
+}
+
+.prof-skills-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.prof-skill-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+
+.prof-skill-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.prof-skill-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.prof-skill-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+.prof-remove-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-sm);
+  color: var(--ink-2);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.prof-remove-btn:hover {
+  background: var(--surface-2);
+  color: var(--accent-text);
+}
+
+.prof-add-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 132px auto;
+  gap: 8px;
+  align-items: end;
+}
+
+@media (max-width: 1024px) {
+  .prof-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .prof-add-row {
+    grid-template-columns: 1fr;
+  }
+}

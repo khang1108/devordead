@@ -1,0 +1,81 @@
+.rm-screen { min-width: 0; }
+.rm-screen .tabs { flex-wrap: wrap; }
+.rm-screen .tabs__tab { min-height: 44px; }
+.rm-flight {
+  background: linear-gradient(180deg, var(--surface) 44%, var(--bg));
+  overflow: hidden;
+}
+.rm-flight .card__head { flex-wrap: wrap; }
+.rm-flight .badge { white-space: normal; }
+.rm-hubs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  position: relative;
+  padding: 22px 0 12px;
+  list-style: none;
+}
+.rm-hubs::before {
+  content: "";
+  position: absolute;
+  inset: 32px 12.5% auto;
+  border-top: 2px dashed var(--ink-3);
+}
+.rm-hub {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 4px;
+  padding-inline: 6px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.rm-dot {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-bottom: 10px;
+  border: 5px solid var(--surface);
+  border-radius: var(--r-pill);
+  background: var(--ink-3);
+}
+.rm-hub[data-state="done"] .rm-dot { background: var(--brand); }
+.rm-hub[data-state="current"] .rm-dot {
+  border: 3px solid var(--accent);
+  background: var(--surface);
+  box-shadow: 0 0 0 5px var(--surface), 0 0 0 8px var(--accent-soft);
+}
+.rm-hub[data-state="current"] .t-heading-s { color: var(--brand-text); }
+.rm-items { list-style: none; }
+.rm-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 34%) auto;
+  align-items: center;
+  gap: 20px;
+  padding-block: 16px;
+}
+.rm-item h3 { overflow-wrap: anywhere; }
+.rm-reason {
+  border-inline-start: 2px solid var(--brand);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  background: var(--bg);
+  padding: 10px 12px;
+}
+.rm-start:hover { text-decoration: none; }
+.rm-note { margin-top: 4px; }
+
+@media (max-width: 1024px) {
+  .rm-item {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
+    gap: 12px;
+  }
+  .rm-reason { width: 100%; }
+}
+@media (max-width: 520px) {
+  .rm-hub .t-heading-s { font-size: 13px; line-height: 1.45; }
+  .rm-hub .t-body-s { font-size: 12px; }
+  .rm-flight, .rm-item { padding-inline: 16px; }
+  .rm-screen .tabs__tab { padding-inline: 8px; }
+}

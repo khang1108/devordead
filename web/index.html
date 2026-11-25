@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="vi" data-palette="sky">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevOrDead — Luyện phỏng vấn IT</title>
+  <meta name="description" content="Luyện phỏng vấn IT với AI — từ lộ trình cá nhân hóa đến offer đầu tiên. Mock interview kỹ thuật, luyện thuật toán và trả lời HR theo mô hình STAR.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&family=JetBrains+Mono:wght@400;700&family=Unbounded:wght@400;700;900&display=swap" rel="stylesheet">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="/src/styles/base.css">
+  <link rel="stylesheet" href="/src/styles/scenes.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="#" class="site-header__logo" aria-label="DevOrDead — trang chủ">
+      <svg class="logo-mark" viewBox="0 0 100 100" aria-hidden="true"><rect class="logo-mark__tile" width="100" height="100" rx="24"/><rect class="logo-mark__bar" x="22" y="24" width="9" height="52" rx="4.5"/><rect class="logo-mark__bar" x="36" y="24" width="9" height="52" rx="4.5"/><path class="logo-mark__bowl" d="M50 24 C80 24, 80 76, 50 76"/></svg>
+      <span class="logo-word">Dev<span class="logo-or">||</span>Dead</span>
+    </a>
+    <nav class="site-header__nav">
+      <a href="#story">Tính năng</a>
+      <a href="#pricing">Bảng giá</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a href="/app/#/login" class="btn btn--accent">Bắt đầu miễn phí</a>
+  </header>
+
+  <main>
+    <section id="story" class="story">
+      <div class="stage">
+        <canvas id="webgl"></canvas>
+        <div class="overlay" id="overlay">
+          <div class="scene" data-scene="hero"></div>
+          <div class="scene" data-scene="fold"></div>
+          <div class="scene" data-scene="roadmap"></div>
+          <div class="scene" data-scene="code"></div>
+          <div class="scene" data-scene="ai"></div>
+          <div class="scene" data-scene="hr"></div>
+          <div class="scene" data-scene="clouds"></div>
+          <div class="scene" data-scene="offer"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="pricing" class="after">
+      <div class="pricing-header">
+        <h2>BẢNG GIÁ</h2>
+        <p class="section-sub">Đầu tư vào sự nghiệp lập trình của bạn với chi phí tối ưu nhất.</p>
+      </div>
+      <div class="pricing-grid">
+        <!-- Gói Free -->
+        <div class="pricing-card">
+          <h3 class="pricing-card__title">Free</h3>
+          <div class="pricing-card__price">0đ <span>/ tháng</span></div>
+          <p class="pricing-card__desc">Khởi động hành trình ôn luyện, làm quen với phỏng vấn IT.</p>
+          <ul class="pricing-card__features">
+            <li>5 lượt phỏng vấn AI mỗi tháng</li>
+            <li>100+ bài tập thuật toán cơ bản</li>
+            <li>Xem phân tích lỗi code cơ bản</li>
+            <li>Lộ trình học chuẩn cho Fresher</li>
+            <li>Hỗ trợ qua cộng đồng Discord</li>
+          </ul>
+          <a href="/app/#/login" class="btn btn--ghost">Bắt đầu miễn phí</a>
+        </div>
+
+        <!-- Gói Pro (nổi bật) -->
+        <div class="pricing-card pricing-card--pro">
+          <div class="pricing-badge">Phổ biến nhất</div>
+          <h3 class="pricing-card__title">Pro</h3>
+          <div class="pricing-card__price">99.000đ <span>/ tháng</span></div>
+          <p class="pricing-card__desc">Dành cho ứng viên quyết tâm bứt phá và chinh phục offer xịn.</p>
+          <ul class="pricing-card__features">
+            <li>Không giới hạn lượt phỏng vấn kỹ thuật với AI</li>
+            <li>1.200+ bài tập & câu hỏi sát thực tế theo công ty</li>
+            <li>Luyện phỏng vấn HR theo phương pháp STAR chuyên sâu</li>
+            <li>Chấm điểm chi tiết từng tiêu chí & gợi ý câu trả lời tốt hơn</li>
+            <li>Giả lập áp lực phòng phỏng vấn thực tế với câu hỏi vặn</li>
+          </ul>
+          <a href="/app/#/login" class="btn btn--accent">Nâng cấp Pro ngay</a>
+        </div>
+
+        <!-- Gói Team/Trường học -->
+        <div class="pricing-card">
+          <h3 class="pricing-card__title">Team / Trường học</h3>
+          <div class="pricing-card__price">Liên hệ</div>
+          <p class="pricing-card__desc">Giải pháp đào tạo và đánh giá năng lực cho trường học và tổ chức.</p>
+          <ul class="pricing-card__features">
+            <li>Toàn bộ tính năng gói Pro cho mọi thành viên</li>
+            <li>Dashboard quản lý & theo dõi tiến độ học viên</li>
+            <li>Tùy biến ngân hàng đề thi theo giáo trình riêng</li>
+            <li>Báo cáo phân tích kỹ năng & xếp hạng ứng viên</li>
+            <li>Hỗ trợ kỹ thuật ưu tiên 24/7 và mentor chuyên trách</li>
+          </ul>
+          <a href="#" class="btn btn--ghost">Liên hệ tư vấn</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq" class="after">
+      <div class="faq-header">
+        <h2>CÂU HỎI THƯỜNG GẶP</h2>
+        <p class="section-sub">Những thắc mắc phổ biến nhất về cách luyện tập và chuẩn bị phỏng vấn cùng DevOrDead.</p>
+      </div>
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary>DevOrDead hoạt động như thế nào?</summary>
+          <div class="faq-content">
+            <p>DevOrDead là nền tảng luyện phỏng vấn IT thông minh với AI. Bạn sẽ trải qua một lộ trình cá nhân hóa: luyện thuật toán, kiến trúc hệ thống, và phỏng vấn mô phỏng trực tiếp với AI (kỹ thuật lẫn văn hóa/HR) để nhận phản hồi chi tiết ngay lập tức.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>AI phỏng vấn của DevOrDead có sát với thực tế không?</summary>
+          <div class="faq-content">
+            <p>Rất sát thực tế. Hệ thống AI được huấn luyện trên hàng ngàn câu hỏi phỏng vấn thực tế từ các công ty công nghệ hàng đầu, có khả năng hỏi vặn (follow-up questions), phân tích độ phức tạp thời gian/không gian và đánh giá khả năng giải quyết vấn đề như một Tech Lead thật.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>Tôi là sinh viên chưa có kinh nghiệm, có phù hợp không?</summary>
+          <div class="faq-content">
+            <p>Hoàn toàn phù hợp. DevOrDead thiết kế riêng các lộ trình dành cho Intern/Fresher từ cơ bản đến nâng cao, giúp bạn bù đắp lỗ hổng kiến thức cốt lõi, rèn luyện phản xạ phỏng vấn và tự tin trình bày theo mô hình STAR.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>Tôi có thể hủy gói Pro bất cứ lúc nào không?</summary>
+          <div class="faq-content">
+            <p>Có. Bạn có thể chủ động hủy gói Pro bất cứ lúc nào trong trang quản lý tài khoản. Sau khi hủy, bạn vẫn tiếp tục được sử dụng đầy đủ các quyền lợi Pro cho đến hết chu kỳ thanh toán hiện tại mà không phát sinh thêm chi phí nào.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>DevOrDead hỗ trợ những ngôn ngữ và vị trí nào?</summary>
+          <div class="faq-content">
+            <p>Nền tảng hỗ trợ các vị trí phổ biến như Frontend, Backend, Fullstack, Mobile, Data,... cùng hầu hết ngôn ngữ lập trình thông dụng như JavaScript, TypeScript, Python, Java, C++, Go, C#, PHP.</p>
+          </div>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a href="#" class="footer-logo" aria-label="DevOrDead — trang chủ">
+      <svg class="logo-mark" viewBox="0 0 100 100" aria-hidden="true"><rect class="logo-mark__tile" width="100" height="100" rx="24"/><rect class="logo-mark__bar" x="22" y="24" width="9" height="52" rx="4.5"/><rect class="logo-mark__bar" x="36" y="24" width="9" height="52" rx="4.5"/><path class="logo-mark__bowl" d="M50 24 C80 24, 80 76, 50 76"/></svg>
+      <span class="logo-word">Dev<span class="logo-or">||</span>Dead</span>
+    </a>
+        <p>Luyện phỏng vấn IT với AI — từ lộ trình cá nhân hóa đến offer đầu tiên. Biết code là một chuyện. Vượt qua phỏng vấn là chuyện khác.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Sản phẩm</h4>
+        <ul>
+          <li><a href="#story">Tính năng</a></li>
+          <li><a href="#pricing">Bảng giá</a></li>
+          <li><a href="#story">Lộ trình học</a></li>
+          <li><a href="#story">Ngân hàng đề thi</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Tài nguyên</h4>
+        <ul>
+          <li><a href="#">Cẩm nang phỏng vấn IT</a></li>
+          <li><a href="#">Phương pháp STAR</a></li>
+          <li><a href="#">Đàm phán đãi ngộ</a></li>
+          <li><a href="#">Cộng đồng Discord</a></li>
+          <li><a href="#">Blog công nghệ</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Pháp lý & Liên hệ</h4>
+        <ul>
+          <li><a href="#">Điều khoản sử dụng</a></li>
+          <li><a href="#">Chính sách bảo mật</a></li>
+          <li><a href="#">Báo cáo lỗ hổng</a></li>
+          <li><a href="#">Liên hệ hỗ trợ</a></li>
+          <li><a href="#">Tuyển dụng</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 DevOrDead. All rights reserved.</p>
+      <p>Biết code là một chuyện. Vượt qua phỏng vấn là chuyện khác.</p>
+    </div>
+  </footer>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

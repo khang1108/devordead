@@ -1,0 +1,27 @@
+.voice { display: flex; flex-direction: column; gap: 24px; }
+.voice__grid { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 24px; align-items: start; }
+.voice .btn { text-decoration: none; }
+.voice__steps { list-style: none; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.voice__step { position: relative; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--r-md); background: var(--surface); border: 1px solid var(--line); color: var(--ink-2); }
+.voice__step-dot { display: grid; place-items: center; flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--surface-2); font: 700 12px/1 var(--font-mono); color: var(--ink-2); }
+.voice__step.is-done .voice__step-dot { background: var(--success); color: #fff; }
+.voice__step.is-current { border-color: var(--brand); background: var(--brand-soft); color: var(--ink); font-weight: 600; }
+.voice__step.is-current .voice__step-dot { background: var(--brand); color: #fff; }
+.voice__question .t-heading-m { font-size: 22px; line-height: 1.4; }
+.voice__recorder { gap: 20px; }
+.voice__dot-idle { width: 10px; height: 10px; border-radius: 50%; background: #3C5A6E; }
+.voice__mic-note { color: #9FB6C6; }
+.voice__transcript { min-height: 140px; }
+.voice__interim { color: var(--ink-2); font-style: italic; }
+.voice__caret { display: inline-block; width: 2px; height: 1em; margin-left: 4px; vertical-align: text-bottom; background: var(--brand); animation: pulse 1s steps(1) infinite; }
+.voice__feedback { position: sticky; top: 24px; min-height: 520px; }
+.voice__empty { flex: 1; padding: 32px 8px; }
+.voice__score { display: flex; flex-direction: column; gap: 4px; padding: 16px; border-radius: var(--r-md); background: var(--surface-2); }
+.voice__list { display: flex; flex-direction: column; gap: 6px; padding-left: 18px; }
+.voice__list li::marker { color: var(--ink-3); }
+.voice__actions { margin-top: auto; }
+.voice__rules { padding-top: 8px; border-top: 1px solid var(--line); }
+@media (max-width: 1100px) {
+  .voice__grid { grid-template-columns: 1fr; }
+  .voice__feedback { position: static; min-height: 0; }
+}
