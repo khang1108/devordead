@@ -1,9 +1,16 @@
-// Bộ component giao diện dùng chung — khớp component trong file Figma "DevOrDead — App Screens".
-// Mọi màn hình chỉ dùng các component này + class tiện ích trong styles/app.css.
+// Bộ component giao diện dùng chung — hệ thống Neutral Studio (Linear / Attio / Vercel craft).
+// Giữ nguyên 100% tên export và chữ ký props để tương thích toàn bộ 15 màn hình.
 import { useId } from "react";
 
 export function Button({ variant = "primary", size, block, onDark, className = "", children, ...rest }) {
-  const cls = ["btn", `btn--${variant}`, size === "sm" && "btn--sm", block && "btn--block", onDark && "btn--on-dark", className]
+  const cls = [
+    "btn",
+    `btn--${variant}`,
+    size === "sm" && "btn--sm",
+    block && "btn--block",
+    onDark && "btn--on-dark",
+    className,
+  ]
     .filter(Boolean)
     .join(" ");
   return (
@@ -13,18 +20,27 @@ export function Button({ variant = "primary", size, block, onDark, className = "
   );
 }
 
-/** tone: neutral | brand | success | warning | danger */
-export function Badge({ tone = "neutral", dot, children, className = "" }) {
+/** tone: neutral | brand | success | warning | danger — chip trung tính 1px kèm chấm màu ngữ nghĩa */
+export function Badge({ tone = "neutral", dot, children, className = "", ...rest }) {
+  const showDot = Boolean(dot || tone !== "neutral");
+  const cls = ["badge", `badge--${tone}`, className].filter(Boolean).join(" ");
   return (
-    <span className={`badge badge--${tone} ${className}`}>
-      {dot && <span className="badge__dot" aria-hidden="true" />}
+    <span className={cls} {...rest}>
+      {showDot && <span className="badge__dot" aria-hidden="true" />}
       {children}
     </span>
   );
 }
 
-export function Card({ as: Tag = "section", variant, className = "", children, ...rest }) {
-  const cls = ["card", variant && `card--${variant}`, className].filter(Boolean).join(" ");
+export function Card({ as: Tag = "section", variant, interactive = false, className = "", children, ...rest }) {
+  const cls = [
+    "card",
+    variant && `card--${variant}`,
+    interactive && "card--interactive",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
   return (
     <Tag className={cls} {...rest}>
       {children}
@@ -32,25 +48,29 @@ export function Card({ as: Tag = "section", variant, className = "", children, .
   );
 }
 
-/** Tiêu đề nhỏ dạng mono của một card, kèm phần tử bên phải (link, badge…) */
-export function CardHead({ title, children }) {
+/** Tiêu đề phần bên trong card (sentence-case, tinh gọn), kèm phần tử bên phải */
+export function CardHead({ title, children, className = "" }) {
   return (
-    <div className="card__head">
-      <h2 className="t-mono card__title">{title}</h2>
+    <div className={`card__head ${className}`.trim()}>
+      <h2 className="card__title">{title}</h2>
       {children}
     </div>
   );
 }
 
-export function Eyebrow({ children, className = "" }) {
-  return <p className={`t-mono ${className}`}>{children}</p>;
+export function Eyebrow({ children, className = "", ...rest }) {
+  return (
+    <p className={`eyebrow ${className}`.trim()} {...rest}>
+      {children}
+    </p>
+  );
 }
 
-export function PageHeader({ eyebrow, title, subtitle, actions }) {
+export function PageHeader({ eyebrow, title, subtitle, actions, className = "" }) {
   return (
-    <header className="page-header">
+    <header className={`page-header ${className}`.trim()}>
       <div className="page-header__text">
-        {eyebrow && <p className="t-mono page-header__eyebrow">{eyebrow}</p>}
+        {eyebrow && <p className="page-header__eyebrow">{eyebrow}</p>}
         <h1 className="t-display-l">{title}</h1>
         {subtitle && <p className="page-header__sub">{subtitle}</p>}
       </div>
@@ -59,26 +79,28 @@ export function PageHeader({ eyebrow, title, subtitle, actions }) {
   );
 }
 
-export function StatCard({ label, value, delta, deltaTone = "success" }) {
+export function StatCard({ label, value, delta, deltaTone = "success", className = "" }) {
   return (
-    <div className="stat">
-      <p className="t-mono stat__label">{label}</p>
-      <p className="t-number">{value}</p>
-      {delta && <p className={`t-body-s c-${deltaTone}`}>{delta}</p>}
+    <div className={`stat ${className}`.trim()}>
+      <p className="stat__label">{label}</p>
+      <p className="t-number stat__value">{value}</p>
+      {delta && <p className={`t-body-s stat__delta c-${deltaTone}`}>{delta}</p>}
     </div>
   );
 }
 
-/** Ô nhập có nhãn. multiline → textarea. */
+/** Ô nhập có nhãn. multiline → textarea. Tương thích truyền ref trực tiếp trong React 19. */
 export function Field({ label, hint, error, multiline, id, className = "", ...rest }) {
   const autoId = useId();
   const fid = id || autoId;
   const Tag = multiline ? "textarea" : "input";
   return (
-    <div className={`field ${className}`}>
-      <label className="field__label" htmlFor={fid}>
-        {label}
-      </label>
+    <div className={`field ${className}`.trim()}>
+      {label && (
+        <label className="field__label" htmlFor={fid}>
+          {label}
+        </label>
+      )}
       <Tag
         id={fid}
         className={multiline ? "textarea" : "input"}
@@ -101,10 +123,10 @@ export function Field({ label, hint, error, multiline, id, className = "", ...re
 }
 
 /** Nhóm lựa chọn một trong nhiều (radiogroup). options: [{ value, label }] hoặc chuỗi */
-export function Segmented({ options, value, onChange, label }) {
+export function Segmented({ options, value, onChange, label, className = "" }) {
   const opts = options.map((o) => (typeof o === "string" ? { value: o, label: o } : o));
   return (
-    <div className="segmented" role="radiogroup" aria-label={label}>
+    <div className={`segmented ${className}`.trim()} role="radiogroup" aria-label={label}>
       {opts.map((o) => (
         <button
           key={o.value}
@@ -121,26 +143,47 @@ export function Segmented({ options, value, onChange, label }) {
   );
 }
 
-export function Chip({ active, onClick, children }) {
+export function Chip({ active, onClick, className = "", children, ...rest }) {
   return (
-    <button type="button" className="chip" aria-pressed={!!active} onClick={onClick}>
+    <button
+      type="button"
+      className={`chip ${className}`.trim()}
+      aria-pressed={!!active}
+      onClick={onClick}
+      {...rest}
+    >
       {children}
     </button>
   );
 }
 
-export function Toggle({ checked, onChange, label }) {
+export function Toggle({ checked, onChange, label, className = "", ...rest }) {
   return (
-    <button type="button" role="switch" aria-checked={!!checked} aria-label={label} className="toggle" onClick={() => onChange?.(!checked)} />
+    <button
+      type="button"
+      role="switch"
+      aria-checked={!!checked}
+      aria-label={label}
+      className={`toggle ${className}`.trim()}
+      onClick={() => onChange?.(!checked)}
+      {...rest}
+    />
   );
 }
 
 /** tabs: [{ value, label }] */
-export function Tabs({ tabs, value, onChange, label }) {
+export function Tabs({ tabs, value, onChange, label, className = "" }) {
   return (
-    <div className="tabs" role="tablist" aria-label={label}>
+    <div className={`tabs ${className}`.trim()} role="tablist" aria-label={label}>
       {tabs.map((t) => (
-        <button key={t.value} type="button" role="tab" aria-selected={value === t.value} className="tabs__tab" onClick={() => onChange?.(t.value)}>
+        <button
+          key={t.value}
+          type="button"
+          role="tab"
+          aria-selected={value === t.value}
+          className="tabs__tab"
+          onClick={() => onChange?.(t.value)}
+        >
           {t.label}
         </button>
       ))}
@@ -149,30 +192,54 @@ export function Tabs({ tabs, value, onChange, label }) {
 }
 
 /** value 0..1; tone: brand | success | warning | accent */
-export function ProgressBar({ value, tone = "brand", label }) {
+export function ProgressBar({ value, tone = "brand", label, className = "" }) {
   const pct = Math.round(Math.max(0, Math.min(1, value)) * 100);
   return (
-    <div className={`progress progress--${tone}`} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label={label}>
+    <div
+      className={`progress progress--${tone} ${className}`.trim()}
+      role="progressbar"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={pct}
+      aria-label={label}
+    >
       <div className="progress__fill" style={{ width: `${pct}%` }} />
     </div>
   );
 }
 
-export function Callout({ tone = "brand", title, children }) {
+export function Callout({ tone = "brand", title, className = "", children, ...rest }) {
+  const titleToneClass =
+    tone === "brand"
+      ? "c-brand"
+      : tone === "warning"
+        ? "c-warning"
+        : tone === "success"
+          ? "c-success"
+          : tone === "danger"
+            ? "c-accent"
+            : "";
   return (
-    <div className={`callout callout--${tone}`}>
-      {title && <p className={`t-mono ${tone === "brand" ? "c-brand" : tone === "warning" ? "c-warning" : tone === "success" ? "c-success" : ""}`}>{title}</p>}
-      <div className="t-body-s">{children}</div>
+    <div className={`callout callout--${tone} ${className}`.trim()} {...rest}>
+      {title && <p className={`callout__title ${titleToneClass}`.trim()}>{title}</p>}
+      <div className="t-body-s callout__body">{children}</div>
     </div>
   );
 }
 
-/** Nhãn quy định nghiệp vụ (BR1–BR4, NFR…) hiển thị tại chỗ áp dụng. */
-export function RuleTag({ code, children }) {
+/** Nhãn quy định nghiệp vụ & phi chức năng (BR1–BR4, NFR01–NFR10) — chip đơn sắc 1px tinh gọn. */
+export function RuleTag({ code, children, className = "" }) {
   return (
-    <Badge tone="neutral">
-      {code}
-      {children ? ` · ${children}` : ""}
-    </Badge>
+    <span className={`rule-tag ${className}`.trim()}>
+      <span className="rule-tag__code">{code}</span>
+      {children ? (
+        <>
+          <span className="rule-tag__sep" aria-hidden="true">
+            {" · "}
+          </span>
+          <span className="rule-tag__label">{children}</span>
+        </>
+      ) : null}
+    </span>
   );
 }

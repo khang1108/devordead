@@ -9,54 +9,100 @@ import initCursor from "./fx/cursor.js";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const motionQuery = matchMedia("(prefers-reduced-motion: reduce)");
 
 async function fontsReady() {
-  // Texture canvas (CV, nhãn lộ trình) cần font đã tải xong
-  const wanted = ['900 64px "Unbounded"', '700 30px "Unbounded"', '500 30px "Be Vietnam Pro"', '400 22px "JetBrains Mono"'];
+  // Đảm bảo bộ font sentence-case Plus Jakarta Sans + Be Vietnam Pro + JetBrains Mono tải xong trước khi vẽ CanvasTexture
+  const sample = "Nguyễn Minh Anh Thư mời nhận việc ĐỆ Ư Ơ Ạ Ấ Ầ Ổ Ữ 0123456789";
+  const wanted = [
+    '600 72px "Plus Jakarta Sans"',
+    '500 32px "Plus Jakarta Sans"',
+    '600 32px "Be Vietnam Pro"',
+    '500 26px "Be Vietnam Pro"',
+    '400 26px "Be Vietnam Pro"',
+    '600 28px "JetBrains Mono"',
+    '400 22px "JetBrains Mono"',
+  ];
   const timeout = new Promise((r) => setTimeout(r, 2500));
-  await Promise.race([Promise.all(wanted.map((f) => document.fonts.load(f, "ĐỆ"))), timeout]);
+  await Promise.race([Promise.all(wanted.map((f) => document.fonts.load(f, sample))), timeout]);
 }
 
 async function main() {
-  // ?palette=blueprint|terminal|coral|forest → thử bảng màu khác (mặc định: mono). Phải đặt trước khi tạo 3D.
-  const palette = new URLSearchParams(location.search).get("palette");
-  if (palette) document.documentElement.dataset.palette = palette;
+  const params = new URLSearchParams(location.search);
+
+  // ?palette=sky|mono|blueprint|terminal|coral|forest → đổi bảng màu trước khi dựng thế giới 3D
+  const palette = params.get("palette");
+  if (palette) {
+    document.documentElement.dataset.palette = palette;
+  }
 
   await fontsReady();
 
   const story = document.getElementById("story");
   const canvas = document.getElementById("webgl");
-  const world = createWorld(canvas);
-  const director = createDirector(document.getElementById("overlay"));
+  const overlay = document.getElementById("overlay");
+
+  const world = createWorld(canvas, { reducedMotion: motionQuery.matches });
+  const director = createDirector(overlay);
+
   try {
     initCursor();
   } catch (err) {
     console.error("[cursor]", err);
   }
 
-  // cuộn mượt + đồng bộ ScrollTrigger
+  motionQuery.addEventListener("change", (e) => {
+    world.setReducedMotion(e.matches);
+  });
+
+  // Tự động đồng bộ thế giới 3D nếu html[data-palette] thay đổi trực tiếp
+  let currentPaletteAttr = document.documentElement.dataset.palette || "";
+  const paletteObserver = new MutationObserver(() => {
+    const next = document.documentElement.dataset.palette || "";
+    if (next === currentPaletteAttr) return;
+    currentPaletteAttr = next;
+    requestAnimationFrame(() => {
+      world.refreshPalette();
+    });
+  });
+  paletteObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-palette"],
+  });
+
+  const reduceMotion = motionQuery.matches;
   const lenis = reduceMotion ? null : new Lenis({ lerp: 0.085, wheelMultiplier: 0.9 });
   if (lenis) {
     lenis.on("scroll", ScrollTrigger.update);
     gsap.ticker.add((time) => lenis.raf(time * 1000));
     gsap.ticker.lagSmoothing(0);
-    // link neo (#pricing…) cuộn bằng Lenis
-    document.querySelectorAll('a[href^="#"]').forEach((a) =>
-      a.addEventListener("click", (e) => {
-        const id = a.getAttribute("href");
-        if (id.length < 2) return;
+
+    document.addEventListener("click", (e) => {
+      const link = e.target.closest?.('a[href^="#"]');
+      if (!link) return;
+      const href = link.getAttribute("href");
+      if (!href) return;
+      if (href === "#") {
         e.preventDefault();
-        lenis.scrollTo(id, { duration: 2.2 });
-      }),
-    );
+        lenis.scrollTo(0, { duration: 1.6 });
+        return;
+      }
+      let target = null;
+      try {
+        target = document.querySelector(href);
+      } catch {
+        target = null;
+      }
+      if (!target) return;
+      e.preventDefault();
+      lenis.scrollTo(target, { duration: 2.0 });
+    });
   }
 
-  const params = new URLSearchParams(location.search);
-  // ?p=0.5&freeze → giữ cố định tiến độ, không cuộn (dùng để chụp ảnh kiểm tra)
   const freeze = params.has("freeze");
   let progress = 0;
-  ScrollTrigger.create({
+
+  const st = ScrollTrigger.create({
     trigger: story,
     start: "top top",
     end: "bottom bottom",
@@ -65,14 +111,26 @@ async function main() {
     },
   });
 
-  // ?p=0.5 → nhảy tới tiến độ (tiện xem nhanh từng cảnh)
-  const jump = params.get("p");
-  if (freeze && jump !== null) progress = parseFloat(jump);
-  else if (jump !== null) {
-    const y = story.offsetTop + parseFloat(jump) * (story.offsetHeight - innerHeight);
-    lenis ? lenis.scrollTo(y, { immediate: true }) : scrollTo(0, y);
-    progress = parseFloat(jump);
+  const jumpRaw = params.get("p");
+  if (jumpRaw !== null) {
+    const parsed = parseFloat(jumpRaw);
+    if (Number.isFinite(parsed)) {
+      const clamped = Math.min(1, Math.max(0, parsed));
+      if (freeze) {
+        progress = clamped;
+      } else if (story) {
+        const span = Math.max(0, story.offsetHeight - innerHeight);
+        const y = story.offsetTop + clamped * span;
+        if (lenis) lenis.scrollTo(y, { immediate: true });
+        else scrollTo(0, y);
+        st.update();
+        progress = clamped;
+      }
+    }
   }
+
+  director.update(progress);
+  world.update(progress, 0);
 
   const timer = new THREE.Timer();
   timer.connect(document);
@@ -90,8 +148,11 @@ async function main() {
   });
 
   document.documentElement.classList.add("is-ready");
-  if (new URLSearchParams(location.search).has("debug")) {
-    setInterval(() => console.log("[debug]", JSON.stringify({ y: scrollY, h: document.body.scrollHeight, progress })), 1000);
+  if (params.has("debug")) {
+    setInterval(
+      () => console.log("[debug]", JSON.stringify({ y: scrollY, h: document.body.scrollHeight, progress })),
+      1000,
+    );
   }
 }
 

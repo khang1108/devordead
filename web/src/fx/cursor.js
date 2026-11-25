@@ -5,7 +5,7 @@ export default function initCursor() {
   const cursor = document.createElement('div');
   cursor.className = 'cursor';
   cursor.setAttribute('aria-hidden', 'true');
-  cursor.innerHTML = '<svg viewBox="0 0 24 24" fill="none"><path d="M12 4v16m-6-6 6 6 6-6" stroke="currentColor" stroke-width="1.25"/></svg>';
+  cursor.innerHTML = '<svg viewBox="0 0 24 24" fill="none"><path d="M12 4v16m-6-6 6 6 6-6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   document.body.append(cursor);
 
   const story = document.querySelector('#story');
@@ -20,7 +20,7 @@ export default function initCursor() {
   let frame = 0;
   let visible = false;
 
-  const enabled = () => fine.matches && !coarse.matches;
+  const enabled = () => fine.matches && !coarse.matches && !reduced.matches;
 
   function restoreTarget() {
     if (hovered) hovered.style.cursor = hoveredCursor;
@@ -28,7 +28,7 @@ export default function initCursor() {
   }
 
   function tick() {
-    const follow = reduced.matches ? 1 : 0.18;
+    const follow = 0.2;
     x += (targetX - x) * follow;
     y += (targetY - y) * follow;
     cursor.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`;
@@ -64,7 +64,9 @@ export default function initCursor() {
         hovered.style.cursor = 'none';
       }
     }
-    cursor.style.setProperty('--cursor-scale', event.target.closest?.('a, button') ? '1.6' : '1');
+    const interactive = Boolean(event.target.closest?.('a, button, summary, [role="button"]'));
+    cursor.style.setProperty('--cursor-scale', interactive ? '1.55' : '1');
+    cursor.classList.toggle('is-interactive', interactive);
     if (!frame) tick();
   }
 
@@ -98,6 +100,7 @@ export default function initCursor() {
   window.addEventListener('resize', measure, { passive: true });
   fine.addEventListener('change', changePointer);
   coarse.addEventListener('change', changePointer);
+  reduced.addEventListener('change', changePointer);
   const observer = new ResizeObserver(measure);
   if (story) observer.observe(story);
   measure();
@@ -114,6 +117,7 @@ export default function initCursor() {
     window.removeEventListener('resize', measure);
     fine.removeEventListener('change', changePointer);
     coarse.removeEventListener('change', changePointer);
+    reduced.removeEventListener('change', changePointer);
     cursor.remove();
   };
 }

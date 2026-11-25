@@ -2,29 +2,60 @@ import { createReveal, easeOutCubic, mapRange } from '../fx/text.js';
 
 export default function createScene(root) {
   root.innerHTML = `
-    <p class="scene-index">08 — OFFER</p>
-    <div class="offer-heading"><p class="offer-eyebrow"><span aria-hidden="true">✓</span>CHƯƠNG MỚI CỦA BẠN</p><h2 class="scene-title">OFFER ĐẦU TIÊN<br><span class="accent-text">ĐANG CHỜ BẠN.</span></h2></div>
-    <div class="offer-action"><a class="scene-button scene-button--primary" href="/app/#/login">Bắt đầu luyện ngay <span aria-hidden="true">↗</span></a><p class="scene-body">Miễn phí. Không cần thẻ.</p></div>
-    <p class="offer-signoff" aria-hidden="true">TỪ DÒNG CODE ĐẦU TIÊN.<br>ĐẾN OFFER ĐẦU TIÊN.</p>`;
+    <div class="offer-layout">
+      <div class="offer-top">
+        <p class="scene-index">08 · Chạm đích</p>
+        <div class="offer-heading">
+          <p class="offer-eyebrow">Chương mới của bạn</p>
+          <h2 class="scene-title">Offer đầu tiên<br><span class="accent-text">đang chờ bạn.</span></h2>
+        </div>
+      </div>
+
+      <div class="offer-action">
+        <div class="offer-cta-group">
+          <a class="scene-button scene-button--primary" href="/app/#/login">
+            <span>Bắt đầu luyện ngay</span>
+          </a>
+          <a class="scene-button scene-button--outline" href="/app/#/interview/setup">
+            <span>Thử phòng phỏng vấn AI</span>
+            <span class="btn-glyph" aria-hidden="true">→</span>
+          </a>
+        </div>
+        <p class="scene-body">Miễn phí. Không cần thẻ. Thiết lập vị trí mục tiêu và CV trong 2 phút.</p>
+      </div>
+    </div>
+    <p class="offer-signoff" aria-hidden="true">Từ dòng code đầu tiên đến offer đầu tiên.</p>`;
+
+  const reducedMotion = typeof window !== 'undefined'
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const title = createReveal(root.querySelector('.scene-title'), { type: 'chars' });
   const heading = root.querySelector('.offer-heading');
+  const indexEl = root.querySelector('.scene-index');
   const action = root.querySelector('.offer-action');
-  const link = root.querySelector('.scene-button');
+  const links = [...root.querySelectorAll('.scene-button')];
   const signoff = root.querySelector('.offer-signoff');
 
   function update(t) {
     root.style.opacity = String(mapRange(t, 0, 0.1));
-    const p = easeOutCubic(mapRange(t, 0.55, 0.76));
+    const p = easeOutCubic(mapRange(t, 0.26, 0.46));
+    indexEl.style.opacity = String(p);
     heading.style.opacity = String(p);
-    title.set(mapRange(t, 0.55, 0.86));
-    const cta = easeOutCubic(mapRange(t, 0.66, 0.86));
+    title.set(mapRange(t, 0.28, 0.5));
+
+    const cta = easeOutCubic(mapRange(t, 0.36, 0.52));
     action.style.opacity = String(cta);
-    action.style.transform = `translate3d(0, ${20 * (1 - cta)}px, 0)`;
-    action.style.visibility = t > 0.66 ? 'inherit' : 'hidden';
-    link.style.pointerEvents = t > 0.66 ? 'auto' : 'none';
-    signoff.style.opacity = String(mapRange(t, 0.76, 0.91));
+    action.style.transform = reducedMotion || cta > 0.995
+      ? 'none'
+      : `translate3d(0, ${14 * (1 - cta)}px, 0)`;
+    const active = t > 0.34;
+    action.style.visibility = active ? 'inherit' : 'hidden';
+    links.forEach((link) => {
+      link.style.pointerEvents = active ? 'auto' : 'none';
+    });
+    signoff.style.opacity = String(mapRange(t, 0.42, 0.54));
   }
+
   update(0);
   return { update };
 }

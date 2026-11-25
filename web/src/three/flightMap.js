@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { makeLabelTexture } from "./textures.js";
 
 const V = (x, z) => new THREE.Vector3(x, 0, z);
-let PAL; // bảng màu, đặt trong createFlightMap
+
 const INCLUDES = /* glsl */ `
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
@@ -16,52 +16,72 @@ const ribbonVert = /* glsl */ `
   }
 `;
 
-// Đường băng: nền đen, vạch tim nét đứt, vạch mép liền, vạch ngưỡng kiểu "phím đàn".
+// Đường băng kiến trúc tối giản: nền than mờ (#181B20), vạch kẻ trắng ngà mảnh chuẩn bản vẽ kỹ thuật, 0 đèn neon
 const runwayFrag = /* glsl */ `
-  uniform float uWipe;     // 0..1: phần đường băng đã hiện (quét từ trái sang)
+  uniform float uWipe;
   uniform float uLength;
-  uniform float uThreshold; // vị trí (đơn vị thật) bắt đầu vạch ngưỡng
+  uniform float uThreshold;
   uniform vec3 uColor;
+  uniform vec3 uShoulder;
   uniform vec3 uLine;
   varying vec2 vUv;
+
   void main() {
     if (vUv.x > uWipe) discard;
-    vec3 col = uColor;
     float c = abs(vUv.y - 0.5);
     float along = vUv.x * uLength;
-    float center = 1.0 - smoothstep(0.010, 0.015, c);
-    col = mix(col, uLine, center * step(0.5, fract(along / 3.0)) * 0.9);
-    float edge = smoothstep(0.43, 0.434, c) * (1.0 - smoothstep(0.444, 0.448, c));
-    col = mix(col, uLine, edge * 0.85);
-    float inThr = step(uThreshold, along) * step(along, uThreshold + 3.2);
-    float keys = step(0.5, fract(vUv.y * 16.0)) * step(0.06, c) * step(c, 0.4);
-    col = mix(col, uLine, inThr * keys * 0.9);
+
+    vec3 col = mix(uColor, uShoulder, smoothstep(0.43, 0.44, c));
+
+    // Vạch biên mảnh hai bên
+    float edgeLine = smoothstep(0.418, 0.421, c) * (1.0 - smoothstep(0.428, 0.431, c));
+    col = mix(col, uLine, edgeLine * 0.78);
+
+    // Vạch tim đường nét đứt thanh mảnh
+    float centerMask = 1.0 - smoothstep(0.007, 0.011, c);
+    float centerDash = step(0.48, fract(along / 3.2));
+    col = mix(col, uLine, centerMask * centerDash * 0.82);
+
+    // Vạch ngưỡng đầu đường băng (Threshold)
+    float inThr = step(uThreshold, along) * step(along, uThreshold + 3.0);
+    float keys = step(0.5, fract(vUv.y * 16.0)) * step(0.06, c) * step(c, 0.38);
+    col = mix(col, uLine, inThr * keys * 0.8);
+
     gl_FragColor = vec4(col, 1.0);
     ${INCLUDES}
   }
 `;
 
-// Tuyến bay trên bản đồ: nét đứt mảnh; đoạn đã bay qua thành nét liền màu nhấn.
+// Tuyến bay nét vẽ kiến trúc trên giấy: đoạn chưa qua = nét đứt chì mờ; đoạn đã bay = nét mực liền sắc nét, không loang sáng neon
 const routeFrag = /* glsl */ `
   uniform float uWipe;
   uniform float uProgress;
   uniform float uLength;
   uniform float uOpacity;
-  uniform vec3 uInk;
-  uniform vec3 uAccent;
+  uniform vec3 uGraphite;
+  uniform vec3 uActive;
   varying vec2 vUv;
+
   void main() {
     if (vUv.x > uWipe) discard;
-    float dash = step(0.45, fract(vUv.x * uLength / 1.1));
-    float done = step(vUv.x, uProgress);
-    float a = mix(dash * 0.6, 1.0, done) * uOpacity;
-    if (a < 0.01) discard;
-    gl_FragColor = vec4(mix(uInk, uAccent, done), a);
+
+    float distY = abs(vUv.y - 0.5) * 2.0;
+    float along = vUv.x * uLength;
+
+    float strokeMask = 1.0 - smoothstep(0.55, 0.88, distY);
+    float dash = step(0.46, fract(along / 1.1));
+    float done = smoothstep(uProgress + 0.004, uProgress - 0.004, vUv.x) * step(0.001, uProgress);
+
+    float alpha = mix(dash * 0.42, 0.92, done) * strokeMask * uOpacity;
+    if (alpha < 0.01) discard;
+
+    vec3 col = mix(uGraphite, uActive, done);
+    gl_FragColor = vec4(col, alpha);
     ${INCLUDES}
   }
 `;
 
-// Lưới chấm kiểu bản đồ, mờ dần ra rìa.
+// Lưới chấm bản vẽ kỹ thuật cực dịu trên nền giấy #FBFBF9 (giảm 55% độ tương phản, bỏ vòng radar màu)
 const gridVert = /* glsl */ `
   varying vec3 vW;
   void main() {
@@ -70,18 +90,25 @@ const gridVert = /* glsl */ `
     gl_Position = projectionMatrix * viewMatrix * w;
   }
 `;
+
 const gridFrag = /* glsl */ `
   uniform float uOpacity;
   uniform vec3 uInk;
   uniform vec2 uCenter;
   uniform float uRadius;
   varying vec3 vW;
+
   void main() {
-    vec2 g = fract(vW.xz / 1.6) - 0.5;
-    float dotm = 1.0 - smoothstep(0.05, 0.08, length(g));
-    float fade = 1.0 - smoothstep(uRadius * 0.55, uRadius, distance(vW.xz, uCenter));
-    float a = dotm * fade * uOpacity * 0.22;
+    float dist = distance(vW.xz, uCenter);
+    float fade = 1.0 - smoothstep(uRadius * 0.48, uRadius, dist);
+    if (fade < 0.005) discard;
+
+    vec2 gMinor = fract(vW.xz / 1.8) - 0.5;
+    float dotMinor = 1.0 - smoothstep(0.036, 0.058, length(gMinor));
+
+    float a = dotMinor * fade * uOpacity * 0.1;
     if (a < 0.003) discard;
+
     gl_FragColor = vec4(uInk, a);
     ${INCLUDES}
   }
@@ -114,68 +141,105 @@ function ribbonGeometry(path, width, segments) {
   return geo;
 }
 
-function route(path, width = 0.32) {
-  const mesh = new THREE.Mesh(
-    ribbonGeometry(path, width, 400),
-    new THREE.ShaderMaterial({
-      vertexShader: ribbonVert,
-      fragmentShader: routeFrag,
-      side: THREE.DoubleSide,
-      transparent: true,
-      depthWrite: false,
-      uniforms: {
-        uWipe: { value: 0 },
-        uProgress: { value: 0 },
-        uLength: { value: path.getLength() },
-        uOpacity: { value: 1 },
-        uInk: { value: PAL.ink.clone() },
-        uAccent: { value: PAL.brand.clone() },
-      },
-    }),
-  );
-  mesh.position.y = 0.02;
-  return mesh;
-}
-
-function groundLabel(renderer, index, title, width) {
-  const { texture, aspect } = makeLabelTexture(renderer, index, title);
-  const mesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(width, width / aspect),
-    new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false, opacity: 0 }),
-  );
-  mesh.rotation.x = -Math.PI / 2; // nằm trên đất, đỉnh chữ hướng −Z (phía trên màn hình khi nhìn từ trên)
-  mesh.position.y = 0.03;
-  return mesh;
-}
-
-/** Ký hiệu sân bay: vòng tròn + chấm, đổi sang màu nhấn khi máy bay đã đi qua. */
-function hubMarker(size = 1) {
-  const g = new THREE.Group();
-  const ringMat = new THREE.MeshBasicMaterial({ color: PAL.ink, transparent: true, opacity: 0 });
-  const fillMat = new THREE.MeshBasicMaterial({ color: PAL.surface, transparent: true, opacity: 0 });
-  const ring = new THREE.Mesh(new THREE.RingGeometry(0.5 * size, 0.78 * size, 48), ringMat);
-  const fill = new THREE.Mesh(new THREE.CircleGeometry(0.5 * size, 48), fillMat);
-  const dot = new THREE.Mesh(new THREE.CircleGeometry(0.22 * size, 32), ringMat);
-  for (const m of [ring, fill, dot]) m.rotation.x = -Math.PI / 2;
-  fill.position.y = 0.035;
-  ring.position.y = dot.position.y = 0.04;
-  g.add(ring, fill, dot);
-  return { group: g, ringMat, fillMat };
-}
-
 /**
- * Đường băng (cảnh gấp: máy bay cất cánh) + bản đồ chuyến bay (cảnh lộ trình):
- * 4 sân bay trung chuyển = 4 chặng kiến thức, rồi tỏa ra 4 điểm đến theo vị trí. Máy bay bay tới Backend.
+ * Bản vẽ lộ trình kiến trúc tối giản trên mặt giấy (Architectural Drafting Flight Map):
+ * nét đứt chì mờ (#8A909E), nét hành trình sắc gọn (#111418 / #2484B5),
+ * ghim trụ gốm mờ (cylindrical matte-ceramic pins) tại 4 trạm cốt lõi và 4 nhánh vị trí.
  */
 export function createFlightMap(renderer, pal) {
-  PAL = pal;
+  let PAL = pal;
   const group = new THREE.Group();
 
-  // ——— đường băng: dọc +X, máy bay đứng ở x = 0..4 trong cảnh gấp ———
+  const discGeo = new THREE.CylinderGeometry(0.58, 0.6, 0.06, 40);
+  const pinGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.12, 32);
+
+  function route(path, width = 0.28) {
+    const mesh = new THREE.Mesh(
+      ribbonGeometry(path, width, 400),
+      new THREE.ShaderMaterial({
+        vertexShader: ribbonVert,
+        fragmentShader: routeFrag,
+        side: THREE.DoubleSide,
+        transparent: true,
+        depthWrite: false,
+        forceSinglePass: true,
+        uniforms: {
+          uWipe: { value: 0 },
+          uProgress: { value: 0 },
+          uLength: { value: path.getLength() },
+          uOpacity: { value: 1 },
+          uGraphite: { value: PAL.draftGraphite.clone() },
+          uActive: { value: PAL.draftActive.clone() },
+        },
+      }),
+    );
+    mesh.position.y = 0.02;
+    return mesh;
+  }
+
+  function groundLabel(index, title, width) {
+    const { texture, aspect } = makeLabelTexture(renderer, index, title);
+    const mat = new THREE.MeshBasicMaterial({
+      map: texture,
+      transparent: true,
+      depthWrite: false,
+      opacity: 0,
+      toneMapped: false,
+    });
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, width / aspect), mat);
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.position.y = 0.03;
+    return { mesh, index, title };
+  }
+
+  /** Ghim trụ gốm mờ tối giản (Minimal Cylindrical Ceramic Waypoint Pin). */
+  function hubPin(size = 1) {
+    const g = new THREE.Group();
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: PAL.draftGraphite,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+    });
+    const discMat = new THREE.MeshStandardMaterial({
+      color: PAL.surface,
+      roughness: 0.85,
+      metalness: 0.02,
+      transparent: true,
+      opacity: 0,
+    });
+    const pinMat = new THREE.MeshStandardMaterial({
+      color: PAL.draftGraphite,
+      roughness: 0.65,
+      metalness: 0.05,
+      transparent: true,
+      opacity: 0,
+    });
+
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.62 * size, 0.72 * size, 48), ringMat);
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.y = 0.036;
+
+    const disc = new THREE.Mesh(discGeo, discMat);
+    disc.scale.setScalar(size);
+    disc.position.y = 0.03 * size;
+    disc.castShadow = true;
+    disc.receiveShadow = true;
+
+    const pin = new THREE.Mesh(pinGeo, pinMat);
+    pin.scale.setScalar(size);
+    pin.position.y = 0.08 * size;
+    pin.castShadow = true;
+
+    g.add(ring, disc, pin);
+    return { group: g, ringMat, discMat, pinMat };
+  }
+
+  // ——— Đường băng ———
   const RW_START = -60, RW_END = 60;
   const runwayPath = new THREE.LineCurve3(V(RW_START, 0), V(RW_END, 0));
   const runway = new THREE.Mesh(
-    ribbonGeometry(runwayPath, 9, 2),
+    ribbonGeometry(runwayPath, 9.2, 2),
     new THREE.ShaderMaterial({
       vertexShader: ribbonVert,
       fragmentShader: runwayFrag,
@@ -185,6 +249,7 @@ export function createFlightMap(renderer, pal) {
         uLength: { value: RW_END - RW_START },
         uThreshold: { value: -8 - RW_START },
         uColor: { value: PAL.runway.clone() },
+        uShoulder: { value: PAL.runwayShoulder.clone() },
         uLine: { value: PAL.runwayLine.clone() },
       },
     }),
@@ -192,7 +257,7 @@ export function createFlightMap(renderer, pal) {
   runway.position.y = 0.005;
   group.add(runway);
 
-  // ——— bản đồ bay ———
+  // ——— Bản đồ 4 trạm cốt lõi & 4 nhánh nghề nghiệp ———
   const hubs = [
     { p: V(16, 16), idx: "01", title: "Nền tảng" },
     { p: V(23, 26), idx: "02", title: "Cấu trúc dữ liệu" },
@@ -211,15 +276,14 @@ export function createFlightMap(renderer, pal) {
     (e) => new THREE.QuadraticBezierCurve3(fork, V(fork.x + (e.x - fork.x) * 0.15, 62), e),
   );
 
-  const mainRoute = route(routeCurve);
+  const mainRoute = route(routeCurve, 0.28);
   group.add(mainRoute);
   const branchRoutes = branches.map((b) => {
-    const m = route(b, 0.26);
+    const m = route(b, 0.21);
     group.add(m);
     return m;
   });
 
-  // lưới chấm bản đồ
   const gridMat = new THREE.ShaderMaterial({
     vertexShader: gridVert,
     fragmentShader: gridFrag,
@@ -229,15 +293,14 @@ export function createFlightMap(renderer, pal) {
       uOpacity: { value: 0 },
       uInk: { value: PAL.ink.clone() },
       uCenter: { value: new THREE.Vector2(19, 44) },
-      uRadius: { value: 48 },
+      uRadius: { value: 50 },
     },
   });
-  const grid = new THREE.Mesh(new THREE.PlaneGeometry(110, 110), gridMat);
+  const grid = new THREE.Mesh(new THREE.PlaneGeometry(112, 112), gridMat);
   grid.rotation.x = -Math.PI / 2;
   grid.position.set(19, 0.003, 44);
   group.add(grid);
 
-  // đường bay của máy bay: đường băng (tới x = 8) → tuyến chính → nhánh Backend
   const flight = new THREE.CurvePath();
   flight.add(new THREE.LineCurve3(V(RW_START, 0), V(8, 0)));
   flight.add(routeCurve);
@@ -247,44 +310,57 @@ export function createFlightMap(renderer, pal) {
   const Lb = branches[1].getLength();
   const total = L0 + Lr + Lb;
 
-  // vị trí (0..1) của mỗi sân bay trên tuyến chính — lấy mẫu để tìm điểm gần nhất
   const samples = routeCurve.getSpacedPoints(800);
   const hubU = hubs.map((h) => {
     let best = 0, bestD = Infinity;
     samples.forEach((s, i) => {
       const d = s.distanceToSquared(h.p);
-      if (d < bestD) (bestD = d), (best = i);
+      if (d < bestD) {
+        bestD = d;
+        best = i;
+      }
     });
     return best / 800;
   });
 
+  const hubLabelOffsets = [
+    [4.6, -0.7], // 01 Nền tảng: bên phải thoáng, lệch nhẹ -Z tránh đường cong đi xuống
+    [4.6, 0.0],  // 02 Cấu trúc dữ liệu: bên phải đỉnh cong
+    [4.6, 0.0],  // 03 Thuật toán: bên phải hõm cong, tránh hoàn toàn .roadmap-features bên trái & mép màn hình dọc
+    [4.8, -0.6], // 04 System Design: bên phải trên điểm rẽ nhánh, tách biệt khỏi 4 tia phân nhánh
+  ];
   const hubItems = hubs.map((h, i) => {
-    const marker = hubMarker(1);
+    const marker = hubPin(1.0);
     marker.group.position.copy(h.p);
-    const label = groundLabel(renderer, h.idx, h.title, 6.4);
-    // nhãn đặt phía ngoài đường cong để không đè lên tuyến bay
-    const side = i % 2 === 0 ? -1 : 1;
-    label.position.set(h.p.x + side * 4.6, 0.03, h.p.z);
-    group.add(marker.group, label);
-    return { ...marker, label, at: (L0 + hubU[i] * Lr) / total, appear: hubU[i] };
+    const labelObj = groundLabel(h.idx, h.title, 5.8);
+    const [dx, dz] = hubLabelOffsets[i];
+    labelObj.mesh.position.set(h.p.x + dx, 0.03, h.p.z + dz);
+    group.add(marker.group, labelObj.mesh);
+    return { ...marker, labelObj, label: labelObj.mesh, at: (L0 + hubU[i] * Lr) / total, appear: hubU[i] };
   });
 
   const destItems = ends.map((e, i) => {
-    const marker = hubMarker(0.8);
+    const isTarget = i === 1;
+    const marker = hubPin(0.84);
     marker.group.position.copy(e);
-    const label = groundLabel(renderer, "→", names[i], 4.6);
-    label.position.set(e.x, 0.03, e.z + 2.2);
-    group.add(marker.group, label);
-    return { ...marker, label, isTarget: i === 1 };
+    const labelObj = groundLabel(isTarget ? "05" : "→", names[i], 4.5);
+    const clampX = i === 0 ? 1.1 : i === 3 ? -1.1 : 0;
+    labelObj.mesh.position.set(e.x + clampX, 0.03, e.z + 2.25);
+    group.add(marker.group, labelObj.mesh);
+    return { ...marker, labelObj, label: labelObj.mesh, isTarget };
   });
 
-  const ink = PAL.ink.clone();
-  const accent = PAL.brand.clone(); // sân bay đã đi qua = màu tiến độ
+  function updatePin(item, vis, active, activeCol) {
+    item.ringMat.opacity = vis * (active ? 0.9 : 0.45);
+    item.discMat.opacity = vis;
+    item.pinMat.opacity = vis;
+    item.label.material.opacity = vis;
 
-  /**
-   * runway: 0..1 phần đường băng đã hiện; map: 0..1 độ hiện của bản đồ (lưới, tuyến chính, sân bay);
-   * branches: 0..1 độ hiện của 4 nhánh; travel: 0..1 vị trí máy bay trên `flight`.
-   */
+    const col = active ? activeCol : PAL.draftGraphite;
+    item.ringMat.color.copy(col);
+    item.pinMat.color.copy(active ? activeCol : PAL.ink);
+  }
+
   function update({ runway: rw, map, branches: br, travel }) {
     runway.material.uniforms.uWipe.value = rw;
     gridMat.uniforms.uOpacity.value = map;
@@ -292,25 +368,45 @@ export function createFlightMap(renderer, pal) {
     const traveled = travel * total;
     mainRoute.material.uniforms.uWipe.value = map;
     mainRoute.material.uniforms.uProgress.value = Math.min(1, Math.max(0, (traveled - L0) / Lr));
+
     branchRoutes.forEach((m, i) => {
       m.material.uniforms.uWipe.value = br;
-      m.material.uniforms.uProgress.value = i === 1 ? Math.max(0, (traveled - L0 - Lr) / Lb) : 0;
+      m.material.uniforms.uProgress.value = i === 1 ? Math.min(1, Math.max(0, (traveled - L0 - Lr) / Lb)) : 0;
     });
 
     for (const h of hubItems) {
-      const vis = Math.min(1, Math.max(0, (map - h.appear) * 6 + 0.4));
-      h.ringMat.opacity = h.fillMat.opacity = vis;
-      h.label.material.opacity = vis;
-      const passed = travel >= h.at;
-      h.ringMat.color.copy(passed ? accent : ink);
+      const vis = Math.min(1, Math.max(0, (map - h.appear) * 6 + 0.42));
+      const passed = travel >= h.at - 0.004;
+      updatePin(h, vis, passed, PAL.draftActive);
     }
-    const arrived = travel >= 0.999;
+
+    const arrived = travel >= 0.985;
     for (const d of destItems) {
-      d.ringMat.opacity = d.fillMat.opacity = br;
-      d.label.material.opacity = br;
-      d.ringMat.color.copy(d.isTarget && arrived ? accent : ink);
+      updatePin(d, br, d.isTarget && arrived, PAL.brand);
     }
   }
 
-  return { group, flight, update, runwayLength: L0, flightLength: total };
+  function setPalette(nextPal) {
+    PAL = nextPal;
+    runway.material.uniforms.uColor.value.copy(PAL.runway);
+    runway.material.uniforms.uShoulder.value.copy(PAL.runwayShoulder);
+    runway.material.uniforms.uLine.value.copy(PAL.runwayLine);
+    gridMat.uniforms.uInk.value.copy(PAL.ink);
+
+    for (const rMesh of [mainRoute, ...branchRoutes]) {
+      rMesh.material.uniforms.uGraphite.value.copy(PAL.draftGraphite);
+      rMesh.material.uniforms.uActive.value.copy(PAL.draftActive);
+    }
+
+    for (const it of [...hubItems, ...destItems]) {
+      it.discMat.color.copy(PAL.surface);
+      const oldTex = it.label.material.map;
+      const { texture } = makeLabelTexture(renderer, it.labelObj.index, it.labelObj.title);
+      it.label.material.map = texture;
+      it.label.material.needsUpdate = true;
+      oldTex?.dispose();
+    }
+  }
+
+  return { group, flight, update, setPalette, runwayLength: L0, flightLength: total };
 }

@@ -2,11 +2,12 @@ import { SCENES } from "./timeline.js";
 import * as factories from "../scenes/index.js";
 
 /**
- * Điều phối lớp DOM: dựng module cho từng cảnh, bật/tắt .is-active, gọi update(t) khi tiến độ đổi.
+ * Điều phối lớp DOM: dựng module cho từng cảnh, bật/tắt .is-active,
+ * chuyển html[data-theme="dark"|"light"], và gọi update(t) là hàm thuần của p ∈ [0,1].
  */
 export function createDirector(overlay) {
   const items = SCENES.map((s) => {
-    const root = overlay.querySelector(`.scene[data-scene="${s.key}"]`);
+    const root = overlay?.querySelector(`.scene[data-scene="${s.key}"]`) ?? null;
     const factory = factories[s.key];
     let api = null;
     try {
@@ -18,12 +19,19 @@ export function createDirector(overlay) {
   });
 
   let lastP = -1;
-  function update(p) {
-    if (Math.abs(p - lastP) < 1e-5) return;
+  let currentP = 0;
+
+  function apply(p, force = false) {
+    currentP = p;
+    if (!force && Math.abs(p - lastP) < 1e-5) return;
     lastP = p;
-    // nền tối ở cảnh AI (khớp bgTrack trong three/world.js) → header chuyển chữ sáng
+
+    // Nền tối ở cảnh AI (khớp điểm chuyển màu bgTrack trong three/world.js) → header & overlay đổi theme
     const theme = p > 0.5 && p < 0.672 ? "dark" : "light";
-    if (document.documentElement.dataset.theme !== theme) document.documentElement.dataset.theme = theme;
+    if (document.documentElement.dataset.theme !== theme) {
+      document.documentElement.dataset.theme = theme;
+    }
+
     for (const it of items) {
       if (!it.root || !it.api) continue;
       const first = it.key === "hero";
@@ -40,8 +48,13 @@ export function createDirector(overlay) {
     }
   }
 
+  function update(p) {
+    apply(p, false);
+  }
+
   function resize() {
     for (const it of items) it.api?.resize?.();
+    apply(currentP, true);
   }
 
   return { update, resize };

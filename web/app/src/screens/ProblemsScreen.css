@@ -1,142 +1,137 @@
-.pb-filters {
-  gap: 14px;
+.prob-screen {
+  --prob-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  min-width: 0;
 }
 
-.pb-filter-fields {
+.prob-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ——— Clean Inline Toolbar on Ground ——— */
+.prob-toolbar {
+  gap: 12px;
+}
+
+.prob-filter-fields {
   --gap: 12px;
-  grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1.8fr) repeat(2, minmax(0, 1fr));
 }
 
-.pb-difficulties {
+.prob-difficulties {
   --gap: 8px;
 }
 
-.pb-difficulties > span {
-  margin-right: 4px;
-}
-
-.pb-difficulties .chip {
+.prob-difficulties .chip {
   min-height: 44px;
 }
 
-.pb-difficulties .chip[aria-pressed="true"] {
-  background: var(--brand-soft);
-  border-color: var(--brand);
-  color: var(--brand-text);
-}
-
-.pb-layout {
-  grid-template-columns: minmax(0, 1.9fr) minmax(290px, 1fr);
+/* ——— Flat Table + Sticky Preview ——— */
+.prob-layout {
+  grid-template-columns: minmax(0, 1.75fr) minmax(300px, 1fr);
   align-items: start;
 }
 
-.pb-layout-empty {
+.prob-layout-empty {
   grid-template-columns: minmax(0, 1fr);
 }
 
-.pb-results-head {
-  padding: 16px 20px;
+.prob-results,
+.prob-preview {
+  box-shadow: none;
 }
 
-.pb-results-head .card__head span {
-  white-space: nowrap;
+.prob-results-head {
+  padding: 16px 20px 10px;
 }
 
-.pb-table-scroll {
+.prob-table-scroll {
   overflow-x: auto;
+  max-width: 100%;
 }
 
-.pb-table {
-  min-width: 526px;
+.prob-table {
+  min-width: 540px;
 }
 
-.pb-table th,
-.pb-table td {
-  padding: 10px 8px;
-  font-size: 12px;
+.prob-table th,
+.prob-table td {
+  padding: 10px 12px;
+  font-size: 13.5px;
 }
 
-.pb-table th {
-  font-size: 11px;
+.prob-table th:first-child,
+.prob-table td:first-child {
+  padding-left: 20px;
 }
 
-.pb-table th:first-child,
-.pb-table td:first-child {
-  padding-left: 14px;
+.prob-table th:last-child,
+.prob-table td:last-child {
+  padding-right: 20px;
 }
 
-.pb-table th:last-child,
-.pb-table td:last-child {
-  padding-right: 14px;
-}
-
-.pb-table tbody tr[aria-selected="true"] td:first-child {
-  box-shadow: inset 3px 0 var(--brand);
-}
-
-.pb-table tbody tr[aria-selected="true"] .pb-row-button {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.pb-row-button {
+.prob-row-button {
   width: 100%;
   min-height: 44px;
+  display: flex;
+  align-items: center;
   color: var(--ink);
   text-align: left;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   overflow-wrap: anywhere;
 }
 
-.pb-preview {
+/* ——— Clean Typographic Preview Card (Zero grey constraint boxes) ——— */
+.prob-preview {
+  position: sticky;
+  top: 24px;
   padding: 20px;
 }
 
-.pb-preview-section {
-  padding-top: 12px;
+.prob-preview-section {
+  padding-top: 14px;
   border-top: 1px solid var(--line);
 }
 
-.pb-constraints {
+.prob-constraints {
+  list-style: disc;
   padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--ink-2);
 }
 
-.pb-example {
+.prob-constraints li {
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+.prob-example {
+  padding: 12px 14px;
   overflow-wrap: anywhere;
 }
 
-.pb-example span {
-  color: var(--on-dark);
-  font-weight: 700;
+.prob-preview-cta {
+  padding-top: 4px;
 }
 
-.pb-approved {
+.prob-approved {
   text-align: center;
 }
 
-@media (max-width: 1200px) {
-  .pb-layout {
+@media (max-width: 1180px) {
+  .prob-layout {
     grid-template-columns: minmax(0, 1fr);
   }
-}
 
-@media (max-width: 540px) {
-  .pb-filter-fields {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .pb-filter-fields > :first-child {
-    grid-column: 1 / -1;
-  }
-
-  .pb-filter-fields .select {
-    padding-inline: 8px;
+  .prob-preview {
+    position: static;
   }
 }
 
-@media (max-width: 360px) {
-  .pb-filter-fields {
+@media (max-width: 560px) {
+  .prob-filter-fields {
     grid-template-columns: minmax(0, 1fr);
   }
 }

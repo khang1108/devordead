@@ -17,19 +17,33 @@ const initialNodes = [
   ...ROLE_FAMILIES.flatMap(({ family, roles }, index) => {
     const id = `family-${index}`;
     return [
-      { id, kind: "family", name: family },
-      ...roles.map((role) => ({ id: `role-${role}`, parentId: id, kind: "role", name: role })),
+      { id, kind: "family", name: family, description: "Nhóm vị trí tuyển dụng chuẩn hóa." },
+      ...roles.map((role) => ({
+        id: `role-${role}`,
+        parentId: id,
+        kind: "role",
+        name: role,
+        level: "Fresher",
+      })),
     ];
   }),
   ...knowledgeTree.flatMap(({ topics, ...domain }) => [
-    { ...domain, kind: "domain" },
+    { ...domain, kind: "domain", description: "Miền kiến thức cốt lõi cho phỏng vấn kỹ thuật." },
     ...topics.flatMap(({ competencies, ...topic }) => [
-      { ...topic, parentId: domain.id, kind: "topic" },
+      {
+        ...topic,
+        parentId: domain.id,
+        kind: "topic",
+        level: "Fresher",
+        roles: ["role-Backend"],
+      },
       ...competencies.map((competency, index) => ({
         ...competency,
         id: `${topic.id}-competency-${index}`,
         parentId: topic.id,
         kind: "competency",
+        level: "Fresher",
+        roles: ["role-Backend"],
       })),
     ]),
   ]),
@@ -45,24 +59,39 @@ function editableFields(node) {
 }
 
 function descendantsOf(nodes, id) {
-  return nodes.filter((node) => node.parentId === id).flatMap((node) => [node, ...descendantsOf(nodes, node.id)]);
+  return nodes
+    .filter((node) => node.parentId === id)
+    .flatMap((node) => [node, ...descendantsOf(nodes, node.id)]);
 }
 
 function nameKey(name) {
   return name.trim().replace(/\s+/g, " ").normalize("NFC").toLocaleLowerCase("vi");
 }
 
-function TaxonomyTree({ label, rootKind, nodes, expanded, selectedId, onSelect, onExpand, onAddRoot }) {
+function TaxonomyTree({
+  label,
+  rootKind,
+  nodes,
+  expanded,
+  selectedId,
+  onSelect,
+  onExpand,
+  onAddRoot,
+  footer,
+}) {
   const [focusedId, setFocusedId] = useState(null);
   const roots = nodes.filter((node) => node.kind === rootKind);
   const childrenOf = (id) => nodes.filter((node) => node.parentId === id);
   const visible = roots.flatMap(function visibleBranch(node) {
     return expanded[node.id] ? [node, ...childrenOf(node.id).flatMap(visibleBranch)] : [node];
   });
-  const tabStop = visible.find((node) => node.id === focusedId)
-    ?? visible.find((node) => node.id === selectedId) ?? visible[0];
+  const tabStop =
+    visible.find((node) => node.id === focusedId) ??
+    visible.find((node) => node.id === selectedId) ??
+    visible[0];
 
   function focusNode(node) {
+    if (!node) return;
     document.getElementById(`tax-treeitem-${node.id}`)?.focus();
   }
 
@@ -74,10 +103,18 @@ function TaxonomyTree({ label, rootKind, nodes, expanded, selectedId, onSelect, 
     const children = childrenOf(node.id);
 
     switch (event.key) {
-      case "ArrowDown": focusNode(visible[index + 1] ?? node); break;
-      case "ArrowUp": focusNode(visible[index - 1] ?? node); break;
-      case "Home": focusNode(visible[0]); break;
-      case "End": focusNode(visible.at(-1)); break;
+      case "ArrowDown":
+        focusNode(visible[index + 1] ?? node);
+        break;
+      case "ArrowUp":
+        focusNode(visible[index - 1] ?? node);
+        break;
+      case "Home":
+        focusNode(visible[0]);
+        break;
+      case "End":
+        focusNode(visible.at(-1));
+        break;
       case "ArrowRight":
         if (children.length > 0) {
           if (expanded[node.id]) focusNode(children[0]);
@@ -89,8 +126,11 @@ function TaxonomyTree({ label, rootKind, nodes, expanded, selectedId, onSelect, 
         else if (node.parentId) focusNode(nodes.find((parent) => parent.id === node.parentId));
         break;
       case "Enter":
-      case " ": onSelect(node); break;
-      default: return;
+      case " ":
+        onSelect(node);
+        break;
+      default:
+        return;
     }
     event.preventDefault();
   }
@@ -114,7 +154,11 @@ function TaxonomyTree({ label, rootKind, nodes, expanded, selectedId, onSelect, 
           if (event.target === event.currentTarget) setFocusedId(node.id);
         }}
       >
-        <div className="tax-tree-row" data-selected={node.id === selectedId} data-inactive={!!node.hidden}>
+        <div
+          className="tax-tree-row"
+          data-selected={node.id === selectedId}
+          data-inactive={!!node.hidden}
+        >
           {branch ? (
             <button
               type="button"
@@ -129,7 +173,10 @@ function TaxonomyTree({ label, rootKind, nodes, expanded, selectedId, onSelect, 
             >
               <span className="tax-chevron" aria-hidden="true" />
             </button>
-          ) : <span className="tax-leaf" aria-hidden="true" />}
+          ) : (
+            <span className="tax-leaf" aria-hidden="true" />
+          )}
+
           <button
             type="button"
             tabIndex={-1}
@@ -140,10 +187,14 @@ function TaxonomyTree({ label, rootKind, nodes, expanded, selectedId, onSelect, 
               onSelect(node);
             }}
           >
-            <span>{node.name}</span>
-            {node.hidden && <Badge>Đã ẩn</Badge>}
+            <span className="tax-node-name">{node.name}</span>
+            {node.practiced > 0 && (
+              <span className="t-mono c-ink2 tax-tabular">{node.practiced}p</span>
+            )}
+            {node.hidden && <Badge tone="warning" dot>Đã ẩn</Badge>}
           </button>
         </div>
+
         {open && <ul role="group">{children.map(renderBranch)}</ul>}
       </li>
     );
@@ -151,65 +202,122 @@ function TaxonomyTree({ label, rootKind, nodes, expanded, selectedId, onSelect, 
 
   return (
     <Card className="tax-tree-card" variant="tight">
-      <CardHead title={label} />
+      <CardHead title={label}>
+        <button
+          type="button"
+          className="tax-add-root"
+          onClick={() => onAddRoot(rootKind)}
+        >
+          + Thêm
+        </button>
+      </CardHead>
+
       {roots.length > 0 ? (
         <ul role="tree" aria-label={label} className="tax-tree" onKeyDown={handleKeyDown}>
           {roots.map(renderBranch)}
         </ul>
       ) : (
         <div className="tax-empty col">
-          <p className="t-body-s c-ink2">Chưa có nút nào.</p>
-          <Button variant="secondary" onClick={() => onAddRoot(rootKind)}>Thêm {kindLabels[rootKind].toLowerCase()}</Button>
+          <p className="t-body-s c-ink2">Chưa có nút gốc nào.</p>
+          <Button variant="secondary" onClick={() => onAddRoot(rootKind)}>
+            Thêm {kindLabels[rootKind].toLowerCase()}
+          </Button>
         </div>
       )}
+
+      {footer}
     </Card>
   );
 }
 
-function TaxonomyEditor({ nodes, editor, error, onChange, onSave, onAdd, onCancel, onMove, onVisibility, onDelete }) {
+function TaxonomyEditor({
+  nodes,
+  editor,
+  error,
+  savedToast,
+  onChange,
+  onSave,
+  onAdd,
+  onCancel,
+  onMove,
+  onVisibility,
+  onDelete,
+}) {
   if (!editor) {
     return (
-      <Card>
+      <Card className="tax-card">
         <CardHead title="Chi tiết nút" />
-        <p className="empty">Chọn một nút trong cây để chỉnh sửa.</p>
+        <p className="empty">Chọn một nút trong cây bên trái để chỉnh sửa.</p>
       </Card>
     );
   }
 
   const { node, draft, creating } = editor;
   const parent = nodes.find((item) => item.id === node.parentId);
-  const siblings = nodes.filter((item) => item.kind === node.kind && item.parentId === node.parentId);
+  const siblings = nodes.filter(
+    (item) => item.kind === node.kind && item.parentId === node.parentId,
+  );
   const index = siblings.findIndex((item) => item.id === node.id);
   const families = nodes.filter((item) => item.kind === "family");
 
   return (
-    <Card as="form" className="tax-editor" onSubmit={onSave} noValidate>
-      <CardHead title={creating ? "Thêm nút" : "Chi tiết nút"}>
-        {node.hidden && <Badge>Đã ẩn</Badge>}
+    <Card as="form" className="tax-editor tax-card" onSubmit={onSave} noValidate>
+      <CardHead title={creating ? "Thêm nút mới" : "Chi tiết nút"}>
+        <div className="row stack-sm">
+          {node.practiced > 0 && (
+            <span className="t-body-s c-ink2 tax-tabular">{node.practiced} phiên</span>
+          )}
+          {node.hidden && <Badge tone="warning" dot>Đã ẩn</Badge>}
+        </div>
       </CardHead>
-      <div>
-        <p className="t-mono c-brand">{kindLabels[node.kind]}</p>
-        <h3 className="t-heading-m">{creating ? `Thêm ${kindLabels[node.kind].toLowerCase()}` : node.name}</h3>
-        {parent && <p className="t-body-s c-ink2">Thuộc {parent.name}</p>}
+
+      <div className="tax-inspector-head">
+        <p className="t-body-s c-ink2">
+          {kindLabels[node.kind]}
+          {parent ? ` · Thuộc ${parent.name}` : ""}
+        </p>
+        <h3 className="t-heading-m">
+          {creating ? `Thêm ${kindLabels[node.kind].toLowerCase()}` : node.name}
+        </h3>
       </div>
+
       <Field
         id="tax-name"
         label="Tên"
         required
+        placeholder={`Nhập tên ${kindLabels[node.kind].toLowerCase()}…`}
         value={draft.name}
         onChange={(event) => onChange({ name: event.target.value })}
         error={error?.field === "name" ? error.message : undefined}
       />
-      <Field label="Mô tả" multiline value={draft.description} onChange={(event) => onChange({ description: event.target.value })} />
+
+      <Field
+        label="Mô tả"
+        multiline
+        placeholder="Mô tả phạm vi đánh giá hoặc chuẩn đầu ra năng lực…"
+        value={draft.description}
+        onChange={(event) => onChange({ description: event.target.value })}
+      />
+
       <div className="field">
-        <label className="field__label" htmlFor="tax-level">Cấp độ</label>
-        <select id="tax-level" className="select" value={draft.level} onChange={(event) => onChange({ level: event.target.value })}>
+        <label className="field__label" htmlFor="tax-level">
+          Cấp độ
+        </label>
+        <select
+          id="tax-level"
+          className="select"
+          value={draft.level}
+          onChange={(event) => onChange({ level: event.target.value })}
+        >
           <option value="">Chưa gán cấp độ</option>
-          {LEVELS.map((level) => <option key={level}>{level}</option>)}
+          {LEVELS.map((level) => (
+            <option key={level} value={level}>{level}</option>
+          ))}
         </select>
       </div>
+
       <fieldset className="tax-roles col stack-sm">
-        <legend className="field__label">Liên kết Role</legend>
+        <legend className="field__label">Liên kết vai trò</legend>
         {families.map((family) => {
           const roles = nodes.filter((item) => item.parentId === family.id);
           if (roles.length === 0) return null;
@@ -219,36 +327,101 @@ function TaxonomyEditor({ nodes, editor, error, onChange, onSave, onAdd, onCance
               <p className="t-body-s c-ink2">{family.name}</p>
               <div className="row wrap stack-sm">
                 {roles.map((role) => (
-                  <Chip key={role.id} active={draft.roles.includes(role.id)} onClick={() => onChange({
-                    roles: draft.roles.includes(role.id) ? draft.roles.filter((id) => id !== role.id) : [...draft.roles, role.id],
-                  })}>
-                    {role.name}{role.hidden || family.hidden ? " · Đã ẩn" : ""}
+                  <Chip
+                    key={role.id}
+                    active={draft.roles.includes(role.id)}
+                    onClick={() =>
+                      onChange({
+                        roles: draft.roles.includes(role.id)
+                          ? draft.roles.filter((id) => id !== role.id)
+                          : [...draft.roles, role.id],
+                      })
+                    }
+                  >
+                    {role.name}
+                    {role.hidden || family.hidden ? " · Đã ẩn" : ""}
                   </Chip>
                 ))}
               </div>
             </div>
           );
         })}
-        {!nodes.some((item) => item.kind === "role") && <p className="t-body-s c-ink2">Chưa có vai trò để liên kết.</p>}
+        {!nodes.some((item) => item.kind === "role") && (
+          <p className="t-body-s c-ink2">Chưa có vai trò để liên kết.</p>
+        )}
       </fieldset>
-      {error && !error.field && <div role="alert"><Callout tone="danger">{error.message}</Callout></div>}
+
+      {error && !error.field && (
+        <div role="alert" className="col stack-sm">
+          <Callout tone="danger" title="Không thể xóa nút đang tham chiếu (E1)">
+            <p>{error.message}</p>
+          </Callout>
+          {!creating && !node.hidden && (
+            <div>
+              <Button variant="secondary" onClick={onVisibility}>
+                Vô hiệu hóa thay vì xóa (A1)
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {savedToast && !error && (
+        <Callout tone="success">
+          <p>{savedToast}</p>
+        </Callout>
+      )}
+
       <div className="row wrap stack-sm">
-        <Button variant="accent" type="submit">Lưu</Button>
+        <Button variant="primary" type="submit">
+          Lưu
+        </Button>
         {creating ? (
-          <Button variant="ghost" onClick={onCancel}>Hủy</Button>
+          <Button variant="ghost" onClick={onCancel}>
+            Hủy
+          </Button>
         ) : (
-          <Button variant="secondary" onClick={onAdd} disabled={!childKinds[node.kind]}>Thêm nút con</Button>
+          <Button
+            variant="secondary"
+            onClick={onAdd}
+            disabled={!childKinds[node.kind]}
+          >
+            Thêm nút con
+          </Button>
         )}
       </div>
+
       {!creating && (
         <div className="tax-tools row wrap between stack-sm">
           <div className="row stack-sm" aria-label="Thứ tự nút" role="group">
-            <Button variant="secondary" className="tax-order" aria-label="Chuyển lên" title="Chuyển lên" disabled={index <= 0} onClick={() => onMove(-1)}>↑</Button>
-            <Button variant="secondary" className="tax-order" aria-label="Chuyển xuống" title="Chuyển xuống" disabled={index >= siblings.length - 1} onClick={() => onMove(1)}>↓</Button>
+            <Button
+              variant="secondary"
+              className="tax-order"
+              aria-label="Chuyển lên"
+              title="Chuyển lên"
+              disabled={index <= 0}
+              onClick={() => onMove(-1)}
+            >
+              ↑
+            </Button>
+            <Button
+              variant="secondary"
+              className="tax-order"
+              aria-label="Chuyển xuống"
+              title="Chuyển xuống"
+              disabled={index >= siblings.length - 1}
+              onClick={() => onMove(1)}
+            >
+              ↓
+            </Button>
           </div>
           <div className="row wrap stack-sm">
-            <Button variant="ghost" onClick={onVisibility}>{node.hidden ? "Hiện lại" : "Vô hiệu hóa"}</Button>
-            <Button variant="ghost" onClick={onDelete}>Xóa</Button>
+            <Button variant="ghost" onClick={onVisibility}>
+              {node.hidden ? "Hiện lại" : "Vô hiệu hóa"}
+            </Button>
+            <Button variant="ghost" onClick={onDelete}>
+              Xóa
+            </Button>
           </div>
         </div>
       )}
@@ -258,7 +431,12 @@ function TaxonomyEditor({ nodes, editor, error, onChange, onSave, onAdd, onCance
 
 export default function AdminTaxonomyScreen() {
   const [nodes, setNodes] = useState(initialNodes);
-  const [expanded, setExpanded] = useState({ "family-0": true, db: true, indexing: true });
+  const [expanded, setExpanded] = useState({
+    "family-0": true,
+    "family-1": true,
+    db: true,
+    indexing: true,
+  });
   const [editor, setEditor] = useState(() => {
     const node = initialNodes.find((item) => item.id === "indexing");
     return { node, draft: editableFields(node), creating: false };
@@ -266,21 +444,31 @@ export default function AdminTaxonomyScreen() {
   const [log, setLog] = useState(taxonomyLog);
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState("");
+  const [savedToast, setSavedToast] = useState("");
   const nextId = useRef(1);
   const selected = editor?.node;
+
+  const domainCount = nodes.filter((n) => n.kind === "domain").length;
+  const topicCount = nodes.filter((n) => n.kind === "topic").length;
+  const compCount = nodes.filter((n) => n.kind === "competency").length;
 
   function select(node) {
     setEditor(node ? { node, draft: editableFields(node), creating: false } : null);
     setError(null);
+    setSavedToast("");
   }
 
   function record(what) {
     const at = new Intl.DateTimeFormat("vi-VN", {
-      day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+      day: "2-digit",
+      month: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
     }).format(new Date());
     const id = `change-${nextId.current++}`;
     setLog((current) => [{ id, at, who: adminUser.name, what }, ...current]);
     setNotice(what);
+    setSavedToast(`Đã lưu: ${what}`);
     setError(null);
   }
 
@@ -288,48 +476,73 @@ export default function AdminTaxonomyScreen() {
     const node = { kind, parentId, name: "" };
     setEditor({ node, draft: editableFields(node), creating: true });
     setError(null);
+    setSavedToast("");
     window.requestAnimationFrame(() => document.getElementById("tax-name")?.focus());
   }
 
   function save(event) {
     event.preventDefault();
     const name = editor.draft.name.trim();
-    const duplicate = nodes.some((node) =>
-      node.id !== selected.id && node.kind === selected.kind
-      && node.parentId === selected.parentId && nameKey(node.name) === nameKey(name),
+    const duplicate = nodes.some(
+      (node) =>
+        node.id !== selected.id &&
+        node.kind === selected.kind &&
+        node.parentId === selected.parentId &&
+        nameKey(node.name) === nameKey(name),
     );
     if (!name || duplicate) {
-      setError({ field: "name", message: name ? "Tên này đã tồn tại trong cùng cấp." : "Nhập tên của nút." });
+      setError({
+        field: "name",
+        message: name
+          ? "Tên này đã tồn tại trong cùng cấp (E2)."
+          : "Vui lòng nhập tên của nút.",
+      });
       document.getElementById("tax-name")?.focus();
       return;
     }
 
-    const updated = { ...selected, ...editor.draft, name, description: editor.draft.description.trim() };
+    const updated = {
+      ...selected,
+      ...editor.draft,
+      name,
+      description: editor.draft.description.trim(),
+    };
     if (editor.creating) {
       updated.id = `custom-node-${nextId.current++}`;
       setNodes((current) => [...current, updated]);
-      if (updated.parentId) setExpanded((current) => ({ ...current, [updated.parentId]: true }));
+      if (updated.parentId) {
+        setExpanded((current) => ({ ...current, [updated.parentId]: true }));
+      }
     } else {
-      setNodes((current) => current.map((node) => node.id === updated.id ? updated : node));
+      setNodes((current) =>
+        current.map((node) => (node.id === updated.id ? updated : node)),
+      );
     }
-    select(updated);
+    setEditor({ node: updated, draft: editableFields(updated), creating: false });
     record(`${editor.creating ? "Thêm" : "Cập nhật"} ${kindLabels[updated.kind].toLowerCase()} “${name}”`);
   }
 
   function move(offset) {
-    const siblings = nodes.filter((node) => node.kind === selected.kind && node.parentId === selected.parentId);
-    const neighbor = siblings[siblings.findIndex((node) => node.id === selected.id) + offset];
+    const siblings = nodes.filter(
+      (node) => node.kind === selected.kind && node.parentId === selected.parentId,
+    );
+    const neighbor =
+      siblings[siblings.findIndex((node) => node.id === selected.id) + offset];
     if (!neighbor) return;
-    setNodes((current) => current.map((node) => {
-      if (node.id === selected.id) return neighbor;
-      return node.id === neighbor.id ? selected : node;
-    }));
+    setNodes((current) =>
+      current.map((node) => {
+        if (node.id === selected.id) return neighbor;
+        return node.id === neighbor.id ? selected : node;
+      }),
+    );
     record(`Chuyển “${selected.name}” ${offset < 0 ? "lên" : "xuống"} một vị trí`);
   }
 
   function toggleVisibility() {
     const updated = { ...selected, hidden: !selected.hidden };
-    setNodes((current) => current.map((node) => node.id === updated.id ? updated : node));
+    setNodes((current) =>
+      current.map((node) => (node.id === updated.id ? updated : node)),
+    );
     setEditor((current) => ({ ...current, node: updated }));
     record(`${updated.hidden ? "Vô hiệu hóa" : "Hiện lại"} “${updated.name}”`);
   }
@@ -342,11 +555,20 @@ export default function AdminTaxonomyScreen() {
     }
 
     const removed = new Set(branch.map((node) => node.id));
-    const remaining = nodes.filter((node) => !removed.has(node.id)).map((node) =>
-      node.roles?.some((id) => removed.has(id)) ? { ...node, roles: node.roles.filter((id) => !removed.has(id)) } : node,
-    );
+    const remaining = nodes
+      .filter((node) => !removed.has(node.id))
+      .map((node) =>
+        node.roles?.some((id) => removed.has(id))
+          ? { ...node, roles: node.roles.filter((id) => !removed.has(id)) }
+          : node,
+      );
     setNodes(remaining);
-    select(remaining.find((node) => node.id === selected.parentId) ?? remaining.find((node) => node.kind === selected.kind));
+    const fallback =
+      remaining.find((node) => node.id === selected.parentId) ??
+      remaining.find((node) => node.kind === selected.kind);
+    setEditor(
+      fallback ? { node: fallback, draft: editableFields(fallback), creating: false } : null,
+    );
     record(`Xóa “${selected.name}”`);
   }
 
@@ -362,36 +584,67 @@ export default function AdminTaxonomyScreen() {
   return (
     <div className="tax-screen col stack-lg">
       <PageHeader
-        eyebrow="QUẢN TRỊ — DANH MỤC TRI THỨC"
-        title="Quản lý danh mục tri thức"
-        subtitle="Tổ chức cây tri thức, cấp độ và liên kết theo vai trò."
+        eyebrow="Quản trị hệ thống"
+        title="Danh mục tri thức"
+        subtitle="Chuẩn hóa cây Role Family → Role và cấu trúc năng lực Domain → Topic → Competency."
+        actions={
+          <p className="t-body-s c-ink2 tax-tabular">
+            {domainCount} domain · {topicCount} topic · {compCount} năng lực
+          </p>
+        }
       />
+
       <div className="tax-layout grid">
-        <TaxonomyTree label="Nhóm vai trò → Vai trò" rootKind="family" {...treeProps} />
+        <TaxonomyTree
+          label="Role Family → Role"
+          rootKind="family"
+          {...treeProps}
+          footer={
+            <div className="tax-levels-box">
+              <p className="t-body-s c-ink2">Cấp độ hệ thống: {LEVELS.join(", ")}</p>
+            </div>
+          }
+        />
+
         <TaxonomyTree label="Domain → Topic → Competency" rootKind="domain" {...treeProps} />
+
         <TaxonomyEditor
           nodes={nodes}
           editor={editor}
           error={error}
+          savedToast={savedToast}
           onChange={(changes) => {
-            setEditor((current) => ({ ...current, draft: { ...current.draft, ...changes } }));
+            setEditor((current) => ({
+              ...current,
+              draft: { ...current.draft, ...changes },
+            }));
             setError(null);
+            setSavedToast("");
           }}
           onSave={save}
           onAdd={() => startCreate(childKinds[selected.kind], selected.id)}
-          onCancel={() => select(nodes.find((node) => node.id === selected.parentId))}
+          onCancel={() =>
+            select(
+              nodes.find((node) => node.id === selected.parentId) ??
+                nodes.find((node) => node.kind === "domain"),
+            )
+          }
           onMove={move}
           onVisibility={toggleVisibility}
           onDelete={remove}
         />
       </div>
+
       <p className="sr-only" role="status">{notice}</p>
-      <Card className="tax-log" variant="flush">
-        <CardHead title="Nhật ký thay đổi" />
+
+      <Card className="tax-log tax-card" variant="flush">
+        <CardHead title="Nhật ký thay đổi">
+          <span className="t-body-s c-ink2 tax-tabular">{log.length} bản ghi</span>
+        </CardHead>
         <ol role="list">
           {log.map(({ id, what, who, at }) => (
             <li className="tax-log-entry" key={id ?? `${at}-${what}`}>
-              <p className="t-mono c-ink2">{at}</p>
+              <p className="t-mono c-ink2 tax-tabular">{at}</p>
               <p className="t-body-s t-strong">{what}</p>
               <p className="t-body-s c-ink2">{who}</p>
             </li>

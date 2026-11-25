@@ -1,7 +1,6 @@
-// Trình soạn thảo Monaco (proposal 2.5): tô màu cú pháp, đánh số dòng, tự thụt lề, chỉnh cỡ chữ.
-// Nạp Monaco cục bộ (không qua CDN) và chỉ 4 ngôn ngữ cần dùng để giảm dung lượng.
+// Trình soạn thảo Monaco (F08 / UC08): tô màu cú pháp, đánh số dòng, tự thụt lề, chỉnh cỡ chữ.
+// Nạp Monaco cục bộ (không qua CDN) và chỉ 4 ngôn ngữ cần dùng.
 import Editor, { loader } from "@monaco-editor/react";
-// monaco-editor 0.58: export map "monaco-editor/<x>" → esm/vs/<x>.js
 import * as monaco from "monaco-editor/editor/editor.api";
 import "monaco-editor/languages/definitions/python/register";
 import "monaco-editor/languages/definitions/javascript/register";
@@ -12,29 +11,44 @@ import EditorWorker from "monaco-editor/editor/editor.worker?worker";
 self.MonacoEnvironment = { getWorker: () => new EditorWorker() };
 loader.config({ monaco });
 
+// Neutral Obsidian Studio Theme (#111418 / #171B21) — đồng bộ --code-bg, tuyệt đối không sắc tím
 monaco.editor.defineTheme("devordead", {
   base: "vs-dark",
   inherit: true,
   rules: [
-    { token: "keyword", foreground: "5DB8E4", fontStyle: "bold" },
-    { token: "string", foreground: "9EDBB4" },
-    { token: "number", foreground: "F7C873" },
-    { token: "comment", foreground: "6F8C9E", fontStyle: "italic" },
-    { token: "type", foreground: "F2A4A0" },
+    { token: "keyword", foreground: "7CC4E8", fontStyle: "bold" },
+    { token: "keyword.control", foreground: "7CC4E8", fontStyle: "bold" },
+    { token: "keyword.flow", foreground: "7CC4E8", fontStyle: "bold" },
+    { token: "string", foreground: "86CFA6" },
+    { token: "number", foreground: "E5B567" },
+    { token: "comment", foreground: "6E7785", fontStyle: "italic" },
+    { token: "type", foreground: "9DC6E0" },
+    { token: "type.identifier", foreground: "9DC6E0" },
+    { token: "identifier", foreground: "E5E9F0" },
+    { token: "delimiter", foreground: "9AA2B1" },
+    { token: "operator", foreground: "B8C2CC" },
   ],
   colors: {
-    "editor.background": "#0B2233",
-    "editor.foreground": "#D6E6F2",
-    "editorLineNumber.foreground": "#5E7A8C",
-    "editorLineNumber.activeForeground": "#D6E6F2",
-    "editor.lineHighlightBackground": "#12324A",
-    "editor.selectionBackground": "#1F5A80",
-    "editorCursor.foreground": "#329DD2",
-    "editorIndentGuide.background1": "#173B53",
+    "editor.background": "#111418",
+    "editor.foreground": "#E5E9F0",
+    "editorLineNumber.foreground": "#5C6470",
+    "editorLineNumber.activeForeground": "#E5E9F0",
+    "editor.lineHighlightBackground": "#171B21",
+    "editor.selectionBackground": "#253342",
+    "editorCursor.foreground": "#2484B5",
+    "editorIndentGuide.background1": "#1E232B",
+    "editorIndentGuide.activeBackground1": "#2E3744",
   },
 });
 
-export default function CodeEditor({ language = "python", value, onChange, fontSize = 14, readOnly = false, height = "100%" }) {
+export default function CodeEditor({
+  language = "python",
+  value,
+  onChange,
+  fontSize = 13.5,
+  readOnly = false,
+  height = "100%",
+}) {
   return (
     <Editor
       height={height}
@@ -42,18 +56,23 @@ export default function CodeEditor({ language = "python", value, onChange, fontS
       theme="devordead"
       value={value}
       onChange={(v) => onChange?.(v ?? "")}
-      loading={<div className="empty" style={{ color: "var(--code-ink)" }}>Đang tải trình soạn thảo…</div>}
+      loading={
+        <div className="empty" style={{ color: "var(--code-ink)", height: "100%" }}>
+          Đang tải trình soạn thảo...
+        </div>
+      }
       options={{
         fontSize,
         fontFamily: "'JetBrains Mono', ui-monospace, monospace",
         fontLigatures: true,
         minimap: { enabled: false },
+        bracketPairColorization: { enabled: false },
         lineNumbers: "on",
         autoIndent: "full",
         tabSize: 4,
         scrollBeyondLastLine: false,
         readOnly,
-        padding: { top: 16, bottom: 16 },
+        padding: { top: 14, bottom: 14 },
         renderLineHighlight: "line",
         smoothScrolling: true,
         automaticLayout: true,

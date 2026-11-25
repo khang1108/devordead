@@ -1,8 +1,15 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Badge, Button, Card, CardHead, RuleTag, Tabs } from "../components/ui.jsx";
-import { problems, DIFFICULTY, LANGUAGES } from "../data/mock.js";
-import { MOCK_RESULTS, SANDBOX_LIMITS, SANDBOX_STEPS, TEST_STATUS } from "../lib/sandbox.js";
+import { Badge, Button, Callout, Card, CardHead, RuleTag, Tabs } from "../components/ui.jsx";
+import { ConfirmDialog } from "../components/Room.jsx";
+import { DIFFICULTY, LANGUAGES, problems } from "../data/mock.js";
+import {
+  MOCK_RESULTS,
+  SAMPLE_SOLUTION,
+  SANDBOX_CONSTRAINTS_SPEC,
+  SANDBOX_STEPS,
+  TEST_STATUS,
+} from "../lib/sandbox.js";
 import "./ProblemEditorScreen.css";
 
 const CodeEditor = lazy(() => import("../components/CodeEditor.jsx"));
@@ -14,15 +21,52 @@ const GENERIC_STARTER = {
   java: "class Solution {\n    // Viết lời giải của bạn ở đây\n}\n",
 };
 
-// UC08 Viết & nộp bài + UC09 Chấm qua Sandbox — CHỈ UI (kết quả là dữ liệu minh họa).
+const SUBMIT_PRESETS = [
+  { id: "submit", label: "TLE (4/5)" },
+  { id: "accepted", label: "Accepted (5/5)" },
+  { id: "mle", label: "MLE (>256 MB)" },
+  { id: "re", label: "Runtime error" },
+];
+
+// UC08 Viết & nộp bài + UC09 Chấm qua Zero-Trust Docker Sandbox — CHỈ UI.
 export default function ProblemEditorScreen() {
   const { id } = useParams();
   const problem = problems.find((p) => p.id === id);
+
   const [lang, setLang] = useState("python");
+  const [pendingLang, setPendingLang] = useState(null);
   const [fontSize, setFontSize] = useState(14);
   const [code, setCode] = useState(() => (problem?.starter ?? GENERIC_STARTER).python);
-  const [result, setResult] = useState(null); // null | "run" | "submit"
-  const [tab, setTab] = useState("run");
+  const [emptyError, setEmptyError] = useState("");
+
+  const [hasRun, setHasRun] = useState(false);
+  const [tab, setTab] = useState("run"); // "run" | "submit"
+  const [submitPreset, setSubmitPreset] = useState("submit");
+  const [running, setRunning] = useState(false);
+  const [activeStep, setActiveStep] = useState(-1);
+
+  useEffect(() => {
+    if (!running) return undefined;
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
+      setActiveStep(SANDBOX_STEPS.length);
+      setRunning(false);
+      return undefined;
+    }
+
+    const idTimer = setInterval(() => {
+      setActiveStep((prev) => {
+        if (prev >= SANDBOX_STEPS.length - 1) {
+          clearInterval(idTimer);
+          setRunning(false);
+          return SANDBOX_STEPS.length;
+        }
+        return prev + 1;
+      });
+    }, 90);
+
+    return () => clearInterval(idTimer);
+  }, [running]);
 
   if (!problem) {
     return (
@@ -35,71 +79,123 @@ export default function ProblemEditorScreen() {
 
   const starters = problem.starter ?? GENERIC_STARTER;
   const diff = DIFFICULTY[problem.difficulty];
-  const show = (mode) => {
-    setResult(mode);
-    setTab(mode);
+
+  const handleLangChange = (nextLang) => {
+    const currentStarter = starters[lang] ?? GENERIC_STARTER[lang];
+    if (code.trim() !== currentStarter.trim() && code.trim() !== SAMPLE_SOLUTION.trim()) {
+      setPendingLang(nextLang);
+      return;
+    }
+    setLang(nextLang);
+    setCode(starters[nextLang] ?? GENERIC_STARTER[nextLang]);
+    setEmptyError("");
   };
-  const res = result ? MOCK_RESULTS[tab] : null;
+
+  const confirmLangSwitch = () => {
+    if (!pendingLang) return;
+    setLang(pendingLang);
+    setCode(starters[pendingLang] ?? GENERIC_STARTER[pendingLang]);
+    setPendingLang(null);
+    setEmptyError("");
+  };
+
+  const triggerExecution = (mode, presetOverride) => {
+    if (!code.trim()) {
+      setEmptyError("Mã nguồn đang trống — vui lòng nhập lời giải trước khi chạy thử hoặc nộp bài (UC08 · E1).");
+      return;
+    }
+    setEmptyError("");
+    setHasRun(true);
+    setTab(mode);
+    if (mode === "submit" && !presetOverride) {
+      const looksOptimal = /seen\s*=|new Map|unordered_map|HashMap/.test(code);
+      setSubmitPreset(looksOptimal ? "accepted" : "submit");
+    } else if (presetOverride) {
+      setSubmitPreset(presetOverride);
+    }
+    setActiveStep(0);
+    setRunning(true);
+  };
+
+  const activeResultKey = tab === "run" ? "run" : submitPreset;
+  const res = hasRun ? MOCK_RESULTS[activeResultKey] : null;
+  const lineCount = code.split("\n").length;
 
   return (
     <div className="pe">
-      <div className="pe__top">
+      <header className="pe__top">
         <Link to="/problems" className="pe__back">
-          ← Bài tập
+          ← Ngân hàng bài tập
         </Link>
         <span className="t-mono c-ink2">#{problem.id}</span>
-        <h1 className="t-heading-m">{problem.title}</h1>
-        <Badge tone={diff.tone}>{diff.label}</Badge>
-        <Badge>{problem.topic}</Badge>
+        <h1 className="t-heading-m pe__title">{problem.title}</h1>
+        <Badge tone={diff.tone} dot>
+          {diff.label}
+        </Badge>
+        <span className="t-body-s c-ink2">{problem.topic}</span>
+        <RuleTag code="BR4">Đã duyệt {problem.approvedAt}</RuleTag>
         <span className="pe__spacer" />
-        <span className="t-mono c-ink2">Nháp đã lưu tạm · 10:42</span>
-      </div>
+        <span className="t-body-s pe__autosave">Đã lưu nháp · 10:42</span>
+      </header>
 
       <div className="pe__grid">
+        {/* Cột trái: Đề bài phẳng, phân tách bằng đường mảnh 1px (không hộp xám lồng nhau, không hộp xanh pastel) */}
         <Card as="article" className="pe__problem">
-          <CardHead title="Đề bài" />
-          <p>{problem.description}</p>
-          <h2 className="t-mono c-ink2">Ràng buộc</h2>
-          <ul className="pe__list">
-            {problem.constraints.map((c) => (
-              <li key={c} className="t-body-s">
-                {c}
-              </li>
-            ))}
-          </ul>
-          <h2 className="t-mono c-ink2">Ví dụ</h2>
-          {problem.examples.map((ex, i) => (
-            <div key={i} className="pe__example">
-              <p className="t-code">
-                <span className="c-ink2">Input: </span>
-                {ex.input}
-              </p>
-              <p className="t-code">
-                <span className="c-ink2">Output: </span>
-                {ex.output}
-              </p>
+          <CardHead title="Đề bài (UC08)">
+            <span className="t-mono c-ink2">{problem.tests} test</span>
+          </CardHead>
+          <p className="t-body-m">{problem.description}</p>
+
+          <div className="pe__section">
+            <h2 className="pe__subhead">Ràng buộc</h2>
+            <ul className="pe__list">
+              {problem.constraints.map((c) => (
+                <li key={c} className="t-code pe__constraint-item">
+                  {c}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="pe__section">
+            <h2 className="pe__subhead">Ví dụ</h2>
+            <div className="pe__examples">
+              {problem.examples.map((ex, i) => (
+                <div key={i} className="pe__example-row">
+                  <p className="t-code">
+                    <span className="c-ink2">Input: </span>
+                    {ex.input}
+                  </p>
+                  <p className="t-code">
+                    <span className="c-ink2">Output: </span>
+                    {ex.output}
+                  </p>
+                </div>
+              ))}
             </div>
-          ))}
-          <div className="pe__tip">
-            <p className="t-mono c-brand">Mẹo luyện phỏng vấn</p>
-            <p className="t-body-s">Nói to hướng giải và độ phức tạp trước khi code — người phỏng vấn chấm cả cách bạn suy nghĩ.</p>
+          </div>
+
+          <div className="pe__section pe__note">
+            <p className="pe__subhead">Lưu ý phỏng vấn</p>
+            <p className="t-body-s c-ink2">
+              Nói rõ hướng giải và độ phức tạp Big-O trước khi viết vòng lặp. Trong phỏng vấn kỹ thuật, độ đúng của mã và lập luận được chấm độc lập (BR2).
+            </p>
           </div>
         </Card>
 
+        {/* Cột phải: Monaco IDE + Zero-Trust Sandbox phẳng gọn */}
         <div className="pe__right">
           <section className="pe__editor" aria-label="Trình soạn thảo mã">
+            {/* Thanh công cụ 1 dòng duy nhất trên 1280px & 1440px */}
             <div className="pe__toolbar">
               <label className="sr-only" htmlFor="pe-lang">
-                Ngôn ngữ
+                Ngôn ngữ lập trình
               </label>
               <select
                 id="pe-lang"
                 className="pe__select"
                 value={lang}
-                onChange={(e) => {
-                  setLang(e.target.value);
-                  setCode(starters[e.target.value] ?? GENERIC_STARTER[e.target.value]);
-                }}
+                onChange={(e) => handleLangChange(e.target.value)}
               >
                 {LANGUAGES.map((l) => (
                   <option key={l.value} value={l.value}>
@@ -107,109 +203,228 @@ export default function ProblemEditorScreen() {
                   </option>
                 ))}
               </select>
-              <div className="pe__font" role="group" aria-label="Cỡ chữ">
-                <button type="button" onClick={() => setFontSize((s) => Math.max(11, s - 1))} aria-label="Giảm cỡ chữ">
+
+              <div className="pe__font" role="group" aria-label="Cỡ chữ trình soạn thảo">
+                <button
+                  type="button"
+                  onClick={() => setFontSize((s) => Math.max(12, s - 1))}
+                  aria-label="Giảm cỡ chữ"
+                >
                   A−
                 </button>
-                <span className="t-mono">{fontSize}px</span>
-                <button type="button" onClick={() => setFontSize((s) => Math.min(22, s + 1))} aria-label="Tăng cỡ chữ">
+                <span className="t-mono">{fontSize}</span>
+                <button
+                  type="button"
+                  onClick={() => setFontSize((s) => Math.min(22, s + 1))}
+                  aria-label="Tăng cỡ chữ"
+                >
                   A+
                 </button>
               </div>
-              <Button variant="ghost" size="sm" onDark onClick={() => setCode(starters[lang] ?? GENERIC_STARTER[lang])}>
-                Đặt lại mã
-              </Button>
+
+              <button
+                type="button"
+                className="pe__tool-btn"
+                onClick={() => {
+                  setCode(starters[lang] ?? GENERIC_STARTER[lang]);
+                  setEmptyError("");
+                }}
+                title="Khôi phục mã khởi tạo ban đầu (UC08 · A2)"
+              >
+                Đặt lại
+              </button>
+
               <span className="pe__spacer" />
-              <Button variant="secondary" size="sm" onDark onClick={() => show("run")}>
-                ▶ Run · test mẫu
+
+              <Button
+                variant="secondary"
+                size="sm"
+                onDark
+                disabled={running}
+                onClick={() => triggerExecution("run")}
+              >
+                Run
               </Button>
-              <Button variant="accent" size="sm" onClick={() => show("submit")}>
+              <Button
+                variant="accent"
+                size="sm"
+                className="pe__submit-btn"
+                disabled={running}
+                onClick={() => triggerExecution("submit")}
+              >
                 Submit
               </Button>
             </div>
+
+            {emptyError && (
+              <div className="pe__alert" role="alert">
+                {emptyError}
+              </div>
+            )}
+
             <div className="pe__monaco">
-              <Suspense fallback={<div className="empty pe__loading">Đang tải trình soạn thảo…</div>}>
+              <Suspense fallback={<div className="empty pe__loading">Đang tải trình soạn thảo...</div>}>
                 <CodeEditor language={lang} value={code} onChange={setCode} fontSize={fontSize} />
               </Suspense>
             </div>
+
+            <div className="pe__statusbar">
+              <span className="t-mono pe__status-item">
+                {LANGUAGES.find((l) => l.value === lang)?.label} · UTF-8 · {lineCount} dòng
+              </span>
+              <button
+                type="button"
+                className="pe__sample-btn"
+                onClick={() => {
+                  setLang("python");
+                  setCode(SAMPLE_SOLUTION);
+                  setEmptyError("");
+                }}
+              >
+                Nạp lời giải O(n) mẫu
+              </button>
+            </div>
           </section>
 
+          {/* Zero-Trust Sandbox Inspector (BR3 · NFR02) — 1 dải thông số duy nhất, không lặp 7 pill xám */}
           <Card className="pe__results" aria-live="polite">
-            {!result ? (
-              <div className="pe__placeholder">
-                <p className="t-heading-s">Sẵn sàng chấm bài</p>
-                <p className="t-body-s c-ink2">
-                  <strong>Run</strong> chạy với test mẫu (không tính điểm). <strong>Submit</strong> chấm với bộ {problem.tests} test đầy đủ.
-                </p>
+            <div className="pe__sandbox-head">
+              <div className="row wrap stack-sm">
+                <h2 className="t-heading-s">Sandbox chấm tự động</h2>
+                <RuleTag code="BR3">Zero-trust</RuleTag>
+                <RuleTag code="NFR02">Cô lập container</RuleTag>
               </div>
+              <p className="t-mono pe__sandbox-spec">{SANDBOX_CONSTRAINTS_SPEC}</p>
+            </div>
+
+            {!hasRun ? (
+              <p className="t-body-s c-ink2">
+                Bấm <strong>Run</strong> để kiểm tra 2 test mẫu (không tính điểm) hoặc <strong>Submit</strong> để chấm bộ {problem.tests} test đầy đủ. Mỗi lượt thực thi chạy trong container tạm thời và tự hủy ngay sau khi thu kết quả.
+              </p>
             ) : (
               <>
-                <div className="row between">
+                <div className="row between wrap">
                   <Tabs
-                    label="Kết quả chấm"
+                    label="Chế độ kết quả chấm"
                     value={tab}
-                    onChange={setTab}
+                    onChange={(nextTab) => {
+                      setTab(nextTab);
+                      setRunning(false);
+                      setActiveStep(SANDBOX_STEPS.length);
+                    }}
                     tabs={[
                       { value: "run", label: "Run · test mẫu" },
-                      { value: "submit", label: "Submit" },
+                      { value: "submit", label: `Submit · ${problem.tests} test` },
                     ]}
                   />
-                  <div className="row stack-sm">
-                    <Badge tone={res.tone}>{res.summary}</Badge>
-                    <span className="t-body-s c-ink2">48 ms · 14.2 MB</span>
+
+                  <div className="row wrap stack-sm">
+                    {running ? (
+                      <Badge tone="brand" dot>
+                        Bước {Math.min(activeStep + 1, SANDBOX_STEPS.length)}/{SANDBOX_STEPS.length}
+                      </Badge>
+                    ) : (
+                      <>
+                        <Badge tone={res.tone} dot>
+                          {res.summary}
+                        </Badge>
+                        <span className="t-mono c-ink2">
+                          {res.totalTime} · {res.peakMem}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
 
-                <ol className="pe__steps" aria-label="Các bước chấm trong sandbox">
-                  {SANDBOX_STEPS.map((s, i) => (
-                    <li key={s} className="pe__step">
-                      <span className="pe__step-dot" aria-hidden="true">
-                        ✓
-                      </span>
-                      <span className="t-body-s">
-                        {i + 1}. {s}
-                      </span>
-                    </li>
-                  ))}
-                </ol>
-
-                <div className="pe__tests">
-                  {res.tests.map((t) => {
-                    const st = TEST_STATUS[t.status];
+                {/* Tiến trình 7 bước hiển thị trên 1 dải mảnh gọn gàng */}
+                <ol className="pe__steps-inline" aria-label="Tiến trình thực thi trong Sandbox">
+                  {SANDBOX_STEPS.map((stepName, i) => {
+                    const st = i < activeStep ? "done" : i === activeStep && running ? "active" : "pending";
                     return (
-                      <div key={t.name} className={`pe__test pe__test--${t.status}`}>
-                        <p className="t-body-s t-strong">{t.name}</p>
-                        <Badge tone={st.tone}>{st.label}</Badge>
-                        <p className="t-mono c-ink2">
-                          {t.status === "tle" ? "> 3 s" : `${t.timeMs} ms`} · {t.memMb} MB
-                        </p>
-                      </div>
+                      <li key={stepName} className={`pe__step-inline is-${st}`}>
+                        <span className="pe__step-check" aria-hidden="true">
+                          {st === "done" ? "✓" : `${i + 1}.`}
+                        </span>
+                        <span>{stepName}</span>
+                      </li>
                     );
                   })}
-                </div>
+                </ol>
 
-                {tab === "submit" ? (
-                  <div className="pe__coach">
-                    <p className="t-heading-s">Gần được rồi — 4/5 test đã qua!</p>
-                    <p className="t-body-s">
-                      Test dữ liệu lớn bị TLE: lời giải đang có vòng lặp lồng O(n²). Thử lưu phần tử đã gặp vào hash map để đạt O(n).
-                    </p>
+                {tab === "submit" && (
+                  <div className="pe__presets">
+                    <span className="t-body-s c-ink2">Kịch bản kiểm thử UC09:</span>
+                    <div className="row wrap stack-sm">
+                      {SUBMIT_PRESETS.map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          className={`pe__preset-chip ${submitPreset === p.id ? "is-active" : ""}`}
+                          onClick={() => triggerExecution("submit", p.id)}
+                        >
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                ) : (
-                  <p className="t-body-s c-ink2">{res.note}</p>
+                )}
+
+                {!running && res && (
+                  <>
+                    <div className="pe__test-list" role="list" aria-label="Chi tiết từng test case">
+                      {res.tests.map((t) => {
+                        const st = TEST_STATUS[t.status];
+                        return (
+                          <div key={t.name} role="listitem" className="pe__test-row">
+                            <div className="pe__test-main">
+                              <span className="t-body-s t-strong" style={{ color: "var(--ink)" }}>
+                                {t.name}
+                              </span>
+                              {t.detail && <span className="t-body-s c-ink2">· {t.detail}</span>}
+                            </div>
+                            <div className="pe__test-metrics">
+                              <span className="t-mono c-ink2">
+                                {t.status === "tle" ? "> 3000 ms" : `${t.timeMs} ms`} · {t.memMb.toFixed(1)} MB
+                              </span>
+                              <Badge tone={st.tone} dot>
+                                {st.label}
+                              </Badge>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="row between wrap pe__worker-foot">
+                      <span className="t-mono c-ink2">{res.exitCode}</span>
+                    </div>
+
+                    {res.coachTitle ? (
+                      <Callout tone={res.tone === "success" ? "success" : res.tone === "danger" ? "danger" : "warning"} title={res.coachTitle}>
+                        {res.coachBody}
+                      </Callout>
+                    ) : (
+                      <p className="t-body-s c-ink2">{res.note}</p>
+                    )}
+                  </>
                 )}
               </>
             )}
-            <div className="pe__limits">
-              <span className="t-mono">Sandbox</span>
-              {SANDBOX_LIMITS.map((l) => (
-                <Badge key={l}>{l}</Badge>
-              ))}
-              <RuleTag code="BR3">Zero-trust</RuleTag>
-            </div>
           </Card>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={Boolean(pendingLang)}
+        title="Đổi ngôn ngữ lập trình?"
+        confirmLabel="Nạp mẫu khởi tạo mới"
+        confirmVariant="primary"
+        onCancel={() => setPendingLang(null)}
+        onConfirm={confirmLangSwitch}
+      >
+        Bạn đã chỉnh sửa mã hiện tại. Đổi sang{" "}
+        <strong>{LANGUAGES.find((l) => l.value === pendingLang)?.label}</strong> sẽ nạp lại mẫu khởi tạo của ngôn ngữ mới (UC08 · A1).
+      </ConfirmDialog>
     </div>
   );
 }

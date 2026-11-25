@@ -10,15 +10,15 @@ const evidenceTabs = [
   { value: "tests", label: "Kết quả test" },
 ];
 
-const testCases = [
-  "Ví dụ chuẩn",
-  "Cặp số ở giữa mảng",
-  "Phần tử trùng nhau",
-  "Mảng có số âm",
-  "Mảng lớn sát giới hạn",
+const testCaseTelemetry = [
+  { name: "Ví dụ chuẩn (nums = [2,7,11,15])", time: "12 ms", memory: "18.4 MB" },
+  { name: "Cặp số ở giữa mảng", time: "14 ms", memory: "18.6 MB" },
+  { name: "Phần tử trùng nhau (nums = [3,3])", time: "11 ms", memory: "18.5 MB" },
+  { name: "Mảng có số âm và giá trị biên", time: "19 ms", memory: "19.1 MB" },
+  { name: "Mảng lớn sát giới hạn (n = 10⁴)", time: "> 3000 ms", memory: "24.8 MB" },
 ];
 
-// Giữ yêu cầu đã gửi khi điều hướng giữa các màn trong phiên demo.
+// Lưu yêu cầu đã gửi giữa các lần chuyển màn trong phiên demo.
 let submittedReviews = {};
 
 const twoSum = `function twoSum(nums, target) {
@@ -33,12 +33,19 @@ const twoSum = `function twoSum(nums, target) {
   }
 }`;
 
-function Score({ label, score, note, children, className = "" }) {
+function ScoreLedgerCell({ label, score, tone = "brand", badge, note }) {
   return (
-    <div className={`rep-score col stack-sm ${className}`}>
-      <h3 className="t-mono">{label}</h3>
-      <p className="t-number">{score.toFixed(1)} <span className="t-body-s c-ink2">/ 10</span></p>
-      {children}
+    <div className="rep-score-cell col stack-sm">
+      <div className="row between wrap">
+        <h3 className="t-body-s t-strong c-ink2">{label}</h3>
+        {badge}
+      </div>
+      <p className="t-number rep-tabular">
+        {score.toFixed(1)} <span className="t-body-s c-ink2">/ 10</span>
+      </p>
+      <div className="rep-bar-wrap">
+        <ProgressBar label={label} value={score / 10} tone={tone} />
+      </div>
       {note && <p className="t-body-s c-ink2">{note}</p>}
     </div>
   );
@@ -48,45 +55,74 @@ function Evidence({ correctness }) {
   const [tab, setTab] = useState("transcript");
 
   return (
-    <Card>
-      <CardHead title="Bằng chứng từ phiên" />
+    <Card className="rep-card">
+      <CardHead title="Bằng chứng từ phiên">
+        <RuleTag code="BR1">Snapshot nguyên vẹn</RuleTag>
+      </CardHead>
+
       <Tabs tabs={evidenceTabs} value={tab} onChange={setTab} label="Bằng chứng đánh giá" />
+
       {tab === "transcript" && (
-        <ol className="rep-transcript col" role="list">
-          {techScript.map(({ who, text }) => (
-            <li key={text} className="rep-message" data-speaker={who}>
-              <p className="t-mono c-brand">{who === "ai" ? "Người phỏng vấn AI" : "Bạn"}</p>
-              <p className="t-body-s">{text}</p>
+        <ol className="rep-transcript" role="list">
+          {techScript.map(({ who, text }, idx) => (
+            <li key={text} className="rep-turn">
+              <div className="row between">
+                <span className="t-body-s t-strong">
+                  {who === "ai" ? "Người phỏng vấn AI" : "Bạn"}
+                </span>
+                <span className="t-mono c-ink2 rep-tabular">#0{idx + 1}</span>
+              </div>
+              <p className="t-body-s c-ink2">{text}</p>
             </li>
           ))}
         </ol>
       )}
+
       {tab === "snapshot" && (
         <div className="col stack-sm">
-          <p className="t-mono c-ink2">Two Sum · JavaScript · Bản dùng hash map</p>
+          <p className="t-mono c-ink2">solution.js · JavaScript · Two Sum (30:00)</p>
           <pre className="code-block rep-code"><code>{twoSum}</code></pre>
         </div>
       )}
+
       {tab === "tests" && (
         <div className="col stack-sm">
-          <p className="t-body-s c-ink2">Bản chạy đầu tiên đạt {correctness.passed}/{correctness.total} ca kiểm thử. Test 5 vượt giới hạn thời gian khi dùng vòng lặp lồng nhau.</p>
-          <table className="table rep-tests">
-            <thead><tr><th scope="col">Ca kiểm thử</th><th scope="col">Kết quả</th></tr></thead>
-            <tbody>
-              {testCases.map((test, index) => (
-                <tr key={test}>
-                  <td><strong>Test {index + 1}</strong> · {test}</td>
-                  <td>
-                    {index < correctness.passed ? (
-                      <Badge tone="success" dot>Đạt</Badge>
-                    ) : (
-                      <Badge tone="warning" dot className="rep-table-badge">TLE · Quá thời gian</Badge>
-                    )}
-                  </td>
+          <p className="t-body-s c-ink2">
+            Chấm tự động trong Docker Sandbox đạt{" "}
+            <strong className="rep-tabular">{correctness.passed}/{correctness.total}</strong> ca kiểm thử. Test 5 vượt ngưỡng 3 giây (TLE) ở bản đầu dùng vòng lặp lồng nhau.
+          </p>
+          <div className="rep-table-scroll">
+            <table className="table rep-tests">
+              <thead>
+                <tr>
+                  <th scope="col">Ca kiểm thử</th>
+                  <th scope="col">Thời gian</th>
+                  <th scope="col">Bộ nhớ</th>
+                  <th scope="col">Kết quả</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {testCaseTelemetry.map((tc, index) => (
+                  <tr key={tc.name}>
+                    <td>
+                      <strong className="rep-tabular">Test {index + 1}</strong> · {tc.name}
+                    </td>
+                    <td className="t-mono c-ink2 rep-tabular">{tc.time}</td>
+                    <td className="t-mono c-ink2 rep-tabular">{tc.memory}</td>
+                    <td>
+                      {index < correctness.passed ? (
+                        <Badge tone="success" dot>Đạt</Badge>
+                      ) : (
+                        <Badge tone="warning" dot className="rep-table-badge">
+                          TLE · Quá thời gian
+                        </Badge>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </Card>
@@ -98,13 +134,15 @@ function ReviewForm({ competency, sending, onCancel, onSubmit }) {
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
 
-  useEffect(() => reasonInput.current?.focus(), []);
+  useEffect(() => {
+    reasonInput.current?.focus();
+  }, []);
 
   function submit(event) {
     event.preventDefault();
     const trimmed = reason.trim();
     if (!trimmed) {
-      setError("Nhập lý do yêu cầu đánh giá lại.");
+      setError("Vui lòng nhập lý do yêu cầu đánh giá lại (E1).");
       reasonInput.current?.focus();
       return;
     }
@@ -113,14 +151,25 @@ function ReviewForm({ competency, sending, onCancel, onSubmit }) {
 
   return (
     <form className="rep-review col" onSubmit={submit} noValidate aria-busy={sending}>
-      <h3 className="t-mono c-brand">Yêu cầu đánh giá lại</h3>
-      <p className="t-heading-s">{competency.name}</p>
+      <div className="row between wrap">
+        <div>
+          <p className="t-body-s c-ink2">Yêu cầu đánh giá lại (UC16)</p>
+          <h3 className="t-heading-s">
+            {competency.name}{" "}
+            <span className="t-mono c-ink2 rep-tabular">({competency.score.toFixed(1)} / 10)</span>
+          </h3>
+        </div>
+        <RuleTag code="BR2">Chấm độc lập</RuleTag>
+      </div>
+
+      <p className="t-body-s c-ink2">Bằng chứng hiện tại: “{competency.evidence}”</p>
+
       <Field
         ref={reasonInput}
         label="Lý do (bắt buộc)"
         multiline
         required
-        placeholder="Mô tả phần đánh giá bạn muốn xem xét lại."
+        placeholder="Nêu rõ mốc hội thoại hoặc đoạn mã cần được xem xét lại…"
         value={reason}
         error={error}
         disabled={sending}
@@ -129,12 +178,15 @@ function ReviewForm({ competency, sending, onCancel, onSubmit }) {
           setError("");
         }}
       />
+
       <div className="row wrap stack-sm">
-        <Button variant="accent" type="submit" disabled={sending}>
+        <Button variant="primary" type="submit" disabled={sending}>
           {sending && <span className="spinner" aria-hidden="true" />}
           {sending ? "Đang gửi…" : "Gửi yêu cầu"}
         </Button>
-        <Button variant="ghost" onClick={onCancel} disabled={sending}>Hủy</Button>
+        <Button variant="ghost" onClick={onCancel} disabled={sending}>
+          Hủy
+        </Button>
       </div>
     </form>
   );
@@ -145,10 +197,11 @@ function FullReport({ report, requests, sendingId, onSubmit }) {
   const [lastRequested, setLastRequested] = useState(null);
   const reviewTrigger = useRef(null);
   const activeTarget = target && !requests[target.id] ? target : null;
+
   const summaries = [
-    { label: "Điểm mạnh", points: report.strengths, tone: "strength" },
-    { label: "Cần cải thiện", points: report.weaknesses, tone: "improve" },
-    { label: "Đề xuất", points: report.suggestions, tone: "suggest" },
+    { label: "Điểm mạnh", points: report.strengths },
+    { label: "Cần cải thiện", points: report.weaknesses },
+    { label: "Đề xuất", points: report.suggestions },
   ];
 
   function submitReview(id, reason) {
@@ -158,18 +211,47 @@ function FullReport({ report, requests, sendingId, onSubmit }) {
 
   return (
     <>
-      <Card>
-        <CardHead title="Điểm đánh giá"><RuleTag code="BR2">Chấm độc lập</RuleTag></CardHead>
-        <div className="rep-scores grid">
-          <Score label="Tổng quan" score={report.overall} className="rep-score-overall" />
-          <Score label="Tính đúng của mã" score={report.correctness.score} note={report.correctness.note}>
-            <div><Badge tone="brand">{report.correctness.passed}/{report.correctness.total} test đạt</Badge></div>
-          </Score>
-          <Score label="Lập luận" score={report.reasoning.score} note={report.reasoning.note} />
+      <Card variant="flush" className="rep-card">
+        <div className="rep-section-head">
+          <CardHead title="Điểm đánh giá">
+            <RuleTag code="BR2">Chấm độc lập</RuleTag>
+          </CardHead>
+        </div>
+
+        <div className="rep-scores-ledger">
+          <ScoreLedgerCell
+            label="Tổng quan"
+            score={report.overall}
+            tone="brand"
+            note="Tổng hợp từ kết quả thực thi mã và khả năng lập luận."
+          />
+          <ScoreLedgerCell
+            label="Tính đúng của mã"
+            score={report.correctness.score}
+            tone="success"
+            badge={
+              <Badge tone="success" dot>
+                {report.correctness.passed}/{report.correctness.total} test đạt
+              </Badge>
+            }
+            note={report.correctness.note}
+          />
+          <ScoreLedgerCell
+            label="Lập luận"
+            score={report.reasoning.score}
+            tone="brand"
+            note={report.reasoning.note}
+          />
         </div>
       </Card>
-      <Card className="rep-competencies">
-        <CardHead title="Năng lực theo tiêu chí" />
+
+      <Card variant="flush" className="rep-competencies rep-card">
+        <div className="rep-section-head">
+          <CardHead title="Năng lực theo tiêu chí">
+            <span className="t-body-s c-ink2">Mỗi tiêu chí tối đa 1 yêu cầu (E2)</span>
+          </CardHead>
+        </div>
+
         {activeTarget && (
           <ReviewForm
             key={activeTarget.id}
@@ -182,57 +264,95 @@ function FullReport({ report, requests, sendingId, onSubmit }) {
             onSubmit={submitReview}
           />
         )}
+
         <p className="sr-only" role="status">
-          {lastRequested && requests[lastRequested] ? "Đã gửi yêu cầu đánh giá lại. Yêu cầu đang xử lý." : ""}
+          {lastRequested && requests[lastRequested]
+            ? "Đã gửi yêu cầu đánh giá lại. Yêu cầu đang xử lý."
+            : ""}
         </p>
-        <table className="table rep-competency-table" role="table">
-          <thead role="rowgroup">
-            <tr role="row">
-              <th scope="col" role="columnheader">Năng lực</th>
-              <th scope="col" role="columnheader">Điểm</th>
-              <th scope="col" role="columnheader">Bằng chứng</th>
-              <th scope="col" role="columnheader">Đánh giá lại</th>
-            </tr>
-          </thead>
-          <tbody role="rowgroup">
-            {report.competencies.map((item) => (
-              <tr key={item.id} role="row" data-active={activeTarget?.id === item.id}>
-                <th scope="row" role="rowheader">{item.name}</th>
-                <td role="cell">
-                  <span className="t-mono rep-score-label">{item.score.toFixed(1)} / 10</span>
-                  <ProgressBar label={`Điểm ${item.name}`} value={item.score / 10} />
-                </td>
-                <td role="cell">{item.evidence}</td>
-                <td role="cell">
-                  <div className="col stack-sm">
-                    {requests[item.id] && <Badge tone="brand" dot className="rep-review-state">Đang xử lý</Badge>}
-                    <Button
-                      variant="secondary"
-                      className="rep-review-button"
-                      disabled={Boolean(requests[item.id]) || Boolean(sendingId)}
-                      aria-label={`Yêu cầu đánh giá lại: ${item.name}`}
-                      onClick={(event) => {
-                        reviewTrigger.current = event.currentTarget;
-                        setTarget(item);
-                      }}
-                    >
-                      Yêu cầu đánh giá lại
-                    </Button>
-                  </div>
-                </td>
+
+        <div className="rep-table-scroll">
+          <table className="table rep-competency-table" role="table">
+            <thead role="rowgroup">
+              <tr role="row">
+                <th scope="col" role="columnheader">Năng lực</th>
+                <th scope="col" role="columnheader">Điểm</th>
+                <th scope="col" role="columnheader">Bằng chứng</th>
+                <th scope="col" role="columnheader">Đánh giá lại</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody role="rowgroup">
+              {report.competencies.map((item) => {
+                const submittedReason = requests[item.id];
+                const barTone =
+                  item.score < 6 ? "warning" : item.score >= 8 ? "success" : "brand";
+                return (
+                  <tr key={item.id} role="row" data-active={activeTarget?.id === item.id}>
+                    <th scope="row" role="rowheader">{item.name}</th>
+                    <td role="cell">
+                      <span className="t-mono rep-score-label rep-tabular">
+                        {item.score.toFixed(1)} / 10
+                      </span>
+                      <div className="rep-bar-wrap">
+                        <ProgressBar
+                          label={`Điểm ${item.name}`}
+                          value={item.score / 10}
+                          tone={barTone}
+                        />
+                      </div>
+                    </td>
+                    <td role="cell">
+                      <p className="rep-evidence-quote">{item.evidence}</p>
+                      {submittedReason && (
+                        <p className="t-body-s c-ink2 rep-submitted-note">
+                          Lý do đã gửi: “{submittedReason}”
+                        </p>
+                      )}
+                    </td>
+                    <td role="cell">
+                      <div className="col stack-sm">
+                        {submittedReason && (
+                          <Badge tone="brand" dot className="rep-review-state">
+                            Đang xử lý
+                          </Badge>
+                        )}
+                        <Button
+                          variant="secondary"
+                          className="rep-review-button"
+                          disabled={Boolean(submittedReason) || Boolean(sendingId)}
+                          aria-label={`Yêu cầu đánh giá lại: ${item.name}`}
+                          onClick={(event) => {
+                            reviewTrigger.current = event.currentTarget;
+                            setTarget(item);
+                          }}
+                        >
+                          {submittedReason ? "Đã gửi yêu cầu" : "Yêu cầu đánh giá lại"}
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </Card>
-      <div className="rep-summaries grid">
-        {summaries.map(({ label, points, tone }) => (
-          <Card key={label} variant="tight" className={`rep-summary rep-summary-${tone}`}>
-            <CardHead title={label} />
-            <ul className="col stack-sm">{points.map((point) => <li key={point} className="t-body-s">{point}</li>)}</ul>
-          </Card>
-        ))}
-      </div>
+
+      <Card variant="flush" className="rep-card">
+        <div className="rep-summaries-ledger">
+          {summaries.map(({ label, points }) => (
+            <div key={label} className="rep-summary-col col stack-sm">
+              <h3 className="t-body-s t-strong">{label}</h3>
+              <ul className="col stack-sm">
+                {points.map((point) => (
+                  <li key={point} className="t-body-s c-ink2">{point}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </Card>
+
       <Evidence correctness={report.correctness} />
     </>
   );
@@ -248,7 +368,7 @@ export default function ReportScreen() {
   useEffect(() => () => window.clearTimeout(timeout.current), []);
 
   function submitReview(competencyId, reason) {
-    if (sending || reviews[report.id]?.[competencyId]) return;
+    if (!report || sending || reviews[report.id]?.[competencyId]) return;
     const reportId = report.id;
     setSending({ reportId, competencyId });
     timeout.current = window.setTimeout(() => {
@@ -258,46 +378,83 @@ export default function ReportScreen() {
       };
       setReviews(submittedReviews);
       setSending(null);
-    }, 1000);
+    }, 900);
   }
 
   return (
     <div className="rep-screen col stack-lg">
       <PageHeader
-        eyebrow="06 — BÁO CÁO NĂNG LỰC"
+        eyebrow="Đánh giá năng lực"
         title="Báo cáo năng lực"
-        subtitle="Xem điểm, nhận xét và bằng chứng theo từng phiên phỏng vấn."
+        subtitle="Xem điểm chấm độc lập, bằng chứng từ phiên phỏng vấn và yêu cầu xem xét lại kết quả."
+        actions={
+          <Link className="btn btn--secondary" to="/roadmap">
+            Xem lộ trình học <span aria-hidden="true">→</span>
+          </Link>
+        }
       />
+
       <div className="rep-layout grid stack-lg">
-        <Card variant="tight" className="rep-history">
-          <CardHead title="Lịch sử phiên" />
-          <nav aria-label="Báo cáo theo phiên" className="col stack-sm">
-            {reports.map((item) => (
-              <Link key={item.id} className="rep-report-link col stack-sm" to={`/reports/${item.id}`} aria-current={report?.id === item.id ? "page" : undefined}>
-                <span className="t-strong">{item.type}</span>
-                <span className="row wrap between stack-sm">
-                  <span className="t-mono c-ink2">{item.date}</span>
-                  {item.status === "interrupted" ? (
-                    <Badge tone="warning" dot>Gián đoạn</Badge>
-                  ) : (
-                    <Badge tone="brand">{item.overall.toFixed(1)} / 10</Badge>
-                  )}
-                </span>
-              </Link>
-            ))}
+        <Card variant="flush" className="rep-history rep-card">
+          <div className="rep-history-head">
+            <CardHead title="Lịch sử phiên">
+              <span className="t-body-s c-ink2 rep-tabular">{reports.length}</span>
+            </CardHead>
+          </div>
+
+          <nav aria-label="Báo cáo theo phiên" className="rep-history-list">
+            {reports.map((item) => {
+              const isCurrent = report?.id === item.id;
+              return (
+                <Link
+                  key={item.id}
+                  className="rep-report-link col stack-sm"
+                  to={`/reports/${item.id}`}
+                  aria-current={isCurrent ? "page" : undefined}
+                >
+                  <span className="t-strong">{item.type}</span>
+                  <span className="row wrap between stack-sm">
+                    <span className="t-body-s c-ink2 rep-tabular">
+                      {item.date} · {item.duration}p
+                    </span>
+                    {item.status === "interrupted" ? (
+                      <Badge tone="warning" dot>Gián đoạn</Badge>
+                    ) : (
+                      <span className="t-mono c-ink2 rep-tabular">
+                        {item.overall.toFixed(1)} / 10
+                      </span>
+                    )}
+                  </span>
+                </Link>
+              );
+            })}
           </nav>
         </Card>
 
         <div className="rep-detail col">
           {report ? (
             <>
-              <Card className="rep-session">
-                <p className="t-mono c-brand">Chi tiết phiên</p>
+              <Card className="rep-session rep-card">
+                <div className="row between wrap">
+                  <span className="t-mono c-ink2 rep-tabular">#{report.id}</span>
+                  {report.status === "interrupted" ? (
+                    <Badge tone="warning" dot>Gián đoạn</Badge>
+                  ) : (
+                    <Badge tone="success" dot>Hoàn tất</Badge>
+                  )}
+                </div>
                 <h2 className="t-heading-m">{report.type}</h2>
-                <p className="t-body-s c-ink2">{report.date} · {report.duration} phút</p>
+                <p className="t-body-s c-ink2 rep-tabular">
+                  {report.date} · Thời lượng {report.duration} phút
+                </p>
               </Card>
+
               {report.status === "interrupted" ? (
-                <Callout tone="warning">Phiên bị gián đoạn — kết quả không tính vào hồ sơ năng lực</Callout>
+                <Callout tone="warning" title="Phiên phỏng vấn gián đoạn (A2)">
+                  <p>
+                    Phiên bị gián đoạn — kết quả không tính vào hồ sơ năng lực và không làm thay đổi lộ trình học thích ứng.
+                  </p>
+                </Callout>
               ) : report.competencies ? (
                 <FullReport
                   key={report.id}
@@ -307,16 +464,37 @@ export default function ReportScreen() {
                   onSubmit={submitReview}
                 />
               ) : (
-                <Card>
-                  <CardHead title="Điểm đánh giá" />
-                  <Score label="Tổng quan" score={report.overall} note="Bản minh họa: chi tiết chỉ có ở báo cáo 22/11" className="rep-score-overall" />
+                <Card variant="flush" className="rep-card">
+                  <div className="rep-section-head">
+                    <CardHead title="Điểm đánh giá" />
+                  </div>
+                  <div className="rep-single-score">
+                    <ScoreLedgerCell
+                      label="Tổng quan"
+                      score={report.overall}
+                      tone="brand"
+                      note="Bản minh họa: chi tiết chỉ có ở báo cáo 22/11."
+                    />
+                    <div className="rep-single-cta">
+                      <Link className="btn btn--secondary" to="/reports/r-2211">
+                        Mở báo cáo chi tiết 22/11 <span aria-hidden="true">→</span>
+                      </Link>
+                    </div>
+                  </div>
                 </Card>
               )}
             </>
           ) : (
-            <Card><p className="empty" role="status">Không tìm thấy báo cáo. Hãy chọn một phiên trong lịch sử.</p></Card>
+            <Card className="rep-card">
+              <p className="empty" role="status">
+                Không tìm thấy báo cáo. Hãy chọn một phiên trong lịch sử bên trái.
+              </p>
+            </Card>
           )}
-          <Link className="rep-roadmap t-strong" to="/roadmap">Xem lộ trình học →</Link>
+
+          <Link className="rep-roadmap t-strong" to="/roadmap">
+            Xem lộ trình học <span aria-hidden="true">→</span>
+          </Link>
         </div>
       </div>
     </div>

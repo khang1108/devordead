@@ -1,45 +1,82 @@
-/* Bảng màu "Sky" — trùng landing page (html[data-palette="sky"]) và biến trong file Figma "DevOrDead — App Screens".
-   Mọi cặp chữ/nền dùng cho chữ thường đều ≥ 4.5:1. */
+/* DevOrDead Neutral Studio Tokens — 93% calm neutral ground, crisp 1px hairlines, zero rest drop-shadows.
+   Mọi cặp chữ/nền dùng cho chữ thường đều đạt WCAG AA/AAA. Tuyệt đối không dùng sắc tím/violet/lavender. */
 :root {
-  --bg: #F8FAFC;
-  --surface: #FFFFFF;
-  --surface-2: #F1F5F9;
-  --ink: #0F2D40;          /* chữ chính, 13.7:1 */
-  --ink-2: #4A6273;        /* chữ phụ, 6.1:1 */
-  --ink-3: #9AAEBB;        /* chỉ trang trí / placeholder */
-  --line: #DCE6EE;
+  /* 93% Calm Neutral Studio Surfaces */
+  --bg: #F6F7F8;                      /* Cool architectural paper ground */
+  --surface: #FFFFFF;                 /* Flat card / table / workspace surface */
+  --surface-2: #F0F2F5;               /* Subtle recessed control / hover tint */
+  --surface-3: #E6E9EF;               /* Active neutral tint */
 
-  --brand: #329DD2;        /* khối màu thương hiệu (không dùng làm chữ nhỏ) */
-  --brand-strong: #2484B5; /* chữ lớn màu thương hiệu */
-  --brand-text: #1F6F99;   /* chữ nhỏ màu thương hiệu, kể cả trên --brand-soft */
-  --brand-soft: #E3F2FA;
+  /* Crisp Near-Black Ink Hierarchy */
+  --ink: #111418;                     /* Primary ink — 18.1:1 on white */
+  --ink-2: #525866;                   /* Secondary text & labels — 6.9:1 on white */
+  --ink-3: #8A909E;                   /* Placeholders, disabled, subtle metadata */
 
-  --accent: #EB3F33;       /* điểm nhấn hiếm: CTA chính, logo || */
-  --accent-text: #C9302A;
-  --accent-soft: #FDECEA;
+  /* 1px Hairline System */
+  --line: rgba(17, 20, 24, 0.085);    /* Primary card, table & divider hairline */
+  --line-subtle: rgba(17, 20, 24, 0.05); /* Intra-card row separator */
+  --line-strong: rgba(17, 20, 24, 0.16); /* Hover border & input focus-ready edge */
 
-  --success: #17784B;
-  --success-soft: #E4F5EC;
-  --warning: #9A5B00;      /* cảnh báo, đồng hồ hard-stop */
-  --warning-soft: #FFF4DE;
+  /* Restrained Sky Technical Signal (< 3% screen area) */
+  --brand: #2484B5;
+  --brand-strong: #1B6B94;
+  --brand-text: #1B6B94;              /* ≥ 5.7:1 on white */
+  --brand-soft: rgba(36, 132, 181, 0.08);
+  --brand-soft-hover: rgba(36, 132, 181, 0.13);
+  --brand-on-dark: #7CC4E8;
+  --brand-border: rgba(36, 132, 181, 0.22);
 
-  --bg-dark: #0F2D40;
-  --on-dark: #F8FAFC;
-  --code-bg: #0B2233;
-  --code-ink: #D6E6F2;
+  /* Restrained Coral Signal (Logo ||, live rec dot, <5m timer, destructive error) */
+  --accent: #E03E32;
+  --accent-hover: #C83227;
+  --accent-text: #C42B20;             /* ≥ 5.6:1 on white */
+  --accent-soft: rgba(224, 62, 50, 0.07);
+  --accent-border: rgba(224, 62, 50, 0.22);
 
+  /* Quiet Semantic Status */
+  --success: #16794C;
+  --success-soft: rgba(22, 121, 76, 0.07);
+  --success-border: rgba(22, 121, 76, 0.20);
+  --warning: #9A5B00;
+  --warning-fill: #D97706;
+  --warning-soft: rgba(217, 119, 6, 0.08);
+  --warning-border: rgba(154, 91, 0, 0.20);
+
+  /* Dark Studio & IDE Surfaces (Neutral Obsidian-Slate) */
+  --bg-dark: #111418;
+  --bg-dark-2: #171B21;
+  --bg-dark-3: #222730;
+  --on-dark: #F6F7F8;
+  --code-bg: #111418;
+  --code-border: rgba(255, 255, 255, 0.09);
+  --code-ink: #E5E9F0;
+
+  /* Crisp Software Radii */
   --r-sm: 6px;
-  --r-md: 10px;
-  --r-lg: 16px;
+  --r-md: 8px;
+  --r-lg: 12px;
   --r-pill: 999px;
 
-  --font-display: "Unbounded", system-ui, sans-serif;
-  --font-body: "Be Vietnam Pro", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  /* Typography — Sentence-Case Modern SaaS Stack */
+  --font-display: "Plus Jakarta Sans", "Be Vietnam Pro", system-ui, -apple-system, sans-serif;
+  --font-body: "Be Vietnam Pro", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
-  --shadow-1: 0 1px 2px rgba(15, 45, 64, 0.06), 0 6px 20px rgba(15, 45, 64, 0.05);
-  --shadow-2: 0 12px 40px rgba(15, 45, 64, 0.16);
-  --focus: 0 0 0 3px rgba(50, 157, 210, 0.45);
+  /* ZERO Rest Drop-Shadows */
+  --shadow-xs: none;
+  --shadow-1: none;
+  --shadow-card: none;
+  --shadow-card-hover: 0 4px 16px -4px rgba(17, 20, 24, 0.06);
+  --shadow-2: 0 12px 36px -8px rgba(17, 20, 24, 0.16);
+  --shadow-btn-primary: none;
+  --shadow-btn-accent: none;
+  --focus: 0 0 0 2px var(--bg), 0 0 0 4px var(--ink);
 
-  --sidebar-w: 248px;
+  /* Motion */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* Clean Linear-Width Sidebar */
+  --sidebar-w: 228px;
 }

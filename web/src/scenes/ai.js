@@ -2,42 +2,80 @@ import { createReveal, easeOutCubic, mapRange } from '../fx/text.js';
 
 export default function createScene(root) {
   root.innerHTML = `
-    <p class="scene-index">05 — PHỎNG VẤN AI</p>
-    <h2 class="scene-title">PHỎNG VẤN KỸ THUẬT VỚI AI.<br><span class="accent-text">BẤT CỨ LÚC NÀO.</span></h2>
-    <div class="ai-dialogue">
-      <p class="interviewer-label"><span aria-hidden="true"></span>AI Interviewer</p>
-      <div class="ai-questions">
-        <p class="ai-question">Bạn hãy phân tích độ phức tạp thời gian của lời giải này?</p>
-        <p class="ai-question">Nếu dữ liệu tăng lên 10 triệu bản ghi thì sao?</p>
-      </div>
+    <div class="ai-topbar">
+      <p class="scene-index">05 · Phỏng vấn AI</p>
+      <span class="ai-latency-pill">Độ trễ giọng nói ≤ 2,5s · NFR01</span>
     </div>
+
+    <div class="ai-center-stack">
+      <h2 class="scene-title">Phỏng vấn kỹ thuật với AI.<br><span class="accent-text">Bất cứ lúc nào.</span></h2>
+    </div>
+
     <div class="ai-features">
-      <article class="ai-card"><span class="ai-card-icon" aria-hidden="true">⌖</span><div><h3>Câu hỏi đúng vị trí ứng tuyển</h3><p>Tập trung vào kỹ năng bạn cần.</p></div><span class="ai-card-number" aria-hidden="true">01</span></article>
-      <article class="ai-card"><span class="ai-card-icon" aria-hidden="true">↳</span><div><h3>Hỏi vặn như người phỏng vấn thật</h3><p>Đào sâu cách bạn tư duy.</p></div><span class="ai-card-number" aria-hidden="true">02</span></article>
-      <article class="ai-card"><span class="ai-card-icon" aria-hidden="true">≡</span><div><h3>Chấm điểm chi tiết từng tiêu chí</h3><p>Biết rõ điểm mạnh và điểm cần cải thiện.</p></div><span class="ai-card-number" aria-hidden="true">03</span></article>
-      <article class="ai-card"><span class="ai-card-icon" aria-hidden="true">↗</span><div><h3>Gợi ý cách trả lời tốt hơn</h3><p>Rút kinh nghiệm sau mỗi buổi luyện.</p></div><span class="ai-card-number" aria-hidden="true">04</span></article>
+      <article class="ai-card">
+        <div class="ai-card-top">
+          <span class="ai-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="6.5" stroke="currentColor" stroke-width="1.4"/><circle cx="10" cy="10" r="2" fill="currentColor"/></svg>
+          </span>
+          <span class="ai-card-number" aria-hidden="true">01</span>
+        </div>
+        <h3>Câu hỏi đúng vị trí ứng tuyển</h3>
+        <p>Tùy biến kịch bản theo Role, Level và kỹ năng trong CV/JD.</p>
+      </article>
+
+      <article class="ai-card">
+        <div class="ai-card-top">
+          <span class="ai-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none"><path d="M4 6h8a4 4 0 0 1 4 4v5m0 0-3-3m3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <span class="ai-card-number" aria-hidden="true">02</span>
+        </div>
+        <h3>Hỏi vặn như người phỏng vấn thật</h3>
+        <p>Đào sâu cơ chế hệ thống, trường hợp biên và đánh đổi thiết kế.</p>
+      </article>
+
+      <article class="ai-card">
+        <div class="ai-card-top">
+          <span class="ai-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none"><path d="M3 6h14M3 10h9M3 14h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          </span>
+          <span class="ai-card-number" aria-hidden="true">03</span>
+        </div>
+        <h3>Chấm độc lập từng tiêu chí (BR2)</h3>
+        <p>Tách riêng độ đúng của mã và khả năng lập luận thuật toán.</p>
+      </article>
+
+      <article class="ai-card">
+        <div class="ai-card-top">
+          <span class="ai-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none"><path d="M5 15 15 5m0 0H8m7 0v7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <span class="ai-card-number" aria-hidden="true">04</span>
+        </div>
+        <h3>Gợi ý cách trả lời tốt hơn</h3>
+        <p>Lưu bản gỡ băng kèm dẫn chứng để cập nhật lộ trình học tập.</p>
+      </article>
     </div>`;
 
+  const reducedMotion = typeof window !== 'undefined'
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   const title = createReveal(root.querySelector('.scene-title'), { type: 'chars' });
-  const questions = [...root.querySelectorAll('.ai-question')];
-  const typing = questions.map((el) => createReveal(el, { type: 'type' }));
-  const dialogue = root.querySelector('.ai-dialogue');
   const cards = [...root.querySelectorAll('.ai-card')];
 
   function update(t) {
     root.style.opacity = String(mapRange(t, 0, 0.1) * (1 - mapRange(t, 0.9, 1)));
-    title.set(mapRange(t, 0.02, 0.25));
-    dialogue.style.opacity = String(mapRange(t, 0.1, 0.16));
-    typing[0].set(mapRange(t, 0.14, 0.4));
-    typing[1].set(mapRange(t, 0.46, 0.73));
-    questions[0].style.opacity = String(1 - mapRange(t, 0.41, 0.46));
-    questions[1].style.opacity = String(mapRange(t, 0.45, 0.48));
+    title.set(mapRange(t, 0.02, 0.24));
+
     cards.forEach((el, i) => {
-      const p = easeOutCubic(mapRange(t, 0.5 + i * 0.065, 0.63 + i * 0.065));
+      const p = easeOutCubic(mapRange(t, 0.16 + i * 0.06, 0.32 + i * 0.06));
       el.style.opacity = String(p);
-      el.style.transform = `translate3d(${(i % 2 ? 16 : -16) * (1 - p)}px, ${12 * (1 - p)}px, 0)`;
+      el.style.transform = reducedMotion || p > 0.995
+        ? 'none'
+        : `translate3d(0, ${10 * (1 - p)}px, 0)`;
     });
   }
+
   update(0);
   return { update };
 }
