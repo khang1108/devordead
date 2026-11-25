@@ -1,0 +1,398 @@
+/* 07 · Trình soạn thảo & Zero-Trust Sandbox (UC08, UC09) — Two-Level Containment, 1280px Single-Row Toolbar */
+.pe {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.pe__top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pe__back {
+  font-weight: 500;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.pe__title {
+  margin-right: 2px;
+}
+
+.pe__spacer {
+  flex: 1 1 8px;
+  min-width: 4px;
+}
+
+.pe__autosave {
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.pe__grid {
+  display: grid;
+  grid-template-columns: 328px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+/* ——— Left Problem Pane (Flat Card + Hairline Sections, Zero Inner Boxes) ——— */
+.pe__problem {
+  position: sticky;
+  top: 24px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  gap: 14px;
+}
+
+.pe__section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-subtle);
+}
+
+.pe__subhead {
+  font: 600 13px/1.35 var(--font-body);
+  color: var(--ink-2);
+}
+
+.pe__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 16px;
+}
+
+.pe__constraint-item {
+  font-size: 12.5px;
+  color: var(--ink);
+}
+
+.pe__examples {
+  display: flex;
+  flex-direction: column;
+}
+
+.pe__example-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line-subtle);
+  overflow-x: auto;
+}
+
+.pe__example-row:first-child {
+  padding-top: 2px;
+  border-top: 0;
+}
+
+.pe__right {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* ——— Monaco IDE Container & Compact Single-Row Header (1280px & 1440px safe) ——— */
+.pe__editor {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: var(--code-bg);
+  border: 1px solid var(--line-strong, rgba(17, 20, 24, 0.16));
+  min-width: 0;
+}
+
+.pe__toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-dark-2, #171B21);
+  border-bottom: 1px solid var(--code-border, rgba(255, 255, 255, 0.09));
+  min-width: 0;
+}
+
+.pe__select {
+  flex: 0 0 auto;
+  min-height: 32px;
+  padding: 4px 10px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--code-border, rgba(255, 255, 255, 0.12));
+  background: var(--code-bg);
+  color: var(--on-dark);
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.pe__select:focus {
+  outline: none;
+  border-color: var(--brand-on-dark);
+}
+
+.pe__font {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--code-border, rgba(255, 255, 255, 0.12));
+  background: var(--code-bg);
+  color: var(--code-ink);
+}
+
+.pe__font button {
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0 5px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--code-ink);
+}
+
+.pe__font button:hover {
+  background: var(--bg-dark-3, #222730);
+}
+
+.pe__font .t-mono {
+  color: var(--code-ink);
+  padding: 0 4px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pe__tool-btn {
+  flex: 0 0 auto;
+  min-height: 32px;
+  padding: 4px 10px;
+  border-radius: var(--r-sm);
+  color: var(--code-ink);
+  opacity: 0.82;
+  font: 500 13px/1.2 var(--font-body);
+  white-space: nowrap;
+  transition: background-color 140ms var(--ease-out, ease), opacity 140ms var(--ease-out, ease);
+}
+
+.pe__tool-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  opacity: 1;
+}
+
+.pe__toolbar .btn--sm {
+  min-height: 32px;
+  padding: 5px 12px;
+  flex: 0 0 auto;
+}
+
+/* High-contrast crisp light CTA on dark IDE header (matches Linear dark-bar CTA) */
+.pe__toolbar .pe__submit-btn {
+  background: var(--on-dark);
+  color: var(--bg-dark);
+  border-color: var(--on-dark);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pe__toolbar .pe__submit-btn:hover:not(:disabled) {
+    background: var(--surface);
+    opacity: 0.92;
+  }
+}
+
+.pe__alert {
+  padding: 8px 14px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: 13px;
+  font-weight: 500;
+  border-bottom: 1px solid var(--accent-border);
+}
+
+.pe__monaco {
+  height: 360px;
+}
+
+.pe__loading {
+  height: 100%;
+  color: var(--code-ink);
+}
+
+.pe__statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--code-bg);
+  border-top: 1px solid var(--code-border, rgba(255, 255, 255, 0.09));
+}
+
+.pe__status-item {
+  color: var(--code-ink);
+  opacity: 0.68;
+  font-size: 11.5px;
+}
+
+.pe__sample-btn {
+  font: 500 12px/1.3 var(--font-body);
+  color: var(--brand-on-dark);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.pe__sample-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+/* ——— Zero-Trust Sandbox Pane (Hairline Rows, Zero Duplicate Pills) ——— */
+.pe__results {
+  gap: 14px;
+}
+
+.pe__sandbox-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line-subtle);
+}
+
+.pe__sandbox-spec {
+  color: var(--ink-2);
+  font-size: 11.5px;
+}
+
+.pe__steps-inline {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line-subtle);
+}
+
+.pe__step-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font: 400 12.5px/1.4 var(--font-body);
+  color: var(--ink-3);
+}
+
+.pe__step-check {
+  font: 600 11.5px/1 var(--font-mono);
+}
+
+.pe__step-inline.is-active {
+  color: var(--brand-text);
+  font-weight: 600;
+}
+
+.pe__step-inline.is-done {
+  color: var(--ink);
+}
+
+.pe__step-inline.is-done .pe__step-check {
+  color: var(--success);
+}
+
+.pe__presets {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pe__preset-chip {
+  padding: 4px 10px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font: 500 12px/1.3 var(--font-body);
+  color: var(--ink-2);
+}
+
+.pe__preset-chip:hover {
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.pe__preset-chip.is-active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--surface);
+}
+
+/* Flat Hairline Test Rows */
+.pe__test-list {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.pe__test-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 4px;
+  border-top: 1px solid var(--line-subtle);
+}
+
+.pe__test-row:first-child {
+  border-top: 0;
+}
+
+.pe__test-main {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pe__test-metrics {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pe__worker-foot {
+  padding-top: 2px;
+}
+
+@media (max-width: 1120px) {
+  .pe__grid {
+    grid-template-columns: 1fr;
+  }
+  .pe__problem {
+    position: static;
+    max-height: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .pe__toolbar {
+    flex-wrap: wrap;
+  }
+  .pe__toolbar .pe__spacer {
+    display: none;
+  }
+}

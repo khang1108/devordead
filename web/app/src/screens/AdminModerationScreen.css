@@ -1,0 +1,151 @@
+.mod-screen {
+  --mod-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  min-width: 0;
+}
+
+.mod-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.mod-card {
+  box-shadow: none;
+}
+
+.mod-layout {
+  grid-template-columns: minmax(256px, 32%) minmax(0, 1fr);
+  align-items: start;
+  --gap: 20px;
+}
+
+/* ——— Flat Hairline Moderation Queue (Zero nested item boxes) ——— */
+.mod-queue-head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 16px 0;
+}
+
+.mod-queue .card__head,
+.mod-queue .tabs {
+  flex-wrap: wrap;
+}
+
+.mod-queue .tabs__tab {
+  min-height: 44px;
+  padding-inline: 10px;
+}
+
+.mod-items,
+.mod-history-list {
+  list-style: none;
+}
+
+.mod-item {
+  width: 100%;
+  min-height: 44px;
+  padding: 14px 16px;
+  text-align: start;
+  overflow-wrap: anywhere;
+  border-top: 1px solid var(--line-subtle, var(--line));
+  background: transparent;
+  transition: background-color 140ms var(--mod-ease);
+}
+
+.mod-items li:first-child .mod-item {
+  border-top: 0;
+}
+
+.mod-item:hover {
+  background: var(--surface-2);
+}
+
+.mod-item[aria-selected="true"] {
+  background: var(--surface-2);
+  box-shadow: inset 2px 0 0 var(--ink);
+}
+
+/* ——— Flat Moderation Editor ——— */
+.mod-editor {
+  gap: 18px;
+}
+
+.mod-source {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line-subtle, var(--line));
+  gap: 12px;
+}
+
+.mod-fields {
+  border: 0;
+  min-width: 0;
+  --gap: 14px;
+}
+
+.mod-fields .textarea {
+  min-height: 88px;
+}
+
+.mod-assignment {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) minmax(110px, 0.65fr);
+  --gap: 12px;
+}
+
+.mod-assignment .select {
+  min-width: 0;
+}
+
+.mod-assignment .select[aria-invalid="true"] {
+  border-color: var(--accent);
+}
+
+.mod-rejection {
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.mod-actions {
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.mod-editor .btn {
+  white-space: normal;
+}
+
+/* ——— Processed History ——— */
+.mod-history .card__head {
+  padding: 16px 20px;
+}
+
+.mod-history-empty {
+  padding: 0 20px 18px;
+}
+
+.mod-history-entry {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--line-subtle, var(--line));
+  overflow-wrap: anywhere;
+}
+
+.mod-history-entry > div {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+@media (max-width: 1024px) {
+  .mod-layout,
+  .mod-assignment {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 540px) {
+  .mod-editor {
+    padding-inline: 16px;
+  }
+}
