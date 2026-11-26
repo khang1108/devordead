@@ -13,5 +13,9 @@ dist/
 # Environment & local artifacts
 .env
 .env.local
+data/
+*.db
+*.db-wal
+*.db-shm
 *.log
 .DS_Store

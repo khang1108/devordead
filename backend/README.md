@@ -1,32 +1,40 @@
-# DevOrDead — Backend
+# DevOrDead — Backend (FastAPI + SQLite + JWT + Sandbox Runner)
 
 > Nhánh làm việc riêng của đội **Backend** (`backend` → PR → `main`).
 > Quy ước repo: trên nhánh `backend` chỉ chỉnh sửa các file nằm bên trong thư mục `backend/` để tránh xung đột với nhánh `frontend` khi merge lên `main`.
 
+## Chạy cục bộ
+
+```bash
+cd backend
+cp .env.example .env
+uv venv .venv
+uv pip install --python .venv/bin/python fastapi "uvicorn[standard]" python-multipart
+.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+```
+
+- Health check: `http://127.0.0.1:8000/health`
+- OpenAPI / Swagger UI: `http://127.0.0.1:8000/docs`
+- REST base URL: `http://127.0.0.1:8000/api/v1` (Frontend Vite dev proxy tự chuyển `/api/*` và `/ws/*` về cổng `8000`).
+
 ## Kiến trúc 6 phân hệ (`NFR06`)
 
-Đối xứng 1–1 với `frontend/src/features/*` và tài liệu phân tích yêu cầu (`UC01–UC18`, `BR1–BR4`, `NFR01–NFR10`):
-
-1. **Identity & Profile (`UC01–UC03`)**
-   - `POST /api/v1/auth/login`, `POST /api/v1/auth/register`, `POST /api/v1/auth/oauth/:provider`, `GET /api/v1/auth/me`
-   - `GET/PUT /api/v1/profile/target`, `POST /api/v1/profile/cv-jd/analyze` (`NFR04`: mã hóa lưu trữ)
-2. **Knowledge & Voice Practice (`UC04–UC06`)**
-   - `GET /api/v1/knowledge/tree` (`BR4`: chỉ trả về nội dung đã duyệt)
-   - `GET /api/v1/knowledge/topics/:topicId/voice-session`, `POST /api/v1/knowledge/voice/evaluate` (`NFR01`: ≤ 2.5s)
-3. **Coding Practice & Zero-Trust Sandbox (`UC07–UC09`, `BR3`, `NFR02`)**
-   - `GET /api/v1/problems`, `GET /api/v1/problems/:id`
-   - `POST /api/v1/problems/:id/run`, `POST /api/v1/problems/:id/submit` (Docker cgroups v2: `1 vCPU`, `256 MB RAM`, `50 MB /tmp`, `network=none`, `ro-rootfs`, `timeout 3–5s`)
-4. **AI Mock Interview Orchestrator (`UC10–UC13`, `BR1`, `BR2`)**
-   - `POST /api/v1/interviews/sessions`, `POST /api/v1/interviews/sessions/:id/turns`, `POST /api/v1/interviews/sessions/:id/hint`, `POST /api/v1/interviews/sessions/:id/finalize` (`BR1` hard-stop snapshot)
-   - `WS /ws/interviews/:sessionId` (stream audio & đồng bộ Live Coding)
-5. **Assessment & Adaptive Roadmap (`UC14–UC16`, `BR2`)**
-   - `GET /api/v1/dashboard`
-   - `GET /api/v1/reports`, `GET /api/v1/reports/:id`, `POST /api/v1/reports/:id/reevaluations` (`UC16`)
-   - `GET /api/v1/roadmap`
-6. **Admin & Content Curation (`UC17–UC18`, `BR4`)**
-   - `GET/POST/PATCH/DELETE /api/v1/admin/taxonomy/*`, `GET /api/v1/admin/taxonomy/logs`
-   - `GET /api/v1/admin/moderation/queue`, `POST /api/v1/admin/moderation/:id/{approve,reject,regenerate}`
-
-## Hợp đồng kiểu dữ liệu (DTO)
-
-Mọi cấu trúc JSON request/response được định nghĩa bằng TypeScript trong `frontend/src/shared/types/*` trên nhánh `frontend` (sau khi merge lên `main`).
+```text
+backend/
+├── pyproject.toml
+├── .env.example
+└── app/
+    ├── main.py                 # FastAPI app, CORS, lifespan SQLite init, /api/v1 + /ws
+    ├── config.py               # Cấu hình biến môi trường (JWT, DB, CORS)
+    ├── database.py             # Lược đồ SQLite & dữ liệu danh mục chuẩn đã phê duyệt (BR4)
+    ├── security.py             # PBKDF2-SHA256 password hashing + HMAC-SHA256 JWT
+    ├── sandbox.py              # Trình thực thi mã cô lập (timeout 3s, Python 3 & Node.js)
+    └── routers/
+        ├── auth.py             # UC01: /auth/{register,login,oauth,forgot-password,me}
+        ├── profile.py          # UC02–03: /profile/{target,cv-jd/analyze,skills}
+        ├── knowledge.py        # UC04–06: /knowledge/{tree,topics/:id/voice-session,voice/evaluate}
+        ├── coding.py           # UC07–09: /problems, /problems/:id/{run,submit}
+        ├── interview.py        # UC10–13: /interviews/sessions/* + WS /ws/interviews/sessions/:id
+        ├── assessment.py       # UC14–16: /dashboard, /reports, /reports/:id/reevaluations, /roadmap
+        └── admin.py            # UC17–18: /admin/taxonomy/*, /admin/moderation/*
+```
