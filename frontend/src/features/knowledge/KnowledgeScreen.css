@@ -1,0 +1,260 @@
+.kb-screen {
+  --kb-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  min-width: 0;
+}
+
+.kb-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ——— Inline Filter Toolbar on Ground ——— */
+.kb-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.kb-search {
+  flex: 1 1 260px;
+  max-width: 440px;
+}
+
+.kb-chips {
+  --gap: 8px;
+}
+
+.kb-chips .chip {
+  min-height: 44px;
+}
+
+.kb-context-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 5px 12px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink);
+  font: 600 13px/1.2 var(--font-body);
+}
+
+/* ——— Master-Detail Split ——— */
+.kb-layout {
+  grid-template-columns: minmax(260px, 0.78fr) minmax(0, 1.55fr);
+  align-items: start;
+}
+
+.kb-tree-card,
+.kb-detail,
+.kb-empty-card {
+  box-shadow: none;
+}
+
+.kb-tree-card {
+  padding: 18px 14px;
+}
+
+.kb-tree-card .card__head {
+  padding: 0 8px 4px;
+  flex-wrap: wrap;
+}
+
+.kb-expand-toggle {
+  min-height: 44px;
+  padding: 6px 10px;
+  border-radius: var(--r-sm);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+
+.kb-expand-toggle:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.kb-tree,
+.kb-topics,
+.kb-competencies {
+  list-style: none;
+}
+
+.kb-domain-group + .kb-domain-group {
+  margin-top: 4px;
+}
+
+.kb-domain,
+.kb-topic {
+  --gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  border-radius: var(--r-md);
+  text-align: left;
+  transition: background-color 140ms var(--kb-ease);
+}
+
+.kb-domain {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.kb-domain-name {
+  overflow-wrap: anywhere;
+}
+
+.kb-domain:hover,
+.kb-topic:hover {
+  background: var(--surface-2);
+}
+
+.kb-chevron {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  color: var(--ink-3);
+  transform: rotate(-45deg);
+  transition: transform 150ms var(--kb-ease);
+}
+
+.kb-domain[aria-expanded="true"] .kb-chevron {
+  transform: rotate(45deg);
+  color: var(--ink);
+}
+
+.kb-topics {
+  margin: 2px 0 4px 13px;
+  padding-left: 10px;
+  border-left: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.kb-topic {
+  color: var(--ink-2);
+  font-size: 13.5px;
+}
+
+.kb-topic-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.kb-topic-title {
+  overflow-wrap: anywhere;
+}
+
+.kb-topic-sub {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.kb-topic[aria-selected="true"] {
+  background: var(--surface-2);
+  box-shadow: inset 2px 0 0 var(--ink);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ——— Flat Topic Detail ——— */
+.kb-detail {
+  gap: 20px;
+}
+
+.kb-detail-header h2 {
+  overflow-wrap: anywhere;
+}
+
+.kb-desc {
+  max-width: 66ch;
+}
+
+.kb-metrics {
+  --gap: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.kb-metric-cell {
+  padding: 14px 16px;
+}
+
+.kb-metric-cell:first-child {
+  padding-left: 0;
+}
+
+.kb-metric-cell + .kb-metric-cell {
+  border-left: 1px solid var(--line-subtle, var(--line));
+}
+
+.kb-metric-cell dd {
+  margin-top: 4px;
+}
+
+.kb-comp-section {
+  --gap: 8px;
+}
+
+.kb-comp-row {
+  padding: 12px 0;
+  border-top: 1px solid var(--line-subtle, var(--line));
+}
+
+.kb-bar-wrap .progress {
+  height: 4px;
+}
+
+.kb-actions {
+  --gap: 10px;
+  padding-top: 4px;
+}
+
+.kb-actions .btn {
+  white-space: normal;
+}
+
+.kb-skeleton-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 6px 8px;
+}
+
+@media (max-width: 1024px) {
+  .kb-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .kb-detail {
+    padding: 16px;
+  }
+
+  .kb-metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .kb-metric-cell {
+    padding: 10px 0;
+  }
+
+  .kb-metric-cell + .kb-metric-cell {
+    border-left: 0;
+    border-top: 1px solid var(--line-subtle, var(--line));
+  }
+
+  .kb-actions .btn {
+    width: 100%;
+  }
+}

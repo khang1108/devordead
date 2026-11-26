@@ -1,0 +1,236 @@
+.tax-screen {
+  --tax-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  min-width: 0;
+}
+
+.tax-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.tax-card,
+.tax-tree-card {
+  box-shadow: none;
+}
+
+.tax-layout {
+  grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.22fr) minmax(0, 1.4fr);
+  align-items: start;
+  --gap: 14px;
+}
+
+.tax-tree-card {
+  padding: 16px 12px 14px;
+}
+
+.tax-tree-card .card__head {
+  padding: 0 4px 4px;
+  flex-wrap: wrap;
+}
+
+.tax-add-root {
+  min-height: 44px;
+  padding: 6px 10px;
+  border-radius: var(--r-sm);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+
+.tax-add-root:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.tax-tree,
+.tax-tree ul,
+.tax-log ol {
+  list-style: none;
+}
+
+.tax-tree li:focus-visible {
+  box-shadow: none;
+}
+
+.tax-tree li:focus-visible > .tax-tree-row {
+  box-shadow: var(--focus);
+}
+
+.tax-tree ul {
+  margin-inline-start: 18px;
+  padding-inline-start: 8px;
+  border-inline-start: 1px solid var(--line);
+}
+
+.tax-tree-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 44px;
+  margin-bottom: 2px;
+  border-radius: var(--r-md);
+  transition: background-color 140ms var(--tax-ease);
+}
+
+.tax-tree-row:hover {
+  background: var(--surface-2);
+}
+
+.tax-tree-row[data-selected="true"] {
+  background: var(--surface-2);
+  box-shadow: inset 2px 0 0 var(--ink);
+}
+
+.tax-tree-row[data-selected="true"] .tax-node {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.tax-tree-row[data-inactive="true"] {
+  opacity: 0.6;
+}
+
+.tax-disclosure {
+  flex: 0 0 44px;
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+  color: var(--ink-2);
+  border-radius: var(--r-md);
+}
+
+.tax-disclosure:hover {
+  background: var(--surface-2);
+}
+
+.tax-chevron {
+  width: 6px;
+  height: 6px;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 150ms var(--tax-ease);
+}
+
+.tax-disclosure[aria-expanded="true"] .tax-chevron {
+  transform: rotate(135deg);
+}
+
+.tax-leaf {
+  flex: 0 0 4px;
+  height: 4px;
+  margin-inline: 14px 6px;
+  border-radius: var(--r-pill);
+  background: var(--ink-3);
+}
+
+.tax-node {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  padding: 6px 8px 6px 0;
+  text-align: start;
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.tax-node-name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.tax-levels-box {
+  margin-top: 8px;
+  padding: 10px 6px 2px;
+  border-top: 1px solid var(--line);
+}
+
+.tax-empty {
+  padding: 8px 4px;
+}
+
+.tax-empty .btn,
+.tax-editor .btn {
+  white-space: normal;
+}
+
+/* ——— Clean Flat Node Inspector ——— */
+.tax-editor {
+  padding: 20px;
+  overflow-wrap: anywhere;
+}
+
+.tax-inspector-head {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line-subtle, var(--line));
+}
+
+.tax-inspector-head .t-heading-m {
+  margin-top: 2px;
+}
+
+.tax-roles {
+  min-width: 0;
+  border: 0;
+}
+
+.tax-roles legend {
+  margin-bottom: 8px;
+}
+
+.tax-roles .chip {
+  min-height: 44px;
+  max-width: 100%;
+  text-align: start;
+}
+
+.tax-tools {
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.tax-order.btn {
+  min-width: 44px;
+  padding-inline: 0;
+}
+
+/* ——— Change Log ——— */
+.tax-log .card__head {
+  padding: 16px 20px;
+}
+
+.tax-log-empty {
+  padding: 0 20px 18px;
+}
+
+.tax-log-entry {
+  display: grid;
+  grid-template-columns: minmax(120px, 16%) minmax(0, 1fr) minmax(110px, 16%);
+  align-items: baseline;
+  gap: 16px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--line-subtle, var(--line));
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1120px) {
+  .tax-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .tax-log-entry {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+
+  .tax-editor {
+    padding-inline: 16px;
+  }
+}
