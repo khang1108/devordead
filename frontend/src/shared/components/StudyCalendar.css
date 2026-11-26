@@ -1,0 +1,135 @@
+.lc-cal {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lc-cal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.lc-cal__month {
+  font: 600 14px/1.3 var(--font-body);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.lc-cal__sub {
+  font: 400 12px/1.4 var(--font-body);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.lc-cal__nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.lc-cal__nav-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-2);
+  display: inline-grid;
+  place-items: center;
+  font-size: 14px;
+  line-height: 1;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
+.lc-cal__nav-btn:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.lc-cal__grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  text-align: center;
+}
+
+.lc-cal__wd {
+  font: 500 11px/1.4 var(--font-body);
+  color: var(--ink-3);
+  padding-bottom: 2px;
+}
+
+.lc-cal__cell {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  font: 500 12px/1 var(--font-body);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.lc-cal__cell.is-empty {
+  pointer-events: none;
+}
+
+.lc-cal__cell.is-done {
+  background: var(--success-soft);
+  color: var(--success);
+  font-weight: 600;
+}
+
+.lc-cal__cell.is-today {
+  background: var(--ink);
+  color: var(--surface);
+  font-weight: 600;
+}
+
+.lc-cal__cell.is-today.is-done {
+  background: var(--success);
+  color: #ffffff;
+}
+
+.lc-cal__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line-subtle);
+}
+
+.lc-cal__foot-note {
+  font: 400 12px/1.4 var(--font-body);
+  color: var(--ink-2);
+}
+
+.lc-cal__checkin {
+  flex: none;
+  white-space: nowrap;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink);
+  font: 500 12px/1.2 var(--font-body);
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+.lc-cal__checkin:hover:not(:disabled) {
+  background: var(--surface-3);
+  border-color: var(--line-strong);
+}
+
+.lc-cal__checkin.is-done {
+  background: var(--success-soft);
+  border-color: var(--success-border);
+  color: var(--success);
+  cursor: default;
+}
