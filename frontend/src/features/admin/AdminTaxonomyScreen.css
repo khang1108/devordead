@@ -1,0 +1,242 @@
+.tax-screen {
+  --tax-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  min-width: 0;
+}
+
+.tax-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.tax-pane {
+  height: auto;
+}
+
+.tax-pane-title {
+  font: 600 13px/1.3 var(--font-body);
+  color: var(--ink);
+}
+
+.tax-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.22fr) minmax(0, 1.4fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.tax-add-root {
+  padding: 4px 8px;
+  border-radius: var(--r-sm);
+  font: 500 12.5px/1.2 var(--font-body);
+  color: var(--ink-2);
+  transition: background-color 120ms var(--tax-ease), color 120ms var(--tax-ease);
+}
+
+.tax-add-root:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.tax-tree-body {
+  padding: 10px 8px;
+}
+
+.tax-tree,
+.tax-tree ul,
+.tax-log-list {
+  list-style: none;
+}
+
+.tax-tree li:focus-visible {
+  box-shadow: none;
+}
+
+.tax-tree li:focus-visible > .tax-tree-row {
+  box-shadow: var(--focus);
+}
+
+.tax-tree ul {
+  margin-inline-start: 16px;
+  padding-inline-start: 8px;
+  border-inline-start: 1px solid var(--line);
+}
+
+.tax-tree-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 40px;
+  margin-bottom: 2px;
+  border-radius: var(--r-md);
+  transition: background-color 120ms var(--tax-ease);
+}
+
+.tax-tree-row:hover {
+  background: var(--surface-2);
+}
+
+.tax-tree-row[data-selected="true"] {
+  background: var(--surface-2);
+  box-shadow: inset 2px 0 0 var(--ink);
+}
+
+.tax-tree-row[data-selected="true"] .tax-node {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.tax-tree-row[data-inactive="true"] {
+  opacity: 0.62;
+}
+
+.tax-disclosure {
+  flex: 0 0 36px;
+  display: grid;
+  place-items: center;
+  min-height: 36px;
+  color: var(--ink-2);
+  border-radius: var(--r-md);
+}
+
+.tax-disclosure:hover {
+  background: var(--surface-3);
+}
+
+.tax-chevron {
+  width: 6px;
+  height: 6px;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 150ms var(--tax-ease);
+}
+
+.tax-disclosure[aria-expanded="true"] .tax-chevron {
+  transform: rotate(135deg);
+}
+
+.tax-leaf {
+  flex: 0 0 4px;
+  height: 4px;
+  margin-inline: 14px 6px;
+  border-radius: var(--r-pill);
+  background: var(--ink-3);
+}
+
+.tax-node {
+  flex: 1;
+  min-width: 0;
+  min-height: 38px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  padding: 5px 8px 5px 0;
+  text-align: start;
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.tax-node-name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.tax-empty {
+  padding: 12px 8px;
+}
+
+.tax-empty .btn,
+.tax-editor .btn {
+  white-space: normal;
+}
+
+/* ——— Clean Node Inspector ——— */
+.tax-editor {
+  overflow-wrap: anywhere;
+}
+
+.tax-editor-body {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tax-inspector-head {
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line-subtle, var(--line));
+}
+
+.tax-inspector-head .t-heading-m {
+  margin-top: 2px;
+}
+
+.tax-roles {
+  min-width: 0;
+  border: 0;
+}
+
+.tax-roles legend {
+  margin-bottom: 6px;
+}
+
+.tax-roles .chip {
+  max-width: 100%;
+  text-align: start;
+}
+
+.tax-tools {
+  padding: 10px 18px;
+  flex-wrap: wrap;
+}
+
+.tax-order.btn {
+  min-width: 34px;
+  padding-inline: 0;
+}
+
+/* ——— Audit Log Zebra List ——— */
+.tax-log-empty {
+  padding: 16px 18px;
+}
+
+.tax-log-list {
+  border: 0;
+  border-radius: 0;
+  padding: 6px;
+}
+
+.tax-log-entry {
+  grid-template-columns: minmax(110px, 16%) minmax(0, 1fr) minmax(110px, 18%);
+  align-items: baseline;
+  min-height: 40px;
+  padding: 9px 14px;
+  overflow-wrap: anywhere;
+}
+
+.tax-log-actor {
+  text-align: right;
+}
+
+@media (max-width: 1120px) {
+  .tax-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .tax-log-entry {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+
+  .tax-log-actor {
+    text-align: left;
+  }
+
+  .tax-editor-body {
+    padding: 14px 16px;
+  }
+}

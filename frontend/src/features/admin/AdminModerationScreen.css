@@ -1,0 +1,162 @@
+.mod-screen {
+  --mod-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  min-width: 0;
+}
+
+.mod-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.mod-pane {
+  height: auto;
+}
+
+.mod-pane-title {
+  font: 600 13px/1.3 var(--font-body);
+  color: var(--ink);
+}
+
+.mod-layout {
+  display: grid;
+  grid-template-columns: minmax(264px, 33%) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+/* ——— Moderation Queue Pane (.lc-list Zebra Rows) ——— */
+.mod-queue-subbar {
+  padding: 8px 10px;
+}
+
+.mod-filter-pill {
+  height: 30px;
+  padding: 0 10px;
+  font-size: 12.5px;
+}
+
+.mod-items {
+  list-style: none;
+  border: 0;
+  border-radius: 0;
+  padding: 6px;
+}
+
+.mod-item-li {
+  display: block;
+}
+
+.mod-item-li:nth-child(even) .mod-item:not([aria-selected="true"]):not(:hover) {
+  background: var(--zebra-row);
+}
+
+.mod-item {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  min-height: 44px;
+  padding: 10px 12px;
+  text-align: start;
+  overflow-wrap: anywhere;
+  background: transparent;
+}
+
+.mod-item-title {
+  font-size: 13.5px;
+  line-height: 1.4;
+}
+
+/* ——— Moderation Editor Pane ——— */
+.mod-editor-body {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mod-source {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line-subtle, var(--line));
+  gap: 12px;
+}
+
+.mod-fields {
+  border: 0;
+  min-width: 0;
+  --gap: 14px;
+}
+
+.mod-fields .textarea {
+  min-height: 88px;
+}
+
+.mod-assignment {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) minmax(110px, 0.65fr);
+  --gap: 12px;
+}
+
+.mod-assignment .select {
+  min-width: 0;
+}
+
+.mod-assignment .select[aria-invalid="true"] {
+  border-color: var(--accent);
+}
+
+.mod-rejection {
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.mod-actions {
+  padding: 10px 20px;
+  flex-wrap: wrap;
+}
+
+.mod-editor .btn {
+  white-space: normal;
+}
+
+/* ——— Processed History Zebra List ——— */
+.mod-history-empty {
+  padding: 16px 20px;
+}
+
+.mod-history-list {
+  list-style: none;
+  border: 0;
+  border-radius: 0;
+  padding: 6px;
+}
+
+.mod-history-entry {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px 16px;
+  padding: 11px 14px;
+  overflow-wrap: anywhere;
+}
+
+.mod-history-main {
+  gap: 3px;
+  min-width: 0;
+}
+
+@media (max-width: 1024px) {
+  .mod-layout,
+  .mod-assignment {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 540px) {
+  .mod-editor-body {
+    padding: 14px 16px;
+  }
+
+  .mod-history-entry {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+}

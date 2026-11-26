@@ -1,0 +1,320 @@
+.rep-screen {
+  --rep-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  min-width: 0;
+}
+
+.rep-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.rep-pane {
+  height: auto;
+}
+
+.rep-pane-title {
+  font: 600 13px/1.3 var(--font-body);
+  color: var(--ink);
+}
+
+.rep-pane-body {
+  padding: 16px 20px;
+}
+
+.rep-layout {
+  display: grid;
+  grid-template-columns: minmax(236px, 26%) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+/* ——— Left Session History Pane (.lc-list Zebra Rows) ——— */
+.rep-history {
+  position: sticky;
+  top: calc(var(--topbar-h) + 20px);
+}
+
+.rep-history-list {
+  border: 0;
+  border-radius: 0;
+  padding: 6px;
+}
+
+.rep-report-link {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  min-height: 44px;
+  padding: 10px 12px;
+  overflow-wrap: anywhere;
+}
+
+.rep-report-title {
+  font: 600 13.5px/1.35 var(--font-body);
+  color: var(--ink);
+}
+
+/* ——— Right Report Workspace ——— */
+.rep-detail {
+  min-width: 0;
+  --gap: 16px;
+}
+
+.rep-session-body {
+  padding: 14px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ——— Unified 3-Column BR2 Dual-Scoring Ledger ——— */
+.rep-scores-ledger {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.rep-score-cell {
+  padding: 16px 20px;
+  min-width: 0;
+}
+
+.rep-score-cell + .rep-score-cell {
+  border-left: 1px solid var(--line-subtle, var(--line));
+}
+
+.rep-bar-wrap .progress {
+  height: 4px;
+}
+
+/* ——— Competency Table & Inline UC16 Form ——— */
+.rep-competencies {
+  overflow: hidden;
+}
+
+.rep-table-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.rep-competency-table th,
+.rep-competency-table td {
+  padding-inline: 12px;
+}
+
+.rep-competency-table :is(th, td):first-child {
+  padding-inline-start: 20px;
+}
+
+.rep-competency-table :is(th, td):last-child {
+  padding-inline-end: 20px;
+}
+
+.rep-competency-table tbody tr:nth-child(even) > * {
+  background: var(--zebra-row);
+}
+
+.rep-competency-table tbody th {
+  width: 22%;
+  border-bottom: 1px solid var(--line-subtle, var(--line));
+  font: 600 13.5px/1.45 var(--font-body);
+  background: transparent;
+  color: var(--ink);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.rep-competency-table td:nth-child(2) {
+  width: 18%;
+}
+
+.rep-competency-table tbody tr,
+.rep-tests tbody tr {
+  cursor: default;
+}
+
+.rep-competency-table tbody tr[data-active="true"] > * {
+  background: var(--surface-2);
+}
+
+.rep-tests tbody tr:nth-child(even) td {
+  background: var(--zebra-row);
+}
+
+.rep-evidence-quote {
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+.rep-submitted-note {
+  margin-top: 4px;
+}
+
+.rep-score-label {
+  display: block;
+  margin-bottom: 6px;
+  white-space: nowrap;
+  color: var(--ink);
+}
+
+.rep-review-button.btn {
+  white-space: normal;
+  font-size: 12.5px;
+  padding-inline: 10px;
+}
+
+.rep-review-state {
+  align-self: start;
+  white-space: normal;
+}
+
+.rep-review {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-2);
+}
+
+/* ——— Unified 3-Column Summary Ledger ——— */
+.rep-summaries-ledger {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.rep-summary-col {
+  padding: 16px 20px;
+  min-width: 0;
+}
+
+.rep-summary-col + .rep-summary-col {
+  border-left: 1px solid var(--line-subtle, var(--line));
+}
+
+.rep-summary-col ul {
+  margin-inline-start: 1.1em;
+}
+
+/* ——— Evidence Transcript & Code ——— */
+.rep-transcript {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.rep-turn {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+}
+
+.rep-turn:nth-child(even) {
+  background: var(--zebra-row);
+}
+
+.rep-code {
+  overflow-wrap: anywhere;
+}
+
+.rep-roadmap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  align-self: start;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.rep-roadmap:hover {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+@media (max-width: 1120px) {
+  .rep-scores-ledger {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rep-score-cell + .rep-score-cell {
+    border-left: 0;
+    border-top: 1px solid var(--line-subtle, var(--line));
+  }
+}
+
+@media (max-width: 1024px) {
+  .rep-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rep-history {
+    position: static;
+  }
+
+  .rep-history-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+}
+
+@media (max-width: 720px) {
+  .rep-summaries-ledger {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rep-summary-col + .rep-summary-col {
+    border-left: 0;
+    border-top: 1px solid var(--line-subtle, var(--line));
+  }
+
+  .rep-competency-table {
+    display: block;
+  }
+
+  .rep-competency-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .rep-competency-table tbody {
+    display: block;
+  }
+
+  .rep-competency-table tbody tr {
+    display: grid;
+    gap: 8px 12px;
+    grid-template-columns: minmax(0, 1fr) minmax(88px, 34%);
+    padding: 14px 16px;
+    border-top: 1px solid var(--line-subtle, var(--line));
+  }
+
+  .rep-competency-table tbody tr[data-active="true"] {
+    background: var(--surface-2);
+  }
+
+  .rep-competency-table tbody :is(th, td):nth-child(n) {
+    width: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .rep-competency-table td:nth-child(n + 3) {
+    grid-column: 1 / -1;
+  }
+
+  .rep-competency-table td:last-child .col {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .rep-history-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
