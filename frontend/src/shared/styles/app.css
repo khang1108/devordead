@@ -1754,9 +1754,12 @@ main:focus { outline: none; box-shadow: none; }
 }
 
 .lc-pane__body {
-  flex: 1 1 0;
+  flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
+}
+.lc-workbench .lc-pane__body {
+  flex: 1 1 0;
 }
 
 .lc-pane__foot {
