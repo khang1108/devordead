@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1280 600" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="devordead-layered-architecture-title devordead-layered-architecture-desc" id="devordead-layered-architecture-root">
+        <title id="devordead-layered-architecture-title">DevOrDead Five-Layer System Architecture</title>
+        <desc id="devordead-layered-architecture-desc">Stacked five-layer architecture of DevOrDead from React TypeScript Studio 3D UI and Vite proxy through the focal FastAPI JWT gateway to the isolated Python/Node sandbox and SQLite BR4 catalog.</desc>
+        <defs>
+      <style>@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;family=Noto+Serif:ital@0;1&amp;family=Noto+Sans+KR:wght@400;500;600&amp;family=Noto+Serif+KR:wght@400&amp;family=Noto+Sans+TC:wght@400;500;600&amp;family=Noto+Serif+TC:wght@400&amp;display=swap');
+      #devordead-layered-architecture-root { --color-paper:   #F6F7F8;
+      --color-ink:     #111418;
+      --color-muted:   #4B5260;
+      --color-accent:  #C42B20;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Noto Serif', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace; }
+      #devordead-layered-architecture-root { font-family: var(--font-sans); color: var(--color-ink); }
+      #devordead-layered-architecture-root .diagram-container { width: 100%; overflow-x: auto; }
+      @media print {
+#devordead-layered-architecture-root .diagram-container { overflow-x: visible; }
+}</style>
+          <marker id="devordead-layered-architecture-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4B5260"/></marker>
+          <marker id="devordead-layered-architecture-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#C42B20"/></marker>
+          <marker id="devordead-layered-architecture-arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#1B6B94"/></marker>
+        </defs>
+
+        <rect width="100%" height="100%" fill="#F6F7F8"/>
+
+        <!-- Direction rail (left margin) -->
+        <text x="96" y="64" fill="#57606F" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.16em">PRESENTATION</text>
+        <line x1="96" y1="84" x2="96" y2="456" stroke="#111418" stroke-width="1" stroke-opacity="0.28"/>
+        <polygon points="92,84 100,84 96,76" fill="#4B5260"/>
+        <text x="96" y="476" fill="#57606F" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.16em">PERSISTENCE</text>
+
+        <!-- L5 — Presentation & Studio 3D UI -->
+        <rect x="176" y="80" width="1064" height="76" fill="#ffffff"/>
+        <line x1="176" y1="80" x2="1240" y2="80" stroke="#C5CBD4" stroke-width="1"/>
+        <line x1="176" y1="156" x2="1240" y2="156" stroke="#111418" stroke-width="1" stroke-opacity="0.12"/>
+        <text x="200" y="122" fill="#57606F" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">L5 · UI</text>
+        <text x="308" y="122" fill="#111418" font-size="14" font-weight="600" font-family="'Geist', sans-serif">Presentation &amp; Studio 3D Workbench</text>
+        <text x="1216" y="122" fill="#4B5260" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">React 19 · TS strict · Three.js · Monaco · WebAudio</text>
+
+        <!-- L4 — Feature Modules & Dev Proxy -->
+        <rect x="176" y="156" width="1064" height="76" fill="#F6F7F8"/>
+        <line x1="176" y1="232" x2="1240" y2="232" stroke="#111418" stroke-width="1" stroke-opacity="0.12"/>
+        <text x="200" y="198" fill="#57606F" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">L4 · APP</text>
+        <text x="308" y="198" fill="#111418" font-size="14" font-weight="600" font-family="'Geist', sans-serif">Feature Services &amp; Vite Dev Proxy</text>
+        <text x="1216" y="198" fill="#4B5260" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">7 feature modules · apiClient JWT · /api &amp; /ws proxy</text>
+
+        <!-- L2 — Isolated Sandbox & Evaluation Engine -->
+        <rect x="176" y="308" width="1064" height="76" fill="#ECEFF3"/>
+        <line x1="176" y1="384" x2="1240" y2="384" stroke="#111418" stroke-width="1" stroke-opacity="0.12"/>
+        <text x="200" y="350" fill="#57606F" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">L2 · RUN</text>
+        <text x="308" y="350" fill="#111418" font-size="14" font-weight="600" font-family="'Geist', sans-serif">Isolated Code Sandbox &amp; Evaluation Engine</text>
+        <text x="1216" y="350" fill="#4B5260" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">Subprocess Py3/Node · 3s TLE · BR1/BR2/BR3 rules</text>
+
+        <!-- L1 — SQLite Persistence & BR4 Catalog -->
+        <rect x="176" y="384" width="1064" height="76" fill="#E4E8EE"/>
+        <line x1="176" y1="460" x2="1240" y2="460" stroke="#C5CBD4" stroke-width="1"/>
+        <text x="200" y="426" fill="#57606F" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">L1 · DB</text>
+        <text x="308" y="426" fill="#111418" font-size="14" font-weight="600" font-family="'Geist', sans-serif">SQLite Persistence &amp; BR4 Approved Catalog</text>
+        <text x="1216" y="426" fill="#4B5260" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">13 relational tables · Taxonomy · Problems · Reports</text>
+
+        <!-- Outer side rails -->
+        <line x1="176" y1="80" x2="176" y2="460" stroke="#C5CBD4" stroke-width="1"/>
+        <line x1="1240" y1="80" x2="1240" y2="460" stroke="#C5CBD4" stroke-width="1"/>
+
+        <!-- L3 — FastAPI API & Auth Gateway (FOCAL LAYER, drawn last so border sits cleanly on top) -->
+        <rect x="176" y="232" width="1064" height="76" fill="#F6F7F8"/>
+        <rect x="176" y="232" width="1064" height="76" fill="#c42b20" stroke="#C42B20" stroke-width="1.2" fill-opacity="0.08"/>
+        <text x="200" y="274" fill="#C42B20" font-size="8" font-weight="600" font-family="'Geist Mono', monospace" letter-spacing="0.14em">L3 · API</text>
+        <text x="308" y="274" fill="#111418" font-size="14" font-weight="600" font-family="'Geist', sans-serif">FastAPI Gateway &amp; JWT Security Boundary</text>
+        <text x="1216" y="274" fill="#C42B20" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">35 REST endpoints · WS room · PBKDF2 + JWT HS256</text>
+
+        <!-- Editorial focal callout + bottom legend strip -->
+        <line x1="40" y1="496" x2="1240" y2="496" stroke="#111418" stroke-width="0.8" stroke-opacity="0.12"/>
+        <text x="40" y="520" fill="#C42B20" font-size="8" font-weight="600" font-family="'Geist Mono', monospace" letter-spacing="0.16em">FOCAL BOUNDARY</text>
+        <text x="176" y="520" fill="#4B5260" font-size="14" font-family="'Instrument Serif', serif" font-style="italic">L3 enforces every UC01–UC18 contract, JWT session check, and BR1–BR4 rule between the React frontend and isolated runtime.</text>
+
+        <text x="40" y="564" fill="#57606F" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.16em">LEGEND</text>
+
+        <rect x="176" y="554" width="16" height="12" rx="2" fill="#ffffff" stroke="#C5CBD4" stroke-width="1"/>
+        <text x="200" y="564" fill="#4B5260" font-size="9" font-family="'Geist', sans-serif">Frontend branch (frontend/)</text>
+
+        <rect x="424" y="554" width="16" height="12" rx="2" fill="#c42b20" stroke="#C42B20" stroke-width="1" fill-opacity="0.08"/>
+        <text x="448" y="564" fill="#4B5260" font-size="9" font-family="'Geist', sans-serif">Focal API &amp; Auth contract (backend/)</text>
+
+        <rect x="720" y="554" width="16" height="12" rx="2" fill="#ECEFF3" stroke="#C5CBD4" stroke-width="1"/>
+        <text x="744" y="564" fill="#4B5260" font-size="9" font-family="'Geist', sans-serif">Execution runtime (BR3)</text>
+
+        <rect x="948" y="554" width="16" height="12" rx="2" fill="#E4E8EE" stroke="#C5CBD4" stroke-width="1"/>
+        <text x="972" y="564" fill="#4B5260" font-size="9" font-family="'Geist', sans-serif">SQLite store (BR4)</text>
+      </svg>

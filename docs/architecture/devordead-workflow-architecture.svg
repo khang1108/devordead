@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1280 640" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="devordead-workflow-architecture-title devordead-workflow-architecture-desc" id="devordead-workflow-architecture-root">
+        <title id="devordead-workflow-architecture-title">DevOrDead Runtime Request and Delivery Workflow</title>
+        <desc id="devordead-workflow-architecture-desc">Architecture workflow connecting the frontend React workbench and Vite proxy to the focal FastAPI gateway, JWT guard, isolated Python and Node sandbox, SQLite store, evaluation reports, and Playwright-verified pull request to main.</desc>
+        <defs>
+      <style>@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;family=Noto+Serif:ital@0;1&amp;family=Noto+Sans+KR:wght@400;500;600&amp;family=Noto+Serif+KR:wght@400&amp;family=Noto+Sans+TC:wght@400;500;600&amp;family=Noto+Serif+TC:wght@400&amp;display=swap');
+      #devordead-workflow-architecture-root { --color-paper:   #F6F7F8;
+      --color-ink:     #111418;
+      --color-muted:   #4B5260;
+      --color-accent:  #C42B20;
+      --font-sans:     'Geist', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Noto Serif', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace; }
+      #devordead-workflow-architecture-root { font-family: var(--font-sans); color: var(--color-ink); }
+      #devordead-workflow-architecture-root .diagram-container { width: 100%; overflow-x: auto; }
+      @media print {
+#devordead-workflow-architecture-root .diagram-container { overflow-x: visible; }
+}</style>
+          <marker id="devordead-workflow-architecture-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4B5260"/></marker>
+          <marker id="devordead-workflow-architecture-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#C42B20"/></marker>
+          <marker id="devordead-workflow-architecture-arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#1B6B94"/></marker>
+        </defs>
+
+        <rect width="100%" height="100%" fill="#F6F7F8"/>
+
+        <!-- Zones (drawn first: bg -> zones -> arrows -> nodes; 16px inset around nodes leaves 116px open channels) -->
+        <!-- Zone 1: Frontend branch -->
+        <rect x="52" y="56" width="304" height="460" rx="8" fill="#111418" stroke="#111418" stroke-width="0.8" fill-opacity="0.02" stroke-opacity="0.10"/>
+        <rect x="128" y="60" width="152" height="12" rx="2" fill="#F6F7F8"/>
+        <text x="204" y="69" fill="#57606F" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">FRONTEND · BRANCH</text>
+
+        <!-- Zone 2: Backend branch -->
+        <rect x="472" y="56" width="352" height="460" rx="8" fill="#111418" stroke="#111418" stroke-width="0.8" fill-opacity="0.02" stroke-opacity="0.10"/>
+        <rect x="576" y="60" width="144" height="12" rx="2" fill="#F6F7F8"/>
+        <text x="648" y="69" fill="#57606F" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">BACKEND · BRANCH</text>
+
+        <!-- Zone 3: Persistence & Main PR -->
+        <rect x="940" y="56" width="288" height="460" rx="8" fill="#111418" stroke="#111418" stroke-width="0.8" fill-opacity="0.02" stroke-opacity="0.10"/>
+        <rect x="1016" y="60" width="136" height="12" rx="2" fill="#F6F7F8"/>
+        <text x="1084" y="69" fill="#57606F" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">DATA &amp; MAIN PR</text>
+
+        <!-- Connectors (drawn before nodes; strictly orthogonal, fanned ports, zero crossings) -->
+        <!-- 1. Candidate UI -> Feature Services -->
+        <line x1="204" y1="196" x2="204" y2="260" stroke="#4B5260" stroke-width="1.2" marker-end="url(#devordead-workflow-architecture-arrow)"/>
+        <!-- 2. Feature Services -> Vite Proxy -->
+        <line x1="204" y1="340" x2="204" y2="404" stroke="#1B6B94" stroke-width="1.2" marker-end="url(#devordead-workflow-architecture-arrow-link)"/>
+        <!-- 3. Vite Proxy -> FastAPI Gateway (port 2 on left edge y=176) -->
+        <path d="M 340,444 H 384 Q 392,444 392,436 V 184 Q 392,176 400,176 H 488" fill="none" stroke="#1B6B94" stroke-width="1.2" marker-end="url(#devordead-workflow-architecture-arrow-link)"/>
+        <!-- 4. FastAPI Gateway -> Candidate UI (dashed return, port 1 on left edge y=140) -->
+        <line x1="488" y1="140" x2="340" y2="140" stroke="#4B5260" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#devordead-workflow-architecture-arrow)"/>
+        <!-- 5. FastAPI Gateway -> Auth & BR Guard -->
+        <line x1="648" y1="196" x2="648" y2="260" stroke="#C42B20" stroke-width="1.4" marker-end="url(#devordead-workflow-architecture-arrow-accent)"/>
+        <!-- 6. Auth & BR Guard -> Isolated Sandbox -->
+        <line x1="648" y1="340" x2="648" y2="404" stroke="#C42B20" stroke-width="1.4" marker-end="url(#devordead-workflow-architecture-arrow-accent)"/>
+        <!-- 7. FastAPI Gateway -> SQLite Store -->
+        <line x1="808" y1="156" x2="956" y2="156" stroke="#4B5260" stroke-width="1.2" marker-end="url(#devordead-workflow-architecture-arrow)"/>
+        <!-- 8. SQLite Store -> Reports & Roadmap -->
+        <line x1="1084" y1="196" x2="1084" y2="260" stroke="#4B5260" stroke-width="1.2" marker-end="url(#devordead-workflow-architecture-arrow)"/>
+        <!-- 9. Isolated Sandbox -> Reports & Roadmap (port 1 on right edge y=428) -->
+        <path d="M 808,428 H 852 Q 860,428 860,420 V 308 Q 860,300 868,300 H 956" fill="none" stroke="#C42B20" stroke-width="1.4" marker-end="url(#devordead-workflow-architecture-arrow-accent)"/>
+        <!-- 10. Isolated Sandbox -> PR to main (dashed E2E gate, port 2 on right edge y=464) -->
+        <line x1="808" y1="464" x2="956" y2="464" stroke="#4B5260" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#devordead-workflow-architecture-arrow)"/>
+
+        <!-- Arrow labels (opaque paper mask, 8px gap from stroke, cleanly inside open channels) -->
+        <rect x="212" y="220" width="60" height="12" rx="2" fill="#F6F7F8"/>
+        <text x="242" y="229" fill="#57606F" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">API CALL</text>
+
+        <rect x="212" y="364" width="68" height="12" rx="2" fill="#F6F7F8"/>
+        <text x="246" y="373" fill="#1B6B94" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">HTTP / WS</text>
+
+        <rect x="400" y="296" width="64" height="12" rx="2" fill="#F6F7F8"/>
+        <text x="432" y="305" fill="#1B6B94" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">PROXY /API</text>
+
+        <rect x="380" y="120" width="68" height="12" rx="2" fill="#F6F7F8"/>
+        <text x="414" y="129" fill="#57606F" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">JSON / WS</text>
+
+        <rect x="656" y="220" width="80" height="12" rx="2" fill="#F6F7F8"/>
+        <text x="696" y="229" fill="#C42B20" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">JWT + RULES</text>
+
+        <rect x="656" y="364" width="80" height="12" rx="2" fill="#F6F7F8"/>
+        <text x="696" y="373" fill="#C42B20" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">RUN SANDBOX</text>
+
+        <rect x="852" y="136" width="60" height="12" rx="2" fill="#F6F7F8"/>
+        <text x="882" y="145" fill="#57606F" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">SQL R/W</text>
+
+        <rect x="1092" y="220" width="80" height="12" rx="2" fill="#F6F7F8"/>
+        <text x="1132" y="229" fill="#57606F" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">BR2 METRICS</text>
+
+        <rect x="868" y="360" width="56" height="12" rx="2" fill="#F6F7F8"/>
+        <text x="896" y="369" fill="#C42B20" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">VERDICT</text>
+
+        <rect x="844" y="472" width="80" height="12" rx="2" fill="#F6F7F8"/>
+        <text x="884" y="481" fill="#57606F" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">E2E EVIDENCE</text>
+
+        <!-- Nodes (drawn after arrows so strokes sit cleanly behind boxes) -->
+        <!-- Node 1: Candidate UI (input) -->
+        <rect x="68" y="116" width="272" height="80" rx="6" fill="#F6F7F8"/>
+        <rect x="68" y="116" width="272" height="80" rx="6" fill="#4b5260" stroke="#57606F" stroke-width="1" fill-opacity="0.10"/>
+        <rect x="76" y="124" width="28" height="12" rx="2" fill="none" stroke="#57606f" stroke-width="0.8" stroke-opacity="0.40"/>
+        <text x="90" y="133" fill="#57606F" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">UI</text>
+        <text x="204" y="158" fill="#111418" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Candidate UI</text>
+        <text x="204" y="176" fill="#4B5260" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">React 19 · Monaco · Three.js</text>
+
+        <!-- Node 2: Feature Services (backend) -->
+        <rect x="68" y="260" width="272" height="80" rx="6" fill="#F6F7F8"/>
+        <rect x="68" y="260" width="272" height="80" rx="6" fill="#ffffff" stroke="#111418" stroke-width="1"/>
+        <rect x="76" y="268" width="32" height="12" rx="2" fill="none" stroke="#111418" stroke-width="0.8" stroke-opacity="0.40"/>
+        <text x="92" y="277" fill="#111418" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">SVC</text>
+        <text x="204" y="302" fill="#111418" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Feature Services</text>
+        <text x="204" y="320" fill="#4B5260" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">apiClient · Bearer JWT · TS</text>
+
+        <!-- Node 3: Vite Dev Proxy (external) -->
+        <rect x="68" y="404" width="272" height="80" rx="6" fill="#F6F7F8"/>
+        <rect x="68" y="404" width="272" height="80" rx="6" fill="#111418" stroke="#111418" stroke-width="1" fill-opacity="0.03" stroke-opacity="0.30"/>
+        <rect x="76" y="412" width="32" height="12" rx="2" fill="none" stroke="#111418" stroke-width="0.8" stroke-opacity="0.24"/>
+        <text x="92" y="421" fill="#57606F" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">PRX</text>
+        <text x="204" y="446" fill="#111418" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Vite Dev Proxy</text>
+        <text x="204" y="464" fill="#4B5260" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">:5174 → /api/v1 &amp; /ws</text>
+
+        <!-- Node 4: FastAPI Gateway (focal #1) -->
+        <rect x="488" y="116" width="320" height="80" rx="6" fill="#F6F7F8"/>
+        <rect x="488" y="116" width="320" height="80" rx="6" fill="#c42b20" stroke="#C42B20" stroke-width="1" fill-opacity="0.08"/>
+        <rect x="496" y="124" width="32" height="12" rx="2" fill="none" stroke="#c42b20" stroke-width="0.8" stroke-opacity="0.50"/>
+        <text x="512" y="133" fill="#C42B20" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">API</text>
+        <text x="648" y="158" fill="#111418" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">FastAPI Gateway</text>
+        <text x="648" y="176" fill="#4B5260" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">35 REST + WS · :8000 · UC01–UC18</text>
+
+        <!-- Node 5: Auth & BR Guard (security) -->
+        <rect x="488" y="260" width="320" height="80" rx="6" fill="#F6F7F8"/>
+        <rect x="488" y="260" width="320" height="80" rx="6" fill="#c42b20" stroke="#c42b20" stroke-width="1" stroke-dasharray="4,4" fill-opacity="0.05" stroke-opacity="0.50"/>
+        <rect x="496" y="268" width="32" height="12" rx="2" fill="none" stroke="#c42b20" stroke-width="0.8" stroke-opacity="0.45"/>
+        <text x="512" y="277" fill="#C42B20" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">SEC</text>
+        <text x="648" y="302" fill="#111418" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Auth &amp; Business Rules</text>
+        <text x="648" y="320" fill="#4B5260" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">PBKDF2 · JWT HS256 · BR1–BR4</text>
+
+        <!-- Node 6: Isolated Sandbox (focal #2) -->
+        <rect x="488" y="404" width="320" height="80" rx="6" fill="#F6F7F8"/>
+        <rect x="488" y="404" width="320" height="80" rx="6" fill="#c42b20" stroke="#C42B20" stroke-width="1" fill-opacity="0.08"/>
+        <rect x="496" y="412" width="32" height="12" rx="2" fill="none" stroke="#c42b20" stroke-width="0.8" stroke-opacity="0.50"/>
+        <text x="512" y="421" fill="#C42B20" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">RUN</text>
+        <text x="648" y="446" fill="#111418" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Isolated Sandbox</text>
+        <text x="648" y="464" fill="#4B5260" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">Python 3 · Node.js · 3s TLE · BR3</text>
+
+        <!-- Node 7: SQLite Store (store) -->
+        <rect x="956" y="116" width="256" height="80" rx="6" fill="#F6F7F8"/>
+        <rect x="956" y="116" width="256" height="80" rx="6" fill="#111418" stroke="#4B5260" stroke-width="1" fill-opacity="0.05"/>
+        <rect x="964" y="124" width="28" height="12" rx="2" fill="none" stroke="#4b5260" stroke-width="0.8" stroke-opacity="0.50"/>
+        <text x="978" y="133" fill="#4B5260" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">DB</text>
+        <text x="1084" y="158" fill="#111418" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">SQLite Store</text>
+        <text x="1084" y="176" fill="#4B5260" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">13 tables · BR4 catalog</text>
+
+        <!-- Node 8: Reports & Roadmap (backend) -->
+        <rect x="956" y="260" width="256" height="80" rx="6" fill="#F6F7F8"/>
+        <rect x="956" y="260" width="256" height="80" rx="6" fill="#ffffff" stroke="#111418" stroke-width="1"/>
+        <rect x="964" y="268" width="32" height="12" rx="2" fill="none" stroke="#111418" stroke-width="0.8" stroke-opacity="0.40"/>
+        <text x="980" y="277" fill="#111418" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">OUT</text>
+        <text x="1084" y="302" fill="#111418" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Reports &amp; Roadmap</text>
+        <text x="1084" y="320" fill="#4B5260" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">BR2 scoring · UC14–UC16</text>
+
+        <!-- Node 9: PR to main (optional) -->
+        <rect x="956" y="404" width="256" height="80" rx="6" fill="#F6F7F8"/>
+        <rect x="956" y="404" width="256" height="80" rx="6" fill="#111418" stroke="#111418" stroke-width="1" stroke-dasharray="4,3" fill-opacity="0.02" stroke-opacity="0.28"/>
+        <rect x="964" y="412" width="32" height="12" rx="2" fill="none" stroke="#57606f" stroke-width="0.8" stroke-opacity="0.40"/>
+        <text x="980" y="421" fill="#57606F" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">GIT</text>
+        <text x="1084" y="446" fill="#111418" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">PR Integration → main</text>
+        <text x="1084" y="464" fill="#4B5260" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">Playwright E2E · tsc · build</text>
+
+        <!-- Legend strip -->
+        <line x1="40" y1="548" x2="1240" y2="548" stroke="#111418" stroke-width="0.8" stroke-opacity="0.12"/>
+        <text x="40" y="568" fill="#57606F" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.16em">LEGEND</text>
+
+        <rect x="40" y="584" width="16" height="12" rx="2" fill="#c42b20" stroke="#C42B20" stroke-width="1" fill-opacity="0.08"/>
+        <text x="64" y="594" fill="#4B5260" font-size="9" font-family="'Geist', sans-serif">Focal engine</text>
+
+        <rect x="176" y="584" width="16" height="12" rx="2" fill="#c42b20" stroke="#c42b20" stroke-width="1" stroke-dasharray="4,4" fill-opacity="0.05" stroke-opacity="0.50"/>
+        <text x="200" y="594" fill="#4B5260" font-size="9" font-family="'Geist', sans-serif">Security / rules</text>
+
+        <rect x="332" y="584" width="16" height="12" rx="2" fill="#ffffff" stroke="#111418" stroke-width="1"/>
+        <text x="356" y="594" fill="#4B5260" font-size="9" font-family="'Geist', sans-serif">Service / output</text>
+
+        <rect x="488" y="584" width="16" height="12" rx="2" fill="#111418" stroke="#4B5260" stroke-width="1" fill-opacity="0.05"/>
+        <text x="512" y="594" fill="#4B5260" font-size="9" font-family="'Geist', sans-serif">Data store</text>
+
+        <rect x="612" y="584" width="16" height="12" rx="2" fill="#4b5260" stroke="#57606F" stroke-width="1" fill-opacity="0.10"/>
+        <text x="636" y="594" fill="#4B5260" font-size="9" font-family="'Geist', sans-serif">User / client</text>
+
+        <line x1="752" y1="590" x2="784" y2="590" stroke="#1B6B94" stroke-width="1.2" marker-end="url(#devordead-workflow-architecture-arrow-link)"/>
+        <text x="792" y="594" fill="#4B5260" font-size="9" font-family="'Geist', sans-serif">HTTP / WS proxy</text>
+
+        <line x1="928" y1="590" x2="960" y2="590" stroke="#C42B20" stroke-width="1.4" marker-end="url(#devordead-workflow-architecture-arrow-accent)"/>
+        <text x="968" y="594" fill="#4B5260" font-size="9" font-family="'Geist', sans-serif">Primary path</text>
+
+        <line x1="1084" y1="590" x2="1116" y2="590" stroke="#4B5260" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#devordead-workflow-architecture-arrow)"/>
+        <text x="1124" y="594" fill="#4B5260" font-size="9" font-family="'Geist', sans-serif">Return / gate</text>
+      </svg>
