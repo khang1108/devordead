@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import StudyCalendar from "@shared/components/StudyCalendar";
 import {
   Badge,
   Button,
-  Card,
-  CardHead,
   EmptyState,
   ErrorBanner,
   PageHeader,
@@ -14,22 +13,28 @@ import {
 } from "@shared/ui";
 import { getErrorMessage } from "@shared/services/apiClient";
 import { localStore } from "@shared/services/localStore";
-import type { DashboardOverview, RoadmapPriority, Tone } from "@shared/types";
+import type { DashboardOverview, RoadmapPriority } from "@shared/types";
 import { assessmentService } from "./assessment.service";
 import "./DashboardScreen.css";
 
-interface PracticeLinkItem {
+interface FeaturedTrack {
   to: string;
+  tag: string;
   title: string;
   detail: string;
+  cta: string;
+  accent: "sky" | "emerald" | "slate";
   icon: ReactNode;
 }
 
-const PRACTICE_LINKS: readonly PracticeLinkItem[] = [
+const FEATURED_TRACKS: readonly FeaturedTrack[] = [
   {
     to: "/practice/voice",
-    title: "Luyện giọng nói",
-    detail: "Trả lời câu hỏi kỹ thuật qua micro · Phản hồi AI ≤ 2,5s",
+    tag: "UC05 · UC06",
+    title: "Luyện giọng nói kỹ thuật",
+    detail: "Trả lời câu hỏi mở qua micro · Phản hồi rubric AI ≤ 2,5s",
+    cta: "Mở phòng luyện",
+    accent: "sky",
     icon: (
       <svg
         viewBox="0 0 20 20"
@@ -49,8 +54,11 @@ const PRACTICE_LINKS: readonly PracticeLinkItem[] = [
   },
   {
     to: "/problems",
-    title: "Bài tập lập trình",
-    detail: "Giải thuật toán trên Monaco IDE · Docker Sandbox cô lập (BR3)",
+    tag: "BR3 · Sandbox",
+    title: "Luyện thuật toán Sandbox",
+    detail: "Giải bài trên Monaco IDE · Chạy test trong Docker cô lập",
+    cta: "Mở kho bài tập",
+    accent: "emerald",
     icon: (
       <svg
         viewBox="0 0 20 20"
@@ -69,8 +77,11 @@ const PRACTICE_LINKS: readonly PracticeLinkItem[] = [
   },
   {
     to: "/interview/setup",
-    title: "Phỏng vấn mô phỏng",
-    detail: "HR tiếng Anh hoặc Technical Live Coding (15–45 phút)",
+    tag: "15–45 phút",
+    title: "Phỏng vấn mô phỏng AI",
+    detail: "HR tiếng Anh (STAR) hoặc Technical Live Coding theo JD",
+    cta: "Thiết lập phiên",
+    accent: "slate",
     icon: (
       <svg
         viewBox="0 0 20 20"
@@ -89,42 +100,13 @@ const PRACTICE_LINKS: readonly PracticeLinkItem[] = [
   },
 ];
 
-const PRIORITIES: Record<RoadmapPriority, { order: number; label: string; tone: Tone }> = {
-  high: { order: 0, label: "Ưu tiên cao", tone: "danger" },
-  medium: { order: 1, label: "Ưu tiên TB", tone: "warning" },
-  low: { order: 2, label: "Ưu tiên thấp", tone: "neutral" },
+const PRIORITIES: Record<RoadmapPriority, { order: number; label: string; diffClass: string }> = {
+  high: { order: 0, label: "Cao", diffClass: "lc-diff--hard" },
+  medium: { order: 1, label: "TB", diffClass: "lc-diff--medium" },
+  low: { order: 2, label: "Thấp", diffClass: "c-ink2" },
 };
 
-function PracticeQuickPanel() {
-  return (
-    <Card className="card--flush dash-panel">
-      <div className="dash-panel-head">
-        <CardHead title="Luyện tiếp" />
-      </div>
-
-      <ul className="dash-rows">
-        {PRACTICE_LINKS.map(({ to, title, detail, icon }) => (
-          <li key={to}>
-            <Link className="row dash-action-row" to={to}>
-              <span className="dash-icon" aria-hidden="true">
-                {icon}
-              </span>
-              <span className="grow dash-item-text">
-                <span className="t-heading-s">{title}</span>
-                <span className="t-body-s c-ink2">{detail}</span>
-              </span>
-              <span className="dash-arrow" aria-hidden="true">
-                →
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </Card>
-  );
-}
-
-// UC02, UC15 — Tổng quan luyện tập
+// UC02, UC15 — Tổng quan luyện tập (LeetCode Study Overview + Right Calendar Rail)
 export default function DashboardScreen() {
   const navigate = useNavigate();
   const user = localStore.getUser();
@@ -218,8 +200,8 @@ export default function DashboardScreen() {
         }
         actions={
           <div className="row wrap dash-header-actions">
-            <Link className="btn btn--secondary" to="/profile">
-              Hồ sơ mục tiêu
+            <Link className="btn btn--secondary" to="/problems/sandbox">
+              Mở Sandbox IDE
             </Link>
             <Button variant="primary" onClick={() => navigate("/interview/setup")}>
               Bắt đầu phỏng vấn <span aria-hidden="true">↗</span>
@@ -228,225 +210,306 @@ export default function DashboardScreen() {
         }
       />
 
-      {error && (
-        <ErrorBanner
-          title="Chưa tải được dữ liệu tổng quan từ máy chủ"
-          message={error}
-          onRetry={retry}
-        />
-      )}
+      <div className="lc-workspace">
+        <div className="lc-workspace__main">
+          {error && (
+            <ErrorBanner
+              title="Chưa tải được dữ liệu tổng quan từ máy chủ"
+              message={error}
+              onRetry={retry}
+            />
+          )}
 
-      {loading ? (
-        <>
-          <section className="dash-ledger" aria-label="Đang tải số liệu luyện tập">
-            {[0, 1, 2, 3].map((idx) => (
-              <div className="dash-ledger-cell" key={idx}>
-                <div className="stat">
-                  <Skeleton width="55%" height={13} />
-                  <Skeleton width="42%" height={30} />
-                  <Skeleton width="72%" height={13} />
-                </div>
-              </div>
-            ))}
-          </section>
-
-          <div className="grid dash-columns">
-            <Card className="card--flush dash-panel">
-              <div className="dash-panel-head">
-                <CardHead title="Mức nắm năng lực" />
-              </div>
-              <div className="dash-rows">
-                {[0, 1, 2, 3].map((idx) => (
-                  <div className="dash-row col stack-sm" key={idx}>
-                    <Skeleton width="64%" height={14} />
-                    <Skeleton width="100%" height={6} />
+          {loading ? (
+            <section className="dash-ledger" aria-label="Đang tải số liệu luyện tập">
+              {[0, 1, 2, 3].map((idx) => (
+                <div className="dash-ledger-cell" key={idx}>
+                  <div className="stat">
+                    <Skeleton width="55%" height={13} />
+                    <Skeleton width="42%" height={30} />
+                    <Skeleton width="72%" height={13} />
                   </div>
-                ))}
-              </div>
-            </Card>
-            <PracticeQuickPanel />
-          </div>
-        </>
-      ) : isEmptyDashboard ? (
-        <div className="grid dash-columns">
-          <EmptyState
-            title="Chưa có dữ liệu luyện tập nào"
-            description="Hãy bắt đầu một phiên luyện giọng nói, giải bài tập lập trình trong Sandbox hoặc chạy thử phỏng vấn mô phỏng để hệ thống xây dựng hồ sơ năng lực cho bạn."
-            actions={
-              <>
-                <Link to="/interview/setup" className="btn btn--primary">
-                  Bắt đầu phỏng vấn mô phỏng
-                </Link>
-                <Link to="/knowledge" className="btn btn--secondary">
-                  Khám phá kho tri thức
-                </Link>
-              </>
-            }
-          />
-          <PracticeQuickPanel />
-        </div>
-      ) : (
-        <>
-          {stats.length > 0 && (
-            <section className="dash-ledger" aria-label="Số liệu luyện tập">
-              {stats.map((stat) => (
-                <div className="dash-ledger-cell" key={stat.label}>
-                  <StatCard {...stat} />
                 </div>
               ))}
             </section>
+          ) : (
+            stats.length > 0 && (
+              <section className="dash-ledger" aria-label="Số liệu luyện tập">
+                {stats.map((stat) => (
+                  <div className="dash-ledger-cell" key={stat.label}>
+                    <StatCard {...stat} />
+                  </div>
+                ))}
+              </section>
+            )
           )}
 
-          <div className="grid dash-columns">
-            <Card className="card--flush dash-panel">
-              <div className="dash-panel-head">
-                <CardHead title="Mức nắm năng lực">
-                  {weakCount > 0 && (
+          {/* 3-Column Featured Study Tracks */}
+          <section className="dash-tracks" aria-label="Chặng luyện tập trọng tâm">
+            {FEATURED_TRACKS.map((track) => (
+              <Link
+                key={track.to}
+                to={track.to}
+                className={`dash-track dash-track--${track.accent}`}
+              >
+                <span className="dash-track__strip" aria-hidden="true" />
+                <div className="dash-track__top">
+                  <span className="dash-track__icon" aria-hidden="true">
+                    {track.icon}
+                  </span>
+                  <span className="t-mono dash-track__tag">{track.tag}</span>
+                </div>
+                <div className="dash-track__body">
+                  <h2 className="dash-track__title">{track.title}</h2>
+                  <p className="t-body-s c-ink2 dash-track__detail">{track.detail}</p>
+                </div>
+                <span className="dash-track__cta">
+                  {track.cta} <span aria-hidden="true">→</span>
+                </span>
+              </Link>
+            ))}
+          </section>
+
+          {loading ? (
+            <div className="dash-panels">
+              <section className="lc-pane" aria-label="Đang tải mức nắm năng lực">
+                <div className="lc-pane__head">
+                  <span className="dash-pane-title">Mức nắm năng lực</span>
+                </div>
+                <div className="dash-rows">
+                  {[0, 1, 2, 3].map((idx) => (
+                    <div className="dash-comp-row col stack-sm" key={idx}>
+                      <Skeleton width="64%" height={14} />
+                      <Skeleton width="100%" height={4} />
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="lc-pane" aria-label="Đang tải báo cáo gần đây">
+                <div className="lc-pane__head">
+                  <span className="dash-pane-title">Báo cáo gần đây</span>
+                </div>
+                <div className="dash-rows">
+                  {[0, 1, 2].map((idx) => (
+                    <div className="dash-comp-row col stack-sm" key={idx}>
+                      <Skeleton width="58%" height={15} />
+                      <Skeleton width="38%" height={13} />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </div>
+          ) : isEmptyDashboard ? (
+            <EmptyState
+              title="Chưa có dữ liệu luyện tập nào"
+              description="Hãy bắt đầu một phiên luyện giọng nói, giải bài tập lập trình trong Sandbox hoặc chạy thử phỏng vấn mô phỏng để hệ thống xây dựng hồ sơ năng lực cho bạn."
+              actions={
+                <>
+                  <Link to="/interview/setup" className="btn btn--primary">
+                    Bắt đầu phỏng vấn mô phỏng
+                  </Link>
+                  <Link to="/knowledge" className="btn btn--secondary">
+                    Khám phá kho tri thức
+                  </Link>
+                </>
+              }
+            />
+          ) : (
+            <div className="dash-panels">
+              {/* Competency Mastery Pane */}
+              <section className="lc-pane" aria-labelledby="dash-comp-heading">
+                <div className="lc-pane__head">
+                  <h2 id="dash-comp-heading" className="dash-pane-title">
+                    Mức nắm năng lực
+                  </h2>
+                  {weakCount > 0 ? (
                     <Badge tone="warning" dot>
                       {weakCount} mục dưới 40%
                     </Badge>
+                  ) : (
+                    <span className="t-body-s c-ink2 dash-tabular">
+                      {competencies.length} nhóm
+                    </span>
                   )}
-                </CardHead>
-              </div>
-
-              {competencies.length > 0 ? (
-                <ul className="dash-rows">
-                  {competencies.map(({ name, mastery }) => {
-                    const isLow = mastery < 0.4;
-                    const pct = Math.round(mastery * 100);
-                    return (
-                      <li className="dash-row col stack-sm" key={name}>
-                        <div className="row between wrap">
-                          <span className="row stack-sm">
-                            <span className="t-body-s t-strong">{name}</span>
-                            {isLow && <span className="t-body-s c-warning">Cần ôn ưu tiên</span>}
-                          </span>
-                          <span
-                            className={`t-mono dash-tabular ${isLow ? "c-warning" : "c-ink2"}`}
-                          >
-                            {pct}%
-                          </span>
-                        </div>
-                        <div className="dash-bar-wrap">
-                          <ProgressBar
-                            label={name}
-                            value={mastery}
-                            tone={isLow ? "warning" : "brand"}
-                          />
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              ) : (
-                <div className="dash-panel-empty">
-                  <p className="t-body-s c-ink2">
-                    Chưa có dữ liệu mức nắm năng lực. Hoàn thành bài luyện đầu tiên để theo dõi tiến
-                    độ theo từng chủ đề.
-                  </p>
                 </div>
-              )}
 
-              <div className="dash-panel-foot">
-                <Link className="dash-link" to="/knowledge">
-                  Xem kho tri thức <span aria-hidden="true">→</span>
-                </Link>
-              </div>
-            </Card>
-
-            <PracticeQuickPanel />
-
-            <Card className="card--flush dash-panel">
-              <div className="dash-panel-head">
-                <CardHead title="Lộ trình tuần này">
-                  {weeklyItems.length > 0 && (
-                    <span className="t-body-s c-ink2">{weeklyItems.length} mục ưu tiên</span>
+                <div className="lc-pane__body">
+                  {competencies.length > 0 ? (
+                    <ul className="dash-rows">
+                      {competencies.map(({ name, mastery }) => {
+                        const isLow = mastery < 0.4;
+                        const pct = Math.round(mastery * 100);
+                        return (
+                          <li className="dash-comp-row col stack-sm" key={name}>
+                            <div className="row between wrap">
+                              <span className="row stack-sm">
+                                <span className="t-body-s t-strong">{name}</span>
+                                {isLow && (
+                                  <span className="lc-diff lc-diff--medium">Cần ôn ưu tiên</span>
+                                )}
+                              </span>
+                              <span
+                                className={`t-mono dash-tabular ${isLow ? "c-warning" : "c-ink2"}`}
+                              >
+                                {pct}%
+                              </span>
+                            </div>
+                            <div className="dash-bar-wrap">
+                              <ProgressBar
+                                label={name}
+                                value={mastery}
+                                tone={isLow ? "warning" : "brand"}
+                              />
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : (
+                    <div className="dash-panel-empty">
+                      <p className="t-body-s c-ink2">
+                        Chưa có dữ liệu mức nắm năng lực. Hoàn thành bài luyện đầu tiên để theo dõi
+                        tiến độ theo từng chủ đề.
+                      </p>
+                    </div>
                   )}
-                </CardHead>
-              </div>
+                </div>
 
-              {weeklyItems.length > 0 ? (
-                <ol className="dash-rows">
-                  {weeklyItems.map((item) => {
-                    const { label, tone } = PRIORITIES[item.priority];
-                    return (
-                      <li key={item.id}>
-                        <Link className="row between dash-action-row" to={item.to}>
+                <div className="lc-pane__foot">
+                  <span>Mục tiêu phỏng vấn ≥ 70%</span>
+                  <Link className="dash-foot-link" to="/knowledge">
+                    Xem kho tri thức <span aria-hidden="true">→</span>
+                  </Link>
+                </div>
+              </section>
+
+              {/* Recent Reports Zebra-Striped List Pane */}
+              <section className="lc-pane" aria-labelledby="dash-reports-heading">
+                <div className="lc-pane__head">
+                  <h2 id="dash-reports-heading" className="dash-pane-title">
+                    Báo cáo gần đây
+                  </h2>
+                  <span className="t-body-s c-ink2 dash-tabular">
+                    {recentReports.length} phiên
+                  </span>
+                </div>
+
+                <div className="lc-pane__body">
+                  {recentReports.length > 0 ? (
+                    <div className="lc-list dash-report-list" role="list">
+                      {recentReports.map(({ id, type, date, duration, status, overall }) => (
+                        <Link
+                          key={id}
+                          role="listitem"
+                          className="lc-list__row dash-report-row"
+                          to={`/reports/${id}`}
+                        >
                           <span className="dash-item-text">
-                            <span className="t-body-s t-strong">{item.title}</span>
-                            <span className="t-body-s c-ink2">{item.reason}</span>
+                            <span className="t-body-s t-strong">{type}</span>
+                            <span className="t-body-s c-ink2 dash-tabular">
+                              {date} · {duration} phút
+                            </span>
                           </span>
-                          <Badge tone={tone} dot>
-                            {label}
-                          </Badge>
+                          {status === "interrupted" || overall === null ? (
+                            <span className="lc-diff lc-diff--medium">Gián đoạn</span>
+                          ) : (
+                            <span className="t-mono dash-score dash-tabular">
+                              <strong>{overall.toFixed(1)}</strong> / 10
+                            </span>
+                          )}
                         </Link>
-                      </li>
-                    );
-                  })}
-                </ol>
-              ) : (
-                <div className="dash-panel-empty">
-                  <p className="t-body-s c-ink2">
-                    Chưa có đề xuất ưu tiên trong tuần. Lộ trình sẽ tự động cập nhật sau các phiên
-                    đánh giá của bạn.
-                  </p>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="dash-panel-empty">
+                      <p className="t-body-s c-ink2">
+                        Chưa có báo cáo phiên phỏng vấn nào. Kết quả chấm độc lập (BR2) sẽ hiển thị
+                        tại đây sau khi hoàn tất phiên.
+                      </p>
+                    </div>
+                  )}
                 </div>
-              )}
 
-              <div className="dash-panel-foot">
-                <Link className="dash-link" to="/roadmap">
-                  Xem lộ trình học <span aria-hidden="true">→</span>
-                </Link>
+                <div className="lc-pane__foot">
+                  <span>Đánh giá độc lập · BR2</span>
+                  <Link className="dash-foot-link" to="/reports">
+                    Tất cả báo cáo <span aria-hidden="true">→</span>
+                  </Link>
+                </div>
+              </section>
+            </div>
+          )}
+        </div>
+
+        {/* Right Rail: Real StudyCalendar + Target Role & Weekly Priority Summary */}
+        <aside className="lc-rail-right" aria-label="Lịch học và lộ trình tuần này">
+          <StudyCalendar />
+
+          <section className="lc-pane dash-rail-card" aria-labelledby="dash-rail-goal">
+            <div className="lc-pane__head">
+              <h2 id="dash-rail-goal" className="dash-pane-title">
+                Mục tiêu &amp; ưu tiên tuần
+              </h2>
+              <Link className="dash-head-link" to="/profile">
+                Hồ sơ
+              </Link>
+            </div>
+
+            <div className="dash-rail-target">
+              <p className="t-body-s t-strong">
+                {roleLabel} · {levelLabel}
+              </p>
+              <p className="t-body-s c-ink2">
+                {companyLabel ? `Định hướng: ${companyLabel}` : "Chưa đặt công ty mục tiêu"}
+              </p>
+            </div>
+
+            {loading ? (
+              <div className="dash-rail-body">
+                {[0, 1].map((idx) => (
+                  <div className="dash-rail-item col stack-sm" key={idx}>
+                    <Skeleton width="78%" height={14} />
+                    <Skeleton width="54%" height={12} />
+                  </div>
+                ))}
               </div>
-            </Card>
-
-            <Card className="card--flush dash-panel">
-              <div className="dash-panel-head">
-                <CardHead title="Báo cáo gần đây" />
-              </div>
-
-              {recentReports.length > 0 ? (
-                <ul className="dash-rows">
-                  {recentReports.map(({ id, type, date, duration, status, overall }) => (
-                    <li key={id}>
-                      <Link className="row between dash-action-row" to={`/reports/${id}`}>
-                        <span className="dash-item-text">
-                          <span className="t-body-s t-strong">{type}</span>
-                          <span className="t-body-s c-ink2 dash-tabular">
-                            {date} · {duration} phút
-                          </span>
-                        </span>
-                        {status === "interrupted" || overall === null ? (
-                          <Badge tone="warning" dot>
-                            Gián đoạn
-                          </Badge>
-                        ) : (
-                          <span className="t-mono dash-score dash-tabular">
-                            <strong>{overall.toFixed(1)}</strong> / 10
-                          </span>
-                        )}
+            ) : weeklyItems.length > 0 ? (
+              <ol className="dash-rail-list">
+                {weeklyItems.map((item) => {
+                  const meta = PRIORITIES[item.priority];
+                  return (
+                    <li key={item.id}>
+                      <Link className="dash-rail-item" to={item.to}>
+                        <div className="row between stack-sm">
+                          <span className="t-body-s t-strong dash-rail-title">{item.title}</span>
+                          <span className={`lc-diff ${meta.diffClass}`}>{meta.label}</span>
+                        </div>
+                        <p className="t-body-s c-ink2 dash-rail-reason">{item.reason}</p>
                       </Link>
                     </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="dash-panel-empty">
-                  <p className="t-body-s c-ink2">
-                    Chưa có báo cáo phiên phỏng vấn nào. Kết quả chấm độc lập (BR2) sẽ hiển thị tại
-                    đây sau khi hoàn tất phiên.
-                  </p>
-                </div>
-              )}
-
-              <div className="dash-panel-foot">
-                <Link className="dash-link" to="/reports">
-                  Tất cả báo cáo <span aria-hidden="true">→</span>
-                </Link>
+                  );
+                })}
+              </ol>
+            ) : (
+              <div className="dash-rail-empty">
+                <p className="t-body-s c-ink2">
+                  Lộ trình ưu tiên trong tuần sẽ tự cập nhật sau phiên đánh giá đầu tiên.
+                </p>
               </div>
-            </Card>
-          </div>
-        </>
-      )}
+            )}
+
+            <div className="lc-pane__foot">
+              <Link className="dash-foot-link" to="/profile">
+                Cập nhật hồ sơ
+              </Link>
+              <Link className="dash-foot-link" to="/roadmap">
+                Lộ trình học <span aria-hidden="true">→</span>
+              </Link>
+            </div>
+          </section>
+        </aside>
+      </div>
     </div>
   );
 }

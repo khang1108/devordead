@@ -19,30 +19,45 @@ type NavIconKind =
 type NavItemDef = readonly [to: string, label: string, icon: NavIconKind];
 type NavGroupDef = readonly [title: string, items: readonly NavItemDef[]];
 
-const CANDIDATE_NAV: readonly NavGroupDef[] = [
+const TOP_CANDIDATE_NAV: readonly NavItemDef[] = [
+  ["/dashboard", "Tổng quan", "grid"],
+  ["/problems", "Bài tập", "code"],
+  ["/knowledge", "Kho tri thức", "book"],
+  ["/practice/voice", "Luyện giọng", "mic"],
+  ["/interview/setup", "Phỏng vấn", "play"],
+  ["/roadmap", "Lộ trình", "route"],
+  ["/reports", "Báo cáo", "report"],
+];
+
+const TOP_ADMIN_NAV: readonly NavItemDef[] = [
+  ["/admin/taxonomy", "Danh mục tri thức", "tree"],
+  ["/admin/moderation", "Kiểm duyệt nội dung", "shield"],
+];
+
+const CANDIDATE_RAIL: readonly NavGroupDef[] = [
   [
-    "Luyện tập",
+    "Không gian học",
     [
       ["/dashboard", "Tổng quan", "grid"],
+      ["/problems", "Ngân hàng bài tập", "code"],
       ["/knowledge", "Kho tri thức", "book"],
       ["/practice/voice", "Luyện giọng nói", "mic"],
-      ["/problems", "Bài tập lập trình", "code"],
-    ],
-  ],
-  [
-    "Phỏng vấn",
-    [
-      ["/interview/setup", "Phỏng vấn mô phỏng", "play"],
-      ["/reports", "Báo cáo năng lực", "report"],
       ["/roadmap", "Lộ trình học", "route"],
     ],
   ],
-  ["Tài khoản", [["/profile", "Hồ sơ mục tiêu", "target"]]],
+  [
+    "Phỏng vấn & Đánh giá",
+    [
+      ["/interview/setup", "Phỏng vấn mô phỏng", "play"],
+      ["/reports", "Báo cáo năng lực", "report"],
+    ],
+  ],
+  ["Cá nhân hóa", [["/profile", "Hồ sơ & CV/JD", "target"]]],
 ];
 
-const ADMIN_NAV: readonly NavGroupDef[] = [
+const ADMIN_RAIL: readonly NavGroupDef[] = [
   [
-    "Quản trị",
+    "Quản trị hệ thống",
     [
       ["/admin/taxonomy", "Danh mục tri thức", "tree"],
       ["/admin/moderation", "Kiểm duyệt nội dung", "shield"],
@@ -184,151 +199,19 @@ function deriveInitials(name: string, fallback: string): string {
   return `${first}${last}`.toUpperCase() || fallback;
 }
 
-interface SidebarProps {
-  admin: boolean;
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-function Sidebar({ admin, isOpen, onClose }: SidebarProps) {
-  const groups = admin ? ADMIN_NAV : CANDIDATE_NAV;
-  const storedUser = localStore.getUser();
-  const targetProfile = localStore.getTargetProfile();
-
-  const displayAccount = admin
-    ? storedUser?.accountRole === "admin"
-      ? {
-          name: storedUser.name,
-          initials: storedUser.initials || deriveInitials(storedUser.name, "QT"),
-          subtitle: storedUser.subtitle || "Quản trị hệ thống",
-        }
-      : {
-          name: "Quản trị viên",
-          initials: "QT",
-          subtitle: "Cổng quản trị hệ thống",
-        }
-    : storedUser
-      ? {
-          name: storedUser.name,
-          initials: storedUser.initials || deriveInitials(storedUser.name, "UV"),
-          subtitle: storedUser.subtitle || `${storedUser.role} · ${storedUser.level}`,
-        }
-      : {
-          name: "Tài khoản ứng viên",
-          initials: "UV",
-          subtitle: `${targetProfile.role} · ${targetProfile.level}`,
-        };
-
-  function handleSignOut() {
-    setAuthToken(null);
-    localStore.setUser(null);
-    onClose();
-  }
-
-  return (
-    <aside
-      id="app-sidebar-nav"
-      className={`sidebar ${isOpen ? "is-open" : ""}`}
-      aria-label="Điều hướng chính"
-    >
-      <div className="sidebar__brand-row">
-        <Logo to={admin ? "/admin/taxonomy" : "/dashboard"} size={24} />
-        <a
-          href="/"
-          className="sidebar__home-btn"
-          aria-label="Về trang giới thiệu"
-          title="Về trang giới thiệu"
-        >
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <path
-              d="M4.5 11.5 11.5 4.5M6 4.5h5.5V10"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </a>
-      </div>
-
-      <div className="sidebar__portal-switch" role="group" aria-label="Chuyển đổi cổng">
-        <Link
-          to="/dashboard"
-          onClick={onClose}
-          className={`sidebar__portal-pill ${!admin ? "is-active" : ""}`}
-          aria-current={!admin ? "true" : undefined}
-        >
-          Ứng viên
-        </Link>
-        <Link
-          to="/admin/taxonomy"
-          onClick={onClose}
-          className={`sidebar__portal-pill ${admin ? "is-active" : ""}`}
-          aria-current={admin ? "true" : undefined}
-        >
-          Quản trị
-        </Link>
-      </div>
-
-      <nav className="sidebar__nav" aria-label={admin ? "Menu quản trị" : "Menu ứng viên"}>
-        {groups.map(([title, items]) => (
-          <div className="sidebar__group" key={title}>
-            <p className="sidebar__title">{title}</p>
-            {items.map(([to, label, icon]) => (
-              <NavLink
-                key={to}
-                to={to}
-                onClick={onClose}
-                className={({ isActive }) => `nav-item ${isActive ? "is-active" : ""}`}
-              >
-                <NavIcon kind={icon} />
-                <span className="nav-item__label">{label}</span>
-              </NavLink>
-            ))}
-          </div>
-        ))}
-      </nav>
-
-      <div className="sidebar__footer">
-        <div className="sidebar__profile">
-          <span className="avatar" aria-hidden="true">
-            {displayAccount.initials}
-          </span>
-          <div className="sidebar__profile-meta">
-            <span className="sidebar__profile-name">{displayAccount.name}</span>
-            <span className="sidebar__profile-sub">{displayAccount.subtitle}</span>
-          </div>
-          <Link
-            to="/login"
-            onClick={handleSignOut}
-            className="sidebar__signout"
-            aria-label="Đăng xuất và về màn hình đăng nhập"
-            title="Đăng xuất (UC01)"
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path
-                d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"
-                stroke="currentColor"
-                strokeWidth="1.75"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </Link>
-        </div>
-      </div>
-    </aside>
-  );
-}
-
 export interface AppShellProps {
   admin?: boolean;
 }
 
-/** Khung có sidebar 228px cho ứng viên (mặc định) hoặc quản trị viên (admin). */
+/**
+ * Khung học tập & làm việc kiểu LeetCode:
+ * Thanh điều hướng trên cố định 50px (Logo + tab chính + chuyển cổng + tài khoản)
+ * kết hợp thanh bên trái thu gọn được (204px → 56px) và drawer trên thiết bị nhỏ.
+ */
 export default function AppShell({ admin = false }: AppShellProps) {
   const location = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState<boolean>(() => localStore.getSidebarCollapsed());
 
   useEffect(() => {
     setDrawerOpen(false);
@@ -343,8 +226,52 @@ export default function AppShell({ admin = false }: AppShellProps) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [drawerOpen]);
 
+  const toggleCollapse = () => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      localStore.setSidebarCollapsed(next);
+      return next;
+    });
+  };
+
+  const storedUser = localStore.getUser();
+  const targetProfile = localStore.getTargetProfile();
+
+  const displayAccount = admin
+    ? storedUser?.accountRole === "admin"
+      ? {
+          name: storedUser.name,
+          initials: storedUser.initials || deriveInitials(storedUser.name, "QT"),
+          subtitle: storedUser.subtitle || "Quản trị hệ thống",
+        }
+      : {
+          name: "Quản trị viên",
+          initials: "QT",
+          subtitle: "Cổng kiểm duyệt",
+        }
+    : storedUser
+      ? {
+          name: storedUser.name,
+          initials: storedUser.initials || deriveInitials(storedUser.name, "UV"),
+          subtitle: storedUser.subtitle || `${storedUser.role} · ${storedUser.level}`,
+        }
+      : {
+          name: "Tài khoản ứng viên",
+          initials: "UV",
+          subtitle: `${targetProfile.role} · ${targetProfile.level}`,
+        };
+
+  const topItems = admin ? TOP_ADMIN_NAV : TOP_CANDIDATE_NAV;
+  const railGroups = admin ? ADMIN_RAIL : CANDIDATE_RAIL;
+
+  const handleSignOut = () => {
+    setAuthToken(null);
+    localStore.setUser(null);
+    setDrawerOpen(false);
+  };
+
   return (
-    <div className="app-shell">
+    <div className={`lc-shell ${collapsed ? "is-collapsed" : ""}`.trim()}>
       <button
         type="button"
         className="skip-link"
@@ -356,21 +283,12 @@ export default function AppShell({ admin = false }: AppShellProps) {
         Chuyển tới nội dung chính
       </button>
 
-      <header className="mobile-topbar">
-        <Logo to={admin ? "/admin/taxonomy" : "/dashboard"} size={24} />
-
-        <div className="mobile-topbar__actions">
-          <Link
-            to={admin ? "/dashboard" : "/admin/taxonomy"}
-            className="mobile-topbar__mode"
-            title={admin ? "Chuyển sang cổng Ứng viên" : "Chuyển sang cổng Quản trị"}
-          >
-            {admin ? "Quản trị" : "Ứng viên"}
-          </Link>
-
+      {/* LeetCode-style 50px Unified Top Navigation Bar */}
+      <header className="lc-topbar">
+        <div className="lc-topbar__left">
           <button
             type="button"
-            className="mobile-menu-btn"
+            className="lc-topbar__menu-btn"
             aria-expanded={drawerOpen}
             aria-controls="app-sidebar-nav"
             aria-label={drawerOpen ? "Đóng menu điều hướng" : "Mở menu điều hướng"}
@@ -378,38 +296,180 @@ export default function AppShell({ admin = false }: AppShellProps) {
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               {drawerOpen ? (
-                <path
-                  d="M6 6l12 12M18 6L6 18"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                />
+                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
               ) : (
-                <path
-                  d="M4 7h16M4 12h16M4 17h16"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                />
+                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
               )}
             </svg>
           </button>
+
+          <Logo to={admin ? "/admin/taxonomy" : "/dashboard"} size={24} />
+
+          <nav className="lc-topnav" aria-label="Điều hướng nhanh">
+            {topItems.map(([to, label]) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) => `lc-topnav__link ${isActive ? "is-active" : ""}`.trim()}
+              >
+                {label}
+              </NavLink>
+            ))}
+          </nav>
+        </div>
+
+        <div className="lc-topbar__right">
+          {!admin && (
+            <Link to="/problems/sandbox" className="lc-topbar__ide-btn" title="Mở trình soạn thảo Sandbox IDE">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path
+                  d="M5.5 4.5 2 8l3.5 3.5M10.5 4.5 14 8l-3.5 3.5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <span>Sandbox IDE</span>
+            </Link>
+          )}
+
+          <div className="lc-topbar__portal" role="group" aria-label="Chuyển đổi cổng">
+            <Link
+              to="/dashboard"
+              className={`lc-topbar__portal-btn ${!admin ? "is-active" : ""}`.trim()}
+              aria-current={!admin ? "true" : undefined}
+            >
+              Ứng viên
+            </Link>
+            <Link
+              to="/admin/taxonomy"
+              className={`lc-topbar__portal-btn ${admin ? "is-active" : ""}`.trim()}
+              aria-current={admin ? "true" : undefined}
+            >
+              Quản trị
+            </Link>
+          </div>
+
+          <a href="/" className="lc-topbar__icon-btn" title="Về trang giới thiệu" aria-label="Về trang giới thiệu">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path
+                d="M4.5 11.5 11.5 4.5M6 4.5h5.5V10"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </a>
+
+          <Link
+            to={admin ? "/admin/taxonomy" : "/profile"}
+            className="lc-topbar__user"
+            title={`${displayAccount.name} (${displayAccount.subtitle})`}
+          >
+            <span className="avatar" aria-hidden="true">
+              {displayAccount.initials}
+            </span>
+          </Link>
         </div>
       </header>
 
       {drawerOpen && (
-        <div
-          className="sidebar-backdrop"
-          aria-hidden="true"
-          onClick={() => setDrawerOpen(false)}
-        />
+        <div className="sidebar-backdrop" aria-hidden="true" onClick={() => setDrawerOpen(false)} />
       )}
 
-      <Sidebar admin={admin} isOpen={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      <div className="lc-shell__body">
+        <aside
+          id="app-sidebar-nav"
+          className={`lc-rail ${isOpenClass(drawerOpen)} ${collapsed ? "is-collapsed" : ""}`.trim()}
+          aria-label="Thanh bên không gian học"
+        >
+          <div className="lc-rail__head">
+            {!collapsed && (
+              <span className="lc-rail__context">
+                {admin ? "Cổng quản trị" : `${targetProfile.role} · ${targetProfile.level}`}
+              </span>
+            )}
+            <button
+              type="button"
+              className="lc-rail__collapse-btn"
+              onClick={toggleCollapse}
+              aria-label={collapsed ? "Mở rộng thanh bên" : "Thu gọn thanh bên"}
+              title={collapsed ? "Mở rộng thanh bên" : "Thu gọn thanh bên"}
+            >
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                {collapsed ? (
+                  <path d="M6 3.5 10.5 8 6 12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                ) : (
+                  <path d="M10 3.5 5.5 8 10 12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                )}
+              </svg>
+            </button>
+          </div>
 
-      <main className="main" id="main" tabIndex={-1}>
-        <Outlet />
-      </main>
+          <nav className="lc-rail__nav" aria-label={admin ? "Menu quản trị" : "Menu ứng viên"}>
+            {railGroups.map(([title, items]) => (
+              <div className="sidebar__group" key={title}>
+                {!collapsed && <p className="sidebar__title">{title}</p>}
+                {items.map(([to, label, icon]) => (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    title={collapsed ? label : undefined}
+                    onClick={() => setDrawerOpen(false)}
+                    className={({ isActive }) => `nav-item ${isActive ? "is-active" : ""}`.trim()}
+                  >
+                    <NavIcon kind={icon} />
+                    {!collapsed && <span className="nav-item__label">{label}</span>}
+                  </NavLink>
+                ))}
+              </div>
+            ))}
+          </nav>
+
+          <div className="sidebar__footer">
+            <div className="sidebar__profile">
+              <span className="avatar" aria-hidden="true">
+                {displayAccount.initials}
+              </span>
+              {!collapsed && (
+                <div className="sidebar__profile-meta">
+                  <span className="sidebar__profile-name">{displayAccount.name}</span>
+                  <span className="sidebar__profile-sub">{displayAccount.subtitle}</span>
+                </div>
+              )}
+              {!collapsed && (
+                <Link
+                  to="/login"
+                  onClick={handleSignOut}
+                  className="sidebar__signout"
+                  aria-label="Đăng xuất và về màn hình đăng nhập"
+                  title="Đăng xuất (UC01)"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path
+                      d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"
+                      stroke="currentColor"
+                      strokeWidth="1.75"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </Link>
+              )}
+            </div>
+          </div>
+        </aside>
+
+        <main className="main" id="main" tabIndex={-1}>
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
+}
+
+function isOpenClass(open: boolean): string {
+  return open ? "is-open" : "";
 }

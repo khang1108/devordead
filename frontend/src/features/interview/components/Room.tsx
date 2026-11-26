@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { Link } from "react-router-dom";
 import * as THREE from "three";
-import Logo from "@shared/components/Logo";
-import { Badge, Button, RuleTag, type ButtonVariant } from "@shared/ui";
-import type { TranscriptTurn } from "@shared/types";
+import { LogoMark } from "@shared/components/Logo";
+import { Badge, Button, type ButtonVariant } from "@shared/ui";
+import type { Tone, TranscriptTurn } from "@shared/types";
 import "./room.css";
 
 // 3D Simplex Noise (Stefan Gustavson / Ashima Arts, MIT) — low-frequency smooth acoustic breathing only
@@ -199,69 +200,89 @@ export type TimerTone = "normal" | "warn" | "danger";
 
 export interface RoomTopBarProps {
   badge: string;
+  badgeTone?: Tone;
   title: string;
+  backTo?: string;
+  backLabel?: string;
+  centerSlot?: ReactNode;
+  rightSlot?: ReactNode;
   remaining: string;
   total: string;
   tone?: TimerTone;
-  onEnd: () => void;
+  onEnd?: () => void;
+  endLabel?: string;
   onSimulateTimeout?: () => void;
   simulateLabel?: string;
 }
 
 /**
- * Thanh trên 52px phẳng của phòng phỏng vấn: logo, loại phiên, đồng hồ hard-stop (BR1), kết thúc.
+ * Thanh trên 48px của phòng phỏng vấn (LeetCode Workbench Bar trên nền --workbench-bg).
+ * Hỗ trợ centerSlot tùy chọn (ví dụ cặp nút [Run][Submit] của Live Coding) và đồng hồ hard-stop BR1.
  */
 export function RoomTopBar({
   badge,
+  badgeTone = "brand",
   title,
+  backTo = "/interview/setup",
+  backLabel = "Quay lại cấu hình phỏng vấn",
+  centerSlot,
+  rightSlot,
   remaining,
   total,
   tone = "normal",
   onEnd,
+  endLabel = "Kết thúc & lưu snapshot",
   onSimulateTimeout,
-  simulateLabel = "Kiểm tra mốc 00:00 (BR1)",
+  simulateLabel = "00:00 (BR1)",
 }: RoomTopBarProps) {
   return (
-    <header className="room-bar">
-      <div className="room-bar__brand">
-        <Logo to="/dashboard" />
+    <header className="lc-wb-bar room-wb-bar">
+      <div className="lc-wb-bar__left">
+        <Link to={backTo} className="room-wb-brand" aria-label={backLabel} title={backLabel}>
+          <LogoMark size={22} />
+        </Link>
         <span className="room-bar__sep" aria-hidden="true" />
-        <Badge tone="brand" dot>
+        <Badge tone={badgeTone} dot className="room-bar__badge">
           {badge}
         </Badge>
-        <p className="t-heading-s room-bar__title">{title}</p>
+        <p className="room-bar__title" title={title}>
+          {title}
+        </p>
       </div>
 
-      <div className="room-bar__spacer" />
+      <div className="lc-wb-bar__center">{centerSlot}</div>
 
-      <div className="room-bar__controls">
+      <div className="lc-wb-bar__right">
+        {rightSlot}
+
         {onSimulateTimeout && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="room-bar__demo"
+          <button
+            type="button"
+            className="room-wb-demo"
             onClick={onSimulateTimeout}
             title="Kích hoạt kết thúc đúng hạn (hard-stop BR1) và chụp snapshot ngay"
           >
             {simulateLabel}
-          </Button>
+          </button>
         )}
 
-        <RuleTag code="BR1">Hard-stop</RuleTag>
-
         <div
-          className={`room-timer ${tone === "danger" ? "is-danger" : tone === "warn" ? "is-warn" : ""}`}
+          className={`room-timer ${tone === "danger" ? "is-danger" : tone === "warn" ? "is-warn" : ""}`.trim()}
           role="timer"
-          aria-label={`Thời gian còn lại ${remaining} trên ${total}`}
+          aria-label={`BR1 Hard-stop · Thời gian còn lại ${remaining} trên ${total}`}
+          title="BR1 · Hard-stop — phiên tự kết thúc và lưu snapshot khi chạm 00:00"
         >
+          <span className="room-timer__code">BR1</span>
           <span className="room-timer__dot" aria-hidden="true" />
           <span className="room-timer__value">{remaining}</span>
           <span className="room-timer__total">/ {total}</span>
         </div>
 
-        <Button variant="secondary" size="sm" onClick={onEnd}>
-          Kết thúc
-        </Button>
+        {onEnd && (
+          <Button variant="secondary" size="sm" className="room-wb-end" onClick={onEnd}>
+            {endLabel}
+          </Button>
+        )}
       </div>
     </header>
   );
@@ -376,8 +397,8 @@ export function AiAvatar({
     group.add(ringMesh);
 
     const syncSize = () => {
-      const w = Math.max(64, host.clientWidth || size || 148);
-      const h = Math.max(64, host.clientHeight || size || 148);
+      const w = Math.max(64, host.clientWidth || size || 136);
+      const h = Math.max(64, host.clientHeight || size || 136);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h, false);
@@ -527,6 +548,7 @@ export interface TranscriptListProps {
   youLabel?: string;
   aiLabel?: string;
   emptyLabel?: string;
+  className?: string;
 }
 
 /** Danh sách lượt hội thoại phẳng chuẩn editorial (không lồng hộp trong hộp, phân tách bằng đường mảnh 1px). */
@@ -536,6 +558,7 @@ export function TranscriptList({
   youLabel = "Bạn",
   aiLabel = "AI Interviewer",
   emptyLabel = "Chưa có lượt hội thoại nào được ghi nhận.",
+  className = "",
 }: TranscriptListProps) {
   const listRef = useRef<HTMLOListElement | null>(null);
 
@@ -547,11 +570,11 @@ export function TranscriptList({
   }, [turns.length, interim]);
 
   if (turns.length === 0 && !interim) {
-    return <p className="room-transcript__empty">{emptyLabel}</p>;
+    return <p className={`room-transcript__empty ${className}`.trim()}>{emptyLabel}</p>;
   }
 
   return (
-    <ol className="room-transcript" aria-live="polite" ref={listRef}>
+    <ol className={`room-transcript ${className}`.trim()} aria-live="polite" ref={listRef}>
       {turns.map((t, i) => {
         const roleLabel = t.who === "ai" ? aiLabel : t.who === "hint" ? "Gợi ý định hướng" : youLabel;
         const stamp = t.timestamp || String(i + 1).padStart(2, "0");

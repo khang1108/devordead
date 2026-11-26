@@ -4,8 +4,6 @@ import {
   Badge,
   Button,
   Callout,
-  Card,
-  CardHead,
   EmptyState,
   ErrorBanner,
   Field,
@@ -13,15 +11,10 @@ import {
   ProgressBar,
   RuleTag,
   Skeleton,
-  Tabs,
 } from "@shared/ui";
 import { TEST_STATUS_META } from "@shared/constants";
 import { getErrorMessage } from "@shared/services/apiClient";
-import type {
-  EvaluationReport,
-  ProgressTone,
-  ReportCompetency,
-} from "@shared/types";
+import type { EvaluationReport, ProgressTone, ReportCompetency } from "@shared/types";
 import { assessmentService } from "./assessment.service";
 import "./ReportScreen.css";
 
@@ -72,102 +65,122 @@ function EvidenceSection({ report }: { report: EvaluationReport }) {
   const testResults = report.testResults ?? [];
 
   return (
-    <Card className="rep-card">
-      <CardHead title="Bằng chứng từ phiên">
+    <section className="lc-pane rep-pane" aria-label="Bằng chứng từ phiên">
+      <div className="lc-pane__head">
+        <div className="lc-pane__tabs" role="tablist" aria-label="Bằng chứng đánh giá">
+          {EVIDENCE_TABS.map((t) => (
+            <button
+              key={t.value}
+              type="button"
+              role="tab"
+              aria-selected={tab === t.value}
+              className={`lc-pane__tab ${tab === t.value ? "is-active" : ""}`.trim()}
+              onClick={() => setTab(t.value)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
         <RuleTag code="BR1">Snapshot nguyên vẹn</RuleTag>
-      </CardHead>
+      </div>
 
-      <Tabs tabs={EVIDENCE_TABS} value={tab} onChange={setTab} label="Bằng chứng đánh giá" />
-
-      {tab === "transcript" &&
-        (transcript.length > 0 ? (
-          <ol className="rep-transcript" role="list">
-            {transcript.map(({ id, who, text, timestamp }, idx) => (
-              <li key={id ?? `${who}-${idx}`} className="rep-turn">
-                <div className="row between">
-                  <span className="t-body-s t-strong">
-                    {who === "ai"
-                      ? "Người phỏng vấn AI"
-                      : who === "hint"
-                        ? "Gợi ý định hướng"
-                        : "Bạn"}
-                  </span>
-                  <span className="t-mono c-ink2 rep-tabular">
-                    {timestamp ?? `#${String(idx + 1).padStart(2, "0")}`}
-                  </span>
-                </div>
-                <p className="t-body-s c-ink2">{text}</p>
-              </li>
-            ))}
-          </ol>
-        ) : (
-          <p className="t-body-s c-ink2">Chưa có bản ghi transcript đính kèm trong báo cáo này.</p>
-        ))}
-
-      {tab === "snapshot" &&
-        (codeSnapshot ? (
-          <div className="col stack-sm">
-            <p className="t-mono c-ink2">
-              Snapshot mã nguồn · {report.type} ({report.duration}:00)
+      <div className="lc-pane__body rep-pane-body">
+        {tab === "transcript" &&
+          (transcript.length > 0 ? (
+            <ol className="rep-transcript" role="list">
+              {transcript.map(({ id, who, text, timestamp }, idx) => (
+                <li key={id ?? `${who}-${idx}`} className="rep-turn">
+                  <div className="row between">
+                    <span className="t-body-s t-strong">
+                      {who === "ai"
+                        ? "Người phỏng vấn AI"
+                        : who === "hint"
+                          ? "Gợi ý định hướng"
+                          : "Bạn"}
+                    </span>
+                    <span className="t-mono c-ink2 rep-tabular">
+                      {timestamp ?? `#${String(idx + 1).padStart(2, "0")}`}
+                    </span>
+                  </div>
+                  <p className="t-body-s c-ink2">{text}</p>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="t-body-s c-ink2">
+              Chưa có bản ghi transcript đính kèm trong báo cáo này.
             </p>
-            <pre className="code-block rep-code">
-              <code>{codeSnapshot}</code>
-            </pre>
-          </div>
-        ) : (
-          <p className="t-body-s c-ink2">Phiên này không có snapshot mã nguồn.</p>
-        ))}
+          ))}
 
-      {tab === "tests" &&
-        (testResults.length > 0 ? (
-          <div className="col stack-sm">
-            {report.correctness && (
-              <p className="t-body-s c-ink2">
-                Chấm tự động trong Docker Sandbox đạt{" "}
-                <strong className="rep-tabular">
-                  {report.correctness.passed}/{report.correctness.total}
-                </strong>{" "}
-                ca kiểm thử.
+        {tab === "snapshot" &&
+          (codeSnapshot ? (
+            <div className="col stack-sm">
+              <p className="t-mono c-ink2">
+                Snapshot mã nguồn · {report.type} ({report.duration}:00)
               </p>
-            )}
-            <div className="rep-table-scroll">
-              <table className="table rep-tests">
-                <thead>
-                  <tr>
-                    <th scope="col">Ca kiểm thử</th>
-                    <th scope="col">Thời gian</th>
-                    <th scope="col">Bộ nhớ</th>
-                    <th scope="col">Kết quả</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {testResults.map((tc, index) => {
-                    const meta = TEST_STATUS_META[tc.status];
-                    return (
-                      <tr key={tc.name}>
-                        <td>
-                          <strong className="rep-tabular">Test {index + 1}</strong> · {tc.name}
-                        </td>
-                        <td className="t-mono c-ink2 rep-tabular">
-                          {tc.status === "tle" ? "> 3000 ms" : `${tc.timeMs} ms`}
-                        </td>
-                        <td className="t-mono c-ink2 rep-tabular">{tc.memMb.toFixed(1)} MB</td>
-                        <td>
-                          <Badge tone={meta.tone} dot className="rep-table-badge">
-                            {meta.label}
-                          </Badge>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <pre className="code-block rep-code">
+                <code>{codeSnapshot}</code>
+              </pre>
             </div>
-          </div>
-        ) : (
-          <p className="t-body-s c-ink2">Phiên này không có dữ liệu kiểm thử Sandbox.</p>
-        ))}
-    </Card>
+          ) : (
+            <p className="t-body-s c-ink2">Phiên này không có snapshot mã nguồn.</p>
+          ))}
+
+        {tab === "tests" &&
+          (testResults.length > 0 ? (
+            <div className="col stack-sm">
+              {report.correctness && (
+                <p className="t-body-s c-ink2">
+                  Chấm tự động trong Docker Sandbox đạt{" "}
+                  <strong className="rep-tabular">
+                    {report.correctness.passed}/{report.correctness.total}
+                  </strong>{" "}
+                  ca kiểm thử.
+                </p>
+              )}
+              <div className="rep-table-scroll">
+                <table className="table rep-tests">
+                  <thead>
+                    <tr>
+                      <th scope="col">Ca kiểm thử</th>
+                      <th scope="col">Thời gian</th>
+                      <th scope="col">Bộ nhớ</th>
+                      <th scope="col">Kết quả</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {testResults.map((tc, index) => {
+                      const meta = TEST_STATUS_META[tc.status];
+                      const diffClass =
+                        tc.status === "passed"
+                          ? "lc-diff--easy"
+                          : tc.status === "tle" || tc.status === "mle"
+                            ? "lc-diff--medium"
+                            : "lc-diff--hard";
+                      return (
+                        <tr key={tc.name}>
+                          <td>
+                            <strong className="rep-tabular">Test {index + 1}</strong> · {tc.name}
+                          </td>
+                          <td className="t-mono c-ink2 rep-tabular">
+                            {tc.status === "tle" ? "> 3000 ms" : `${tc.timeMs} ms`}
+                          </td>
+                          <td className="t-mono c-ink2 rep-tabular">{tc.memMb.toFixed(1)} MB</td>
+                          <td>
+                            <span className={`lc-diff ${diffClass}`}>{meta.label}</span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            <p className="t-body-s c-ink2">Phiên này không có dữ liệu kiểm thử Sandbox.</p>
+          ))}
+      </div>
+    </section>
   );
 }
 
@@ -205,7 +218,9 @@ function ReviewForm({ competency, sending, submitError, onCancel, onSubmit }: Re
           <p className="t-body-s c-ink2">Yêu cầu đánh giá lại (UC16)</p>
           <h3 className="t-heading-s">
             {competency.name}{" "}
-            <span className="t-mono c-ink2 rep-tabular">({competency.score.toFixed(1)} / 10)</span>
+            <span className="t-mono c-ink2 rep-tabular">
+              ({competency.score.toFixed(1)} / 10)
+            </span>
           </h3>
         </div>
         <RuleTag code="BR2">Chấm độc lập</RuleTag>
@@ -213,7 +228,9 @@ function ReviewForm({ competency, sending, submitError, onCancel, onSubmit }: Re
 
       <p className="t-body-s c-ink2">Bằng chứng hiện tại: “{competency.evidence}”</p>
 
-      {submitError && <ErrorBanner title="Chưa thể gửi yêu cầu đánh giá lại" message={submitError} />}
+      {submitError && (
+        <ErrorBanner title="Chưa thể gửi yêu cầu đánh giá lại" message={submitError} />
+      )}
 
       <Field
         id="rep-review-reason"
@@ -231,11 +248,11 @@ function ReviewForm({ competency, sending, submitError, onCancel, onSubmit }: Re
       />
 
       <div className="row wrap stack-sm">
-        <Button variant="primary" type="submit" disabled={sending}>
+        <Button variant="primary" size="sm" type="submit" disabled={sending}>
           {sending && <span className="spinner" aria-hidden="true" />}
           {sending ? "Đang gửi…" : "Gửi yêu cầu"}
         </Button>
-        <Button variant="ghost" onClick={onCancel} disabled={sending}>
+        <Button variant="ghost" size="sm" onClick={onCancel} disabled={sending}>
           Hủy
         </Button>
       </div>
@@ -273,11 +290,10 @@ function FullReport({ report, requests, sendingId, submitError, onSubmit }: Full
 
   return (
     <>
-      <Card className="card--flush rep-card">
-        <div className="rep-section-head">
-          <CardHead title="Điểm đánh giá">
-            <RuleTag code="BR2">Chấm độc lập</RuleTag>
-          </CardHead>
+      <section className="lc-pane rep-pane" aria-label="Điểm đánh giá">
+        <div className="lc-pane__head">
+          <span className="rep-pane-title">Điểm đánh giá</span>
+          <RuleTag code="BR2">Chấm độc lập</RuleTag>
         </div>
 
         <div className="rep-scores-ledger">
@@ -312,14 +328,13 @@ function FullReport({ report, requests, sendingId, submitError, onSubmit }: Full
             note={report.reasoning?.note ?? "Đánh giá độc lập dựa trên transcript và lập luận."}
           />
         </div>
-      </Card>
+      </section>
 
       {competencies.length > 0 && (
-        <Card className="card--flush rep-competencies rep-card">
-          <div className="rep-section-head">
-            <CardHead title="Năng lực theo tiêu chí">
-              <span className="t-body-s c-ink2">Mỗi tiêu chí tối đa 1 yêu cầu (E2)</span>
-            </CardHead>
+        <section className="lc-pane rep-pane rep-competencies" aria-label="Năng lực theo tiêu chí">
+          <div className="lc-pane__head">
+            <span className="rep-pane-title">Năng lực theo tiêu chí</span>
+            <span className="t-body-s c-ink2">Mỗi tiêu chí tối đa 1 yêu cầu (E2)</span>
           </div>
 
           {activeTarget && (
@@ -401,6 +416,7 @@ function FullReport({ report, requests, sendingId, submitError, onSubmit }: Full
                           )}
                           <Button
                             variant="secondary"
+                            size="sm"
                             className="rep-review-button"
                             disabled={isPending || Boolean(sendingId)}
                             aria-label={`Yêu cầu đánh giá lại: ${item.name}`}
@@ -419,11 +435,14 @@ function FullReport({ report, requests, sendingId, submitError, onSubmit }: Full
               </tbody>
             </table>
           </div>
-        </Card>
+        </section>
       )}
 
       {summaries.length > 0 && (
-        <Card className="card--flush rep-card">
+        <section className="lc-pane rep-pane" aria-label="Nhận xét tổng hợp">
+          <div className="lc-pane__head">
+            <span className="rep-pane-title">Nhận xét tổng hợp</span>
+          </div>
           <div className="rep-summaries-ledger">
             {summaries.map(({ label, points }) => (
               <div key={label} className="rep-summary-col col stack-sm">
@@ -438,7 +457,7 @@ function FullReport({ report, requests, sendingId, submitError, onSubmit }: Full
               </div>
             ))}
           </div>
-        </Card>
+        </section>
       )}
 
       <EvidenceSection report={report} />
@@ -568,23 +587,28 @@ export default function ReportScreen() {
       )}
 
       {loadingList ? (
-        <div className="rep-layout grid stack-lg">
-          <Card className="card--flush rep-history rep-card">
-            <div className="rep-history-head">
-              <Skeleton width="60%" height={15} />
+        <div className="rep-layout">
+          <section className="lc-pane rep-pane rep-history">
+            <div className="lc-pane__head">
+              <span className="rep-pane-title">Lịch sử phiên</span>
+              <Skeleton width={28} height={14} />
             </div>
-            <div className="col" style={{ padding: "0 16px 16px" }}>
-              <Skeleton width="100%" height={48} />
-              <Skeleton width="100%" height={48} />
-              <Skeleton width="100%" height={48} />
+            <div className="rep-pane-body col stack-sm">
+              <Skeleton width="100%" height={46} />
+              <Skeleton width="100%" height={46} />
+              <Skeleton width="100%" height={46} />
             </div>
-          </Card>
+          </section>
           <div className="rep-detail col">
-            <Card className="rep-card">
-              <Skeleton width="28%" height={14} />
-              <Skeleton width="52%" height={22} />
-              <Skeleton width="100%" height={84} />
-            </Card>
+            <section className="lc-pane rep-pane">
+              <div className="lc-pane__head">
+                <Skeleton width="28%" height={14} />
+              </div>
+              <div className="rep-pane-body col stack-sm">
+                <Skeleton width="52%" height={22} />
+                <Skeleton width="100%" height={84} />
+              </div>
+            </section>
           </div>
         </div>
       ) : !listError && reports.length === 0 ? (
@@ -598,33 +622,31 @@ export default function ReportScreen() {
           }
         />
       ) : reports.length > 0 ? (
-        <div className="rep-layout grid stack-lg">
-          <Card className="card--flush rep-history rep-card">
-            <div className="rep-history-head">
-              <CardHead title="Lịch sử phiên">
-                <span className="t-body-s c-ink2 rep-tabular">{reports.length}</span>
-              </CardHead>
+        <div className="rep-layout">
+          <aside className="lc-pane rep-pane rep-history" aria-label="Lịch sử phiên phỏng vấn">
+            <div className="lc-pane__head">
+              <span className="rep-pane-title">Lịch sử phiên</span>
+              <span className="t-mono c-ink2 rep-tabular">{reports.length}</span>
             </div>
 
-            <nav aria-label="Báo cáo theo phiên" className="rep-history-list">
+            <nav aria-label="Báo cáo theo phiên" className="lc-list rep-history-list">
               {reports.map((item) => {
                 const isCurrent = activeReport?.id === item.id;
                 return (
                   <Link
                     key={item.id}
-                    className="rep-report-link col stack-sm"
+                    className="lc-list__row rep-report-link"
                     to={`/reports/${item.id}`}
                     aria-current={isCurrent ? "page" : undefined}
+                    aria-selected={isCurrent}
                   >
-                    <span className="t-strong">{item.type}</span>
+                    <span className="rep-report-title">{item.type}</span>
                     <span className="row wrap between stack-sm">
                       <span className="t-body-s c-ink2 rep-tabular">
                         {item.date} · {item.duration}p
                       </span>
                       {item.status === "interrupted" || item.overall === null ? (
-                        <Badge tone="warning" dot>
-                          Gián đoạn
-                        </Badge>
+                        <span className="lc-diff lc-diff--medium">Gián đoạn</span>
                       ) : (
                         <span className="t-mono c-ink2 rep-tabular">
                           {item.overall.toFixed(1)} / 10
@@ -635,7 +657,7 @@ export default function ReportScreen() {
                 );
               })}
             </nav>
-          </Card>
+          </aside>
 
           <div className="rep-detail col">
             {detailError && (
@@ -647,16 +669,20 @@ export default function ReportScreen() {
             )}
 
             {loadingDetail && !activeReport ? (
-              <Card className="rep-card">
-                <Skeleton width="35%" height={14} />
-                <Skeleton width="60%" height={24} />
-                <Skeleton width="100%" height={120} />
-              </Card>
+              <section className="lc-pane rep-pane">
+                <div className="lc-pane__head">
+                  <Skeleton width="35%" height={14} />
+                </div>
+                <div className="rep-pane-body col stack-sm">
+                  <Skeleton width="60%" height={24} />
+                  <Skeleton width="100%" height={120} />
+                </div>
+              </section>
             ) : activeReport ? (
               <>
-                <Card className="rep-session rep-card">
-                  <div className="row between wrap">
-                    <span className="t-mono c-ink2 rep-tabular">#{activeReport.id}</span>
+                <section className="lc-pane rep-pane" aria-label="Thông tin phiên báo cáo">
+                  <div className="lc-pane__head">
+                    <span className="t-mono c-ink2 rep-tabular">Phiên #{activeReport.id}</span>
                     {activeReport.status === "interrupted" ? (
                       <Badge tone="warning" dot>
                         Gián đoạn
@@ -667,11 +693,13 @@ export default function ReportScreen() {
                       </Badge>
                     )}
                   </div>
-                  <h2 className="t-heading-m">{activeReport.type}</h2>
-                  <p className="t-body-s c-ink2 rep-tabular">
-                    {activeReport.date} · Thời lượng {activeReport.duration} phút
-                  </p>
-                </Card>
+                  <div className="rep-session-body">
+                    <h2 className="t-heading-m">{activeReport.type}</h2>
+                    <p className="t-body-s c-ink2 rep-tabular">
+                      {activeReport.date} · Thời lượng {activeReport.duration} phút
+                    </p>
+                  </div>
+                </section>
 
                 {activeReport.status === "interrupted" ? (
                   <Callout tone="warning" title="Phiên phỏng vấn gián đoạn (A2)">
@@ -692,11 +720,11 @@ export default function ReportScreen() {
                 )}
               </>
             ) : (
-              <Card className="rep-card">
+              <section className="lc-pane rep-pane">
                 <p className="empty" role="status">
                   Không tìm thấy báo cáo theo mã đã chọn. Hãy chọn một phiên trong lịch sử bên trái.
                 </p>
-              </Card>
+              </section>
             )}
 
             <Link className="rep-roadmap t-strong" to="/roadmap">

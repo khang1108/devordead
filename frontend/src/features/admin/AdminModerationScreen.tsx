@@ -12,15 +12,12 @@ import {
   Badge,
   Button,
   Callout,
-  Card,
-  CardHead,
   EmptyState,
   ErrorBanner,
   Field,
   PageHeader,
   RuleTag,
   Skeleton,
-  Tabs,
 } from "@shared/ui";
 import { DIFFICULTY_META } from "@shared/constants";
 import { getErrorMessage } from "@shared/services/apiClient";
@@ -54,11 +51,23 @@ interface EditableModerationItem {
   revision: number;
 }
 
-type RequiredFieldKey = "title" | "reference" | "criteriaText" | "topic" | "competency" | "difficulty";
+type RequiredFieldKey =
+  | "title"
+  | "reference"
+  | "criteriaText"
+  | "topic"
+  | "competency"
+  | "difficulty";
 
 const KIND_LABELS: Record<ModerationKind, string> = {
   question: "Câu hỏi",
   problem: "Bài tập",
+};
+
+const DIFF_CLASS: Record<Difficulty, string> = {
+  easy: "lc-diff--easy",
+  medium: "lc-diff--medium",
+  hard: "lc-diff--hard",
 };
 
 const FILTERS: readonly { value: QueueFilter; label: string }[] = [
@@ -120,6 +129,7 @@ function toModerationItem(item: EditableModerationItem): ModerationItem {
 }
 
 interface QueueProps {
+  allItems: readonly EditableModerationItem[];
   items: readonly EditableModerationItem[];
   count: number;
   filter: QueueFilter;
@@ -128,7 +138,7 @@ interface QueueProps {
   onSelect: (id: string, focusEditor?: boolean) => void;
 }
 
-function Queue({ items, count, filter, onFilter, selectedId, onSelect }: QueueProps) {
+function Queue({ allItems, items, count, filter, onFilter, selectedId, onSelect }: QueueProps) {
   function navigateQueue(event: KeyboardEvent<HTMLUListElement>) {
     const options = Array.from(
       event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="option"]'),
@@ -160,15 +170,36 @@ function Queue({ items, count, filter, onFilter, selectedId, onSelect }: QueuePr
     options[next]?.focus();
   }
 
+  const countFor = (value: QueueFilter) =>
+    value === "all" ? allItems.length : allItems.filter((item) => item.kind === value).length;
+
   return (
-    <Card className="card--flush mod-queue mod-card">
-      <div className="mod-queue-head">
-        <CardHead title="Hàng chờ">
-          <Badge tone="brand" dot>
-            {count} chờ duyệt
-          </Badge>
-        </CardHead>
-        <Tabs tabs={FILTERS} value={filter} onChange={onFilter} label="Loại nội dung" />
+    <section className="lc-pane mod-pane mod-queue" aria-label="Hàng chờ kiểm duyệt">
+      <div className="lc-pane__head">
+        <span className="mod-pane-title">Hàng chờ</span>
+        <Badge tone="brand" dot>
+          {count} chờ duyệt
+        </Badge>
+      </div>
+
+      <div className="lc-pane__subbar mod-queue-subbar">
+        <div className="lc-pills" role="group" aria-label="Lọc theo loại nội dung">
+          {FILTERS.map((f) => {
+            const active = filter === f.value;
+            return (
+              <button
+                key={f.value}
+                type="button"
+                className={`lc-pill mod-filter-pill ${active ? "is-active" : ""}`.trim()}
+                aria-pressed={active}
+                onClick={() => onFilter(f.value)}
+              >
+                <span>{f.label}</span>
+                <span className="lc-pill__count">{countFor(f.value)}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {items.length === 0 ? (
@@ -179,35 +210,47 @@ function Queue({ items, count, filter, onFilter, selectedId, onSelect }: QueuePr
         </p>
       ) : (
         <ul
-          className="mod-items"
+          className="lc-list mod-items"
           aria-label="Nội dung chờ duyệt"
           role="listbox"
           onKeyDown={navigateQueue}
         >
-          {items.map((item) => (
-            <li key={item.id} role="presentation">
-              <button
-                type="button"
-                role="option"
-                className="mod-item col stack-sm"
-                aria-selected={item.id === selectedId}
-                tabIndex={item.id === selectedId ? 0 : -1}
-                onClick={() => onSelect(item.id, true)}
-              >
-                <span className="row wrap between stack-sm">
-                  <Badge tone={item.kind === "question" ? "brand" : "neutral"} dot>
-                    {KIND_LABELS[item.kind]}
-                  </Badge>
-                  <span className="t-mono c-ink2 mod-tabular">{item.createdAt}</span>
-                </span>
-                <span className="t-strong">{item.title.trim() || item.originalTitle}</span>
-                <span className="t-body-s c-ink2">{item.source}</span>
-              </button>
-            </li>
-          ))}
+          {items.map((item) => {
+            const diffKey = item.difficulty || null;
+            return (
+              <li key={item.id} role="presentation" className="mod-item-li">
+                <button
+                  type="button"
+                  role="option"
+                  className="lc-list__row mod-item"
+                  aria-selected={item.id === selectedId}
+                  tabIndex={item.id === selectedId ? 0 : -1}
+                  onClick={() => onSelect(item.id, true)}
+                >
+                  <span className="row wrap between stack-sm">
+                    <span className="row stack-sm">
+                      <Badge tone={item.kind === "question" ? "brand" : "neutral"} dot>
+                        {KIND_LABELS[item.kind]}
+                      </Badge>
+                      {diffKey && (
+                        <span className={`lc-diff ${DIFF_CLASS[diffKey]}`}>
+                          {DIFFICULTY_META[diffKey].label}
+                        </span>
+                      )}
+                    </span>
+                    <span className="t-mono c-ink2 mod-tabular">{item.createdAt}</span>
+                  </span>
+                  <span className="t-strong mod-item-title">
+                    {item.title.trim() || item.originalTitle}
+                  </span>
+                  <span className="t-body-s c-ink2">{item.source}</span>
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
-    </Card>
+    </section>
   );
 }
 
@@ -336,172 +379,186 @@ function ModerationEditor({
 
   return (
     <form
-      className="card mod-editor mod-card"
+      className="lc-pane mod-pane mod-editor"
       onSubmit={approve}
       noValidate
       aria-busy={Boolean(pending)}
     >
-      <div className="row between wrap">
-        <h2 className="t-body-s t-strong c-ink2" ref={headingRef} tabIndex={-1}>
+      <div className="lc-pane__head">
+        <h2 className="mod-pane-title" ref={headingRef} tabIndex={-1}>
           Chi tiết kiểm duyệt · <span className="t-mono">#{item.id}</span>
         </h2>
         <div className="row stack-sm">
-          <span className="t-body-s c-ink2 mod-tabular">Bản nháp #{item.revision + 1}</span>
+          <span className="t-mono c-ink2 mod-tabular">Bản nháp #{item.revision + 1}</span>
           <Badge tone="warning" dot>
             Chờ duyệt
           </Badge>
         </div>
       </div>
 
-      <div className="mod-source row between wrap">
-        <div>
-          <p className="t-heading-s">{KIND_LABELS[item.kind]}</p>
-          <p className="t-body-s c-ink2 mod-tabular">
-            Nguồn: {item.source} · {item.createdAt}
-          </p>
-        </div>
-      </div>
-
-      {actionError && <ErrorBanner title="Không thể thực hiện thao tác kiểm duyệt" message={actionError} />}
-
-      {regeneratedToast && (
-        <Callout tone="brand">
-          <p>{regeneratedToast}</p>
-        </Callout>
-      )}
-
-      {missingList.length > 0 && (
-        <div role="alert">
-          <Callout tone="danger" title="Thiếu thông tin bắt buộc (E1)">
-            <p>
-              Vui lòng bổ sung:{" "}
-              <strong>{missingList.map((key) => REQUIRED_FIELDS[key]).join(", ")}</strong>.
+      <div className="lc-pane__body mod-editor-body">
+        <div className="mod-source row between wrap">
+          <div>
+            <p className="t-heading-s">{KIND_LABELS[item.kind]}</p>
+            <p className="t-body-s c-ink2 mod-tabular">
+              Nguồn: {item.source} · {item.createdAt}
             </p>
-          </Callout>
-        </div>
-      )}
-
-      <fieldset className="mod-fields col" disabled={Boolean(pending)}>
-        <Field
-          id="mod-title"
-          label="Tiêu đề"
-          required
-          value={item.title}
-          error={errors.title}
-          onChange={(event) => change("title", event.target.value)}
-        />
-        <Field
-          id="mod-content"
-          label="Nội dung đề bài / câu hỏi"
-          multiline
-          placeholder="Nhập hoặc hiệu chỉnh nội dung câu hỏi / đề bài…"
-          value={item.content}
-          onChange={(event) => change("content", event.target.value)}
-        />
-        <Field
-          id="mod-reference"
-          label="Đáp án tham chiếu"
-          multiline
-          required
-          value={item.reference}
-          error={errors.reference}
-          onChange={(event) => change("reference", event.target.value)}
-        />
-        <Field
-          id="mod-criteriaText"
-          label="Tiêu chí chấm"
-          multiline
-          required
-          hint="Mỗi tiêu chí viết trên một dòng."
-          value={item.criteriaText}
-          error={errors.criteriaText}
-          onChange={(event) => change("criteriaText", event.target.value)}
-        />
-
-        <div className="mod-assignment grid">
-          <AssignmentSelect
-            name="topic"
-            label="Topic"
-            value={item.topic}
-            error={errors.topic}
-            options={topicOptions}
-            onChange={(value) => change("topic", value)}
-          />
-          <AssignmentSelect
-            name="competency"
-            label="Competency"
-            value={item.competency}
-            error={errors.competency}
-            options={competencyOptions}
-            onChange={(value) => change("competency", value)}
-          />
-          <AssignmentSelect
-            name="difficulty"
-            label="Độ khó"
-            value={item.difficulty}
-            error={errors.difficulty}
-            options={difficultyOptions}
-            onChange={(value) => change("difficulty", value as Difficulty | "")}
-          />
-        </div>
-      </fieldset>
-
-      {rejecting && (
-        <div className="mod-rejection col">
-          <Field
-            id="mod-reject-reason"
-            label="Lý do từ chối (bắt buộc)"
-            multiline
-            required
-            placeholder="Nêu rõ lý do loại bỏ nội dung này…"
-            value={reason}
-            error={errors.reason}
-            disabled={Boolean(pending)}
-            onChange={(event) => {
-              setReason(event.target.value);
-              setErrors((current) => ({ ...current, reason: undefined }));
-            }}
-          />
-          <div className="row wrap stack-sm">
-            <Button variant="primary" onClick={reject} disabled={busy}>
-              {pending === "reject" && <span className="spinner" aria-hidden="true" />}
-              {pending === "reject" ? LOADING_LABELS.reject : "Xác nhận từ chối"}
-            </Button>
-            <Button
-              variant="ghost"
-              disabled={Boolean(pending)}
-              onClick={() => {
-                setRejecting(false);
-                setReason("");
-                setErrors((current) => ({ ...current, reason: undefined }));
-              }}
-            >
-              Hủy
-            </Button>
           </div>
+          {item.difficulty && (
+            <span className={`lc-diff ${DIFF_CLASS[item.difficulty]}`}>
+              {DIFFICULTY_META[item.difficulty].label}
+            </span>
+          )}
         </div>
-      )}
 
-      <div className="mod-actions row wrap stack-sm">
-        <Button variant="primary" type="submit" disabled={busy || rejecting}>
-          {pending === "approve" && <span className="spinner" aria-hidden="true" />}
-          {pending === "approve" ? LOADING_LABELS.approve : "Phê duyệt"}
-        </Button>
-
-        {!rejecting && (
-          <Button variant="secondary" disabled={busy} onClick={() => setRejecting(true)}>
-            Từ chối
-          </Button>
+        {actionError && (
+          <ErrorBanner title="Không thể thực hiện thao tác kiểm duyệt" message={actionError} />
         )}
 
-        <Button
-          variant="ghost"
-          disabled={busy || rejecting}
-          onClick={() => onAction("regenerate")}
-        >
-          {pending === "regenerate" && <span className="spinner" aria-hidden="true" />}
-          {pending === "regenerate" ? LOADING_LABELS.regenerate : "Yêu cầu AI đề xuất lại"}
-        </Button>
+        {regeneratedToast && (
+          <Callout tone="brand">
+            <p>{regeneratedToast}</p>
+          </Callout>
+        )}
+
+        {missingList.length > 0 && (
+          <div role="alert">
+            <Callout tone="danger" title="Thiếu thông tin bắt buộc (E1)">
+              <p>
+                Vui lòng bổ sung:{" "}
+                <strong>{missingList.map((key) => REQUIRED_FIELDS[key]).join(", ")}</strong>.
+              </p>
+            </Callout>
+          </div>
+        )}
+
+        <fieldset className="mod-fields col" disabled={Boolean(pending)}>
+          <Field
+            id="mod-title"
+            label="Tiêu đề"
+            required
+            value={item.title}
+            error={errors.title}
+            onChange={(event) => change("title", event.target.value)}
+          />
+          <Field
+            id="mod-content"
+            label="Nội dung đề bài / câu hỏi"
+            multiline
+            placeholder="Nhập hoặc hiệu chỉnh nội dung câu hỏi / đề bài…"
+            value={item.content}
+            onChange={(event) => change("content", event.target.value)}
+          />
+          <Field
+            id="mod-reference"
+            label="Đáp án tham chiếu"
+            multiline
+            required
+            value={item.reference}
+            error={errors.reference}
+            onChange={(event) => change("reference", event.target.value)}
+          />
+          <Field
+            id="mod-criteriaText"
+            label="Tiêu chí chấm"
+            multiline
+            required
+            hint="Mỗi tiêu chí viết trên một dòng."
+            value={item.criteriaText}
+            error={errors.criteriaText}
+            onChange={(event) => change("criteriaText", event.target.value)}
+          />
+
+          <div className="mod-assignment grid">
+            <AssignmentSelect
+              name="topic"
+              label="Topic"
+              value={item.topic}
+              error={errors.topic}
+              options={topicOptions}
+              onChange={(value) => change("topic", value)}
+            />
+            <AssignmentSelect
+              name="competency"
+              label="Competency"
+              value={item.competency}
+              error={errors.competency}
+              options={competencyOptions}
+              onChange={(value) => change("competency", value)}
+            />
+            <AssignmentSelect
+              name="difficulty"
+              label="Độ khó"
+              value={item.difficulty}
+              error={errors.difficulty}
+              options={difficultyOptions}
+              onChange={(value) => change("difficulty", value as Difficulty | "")}
+            />
+          </div>
+        </fieldset>
+
+        {rejecting && (
+          <div className="mod-rejection col">
+            <Field
+              id="mod-reject-reason"
+              label="Lý do từ chối (bắt buộc)"
+              multiline
+              required
+              placeholder="Nêu rõ lý do loại bỏ nội dung này…"
+              value={reason}
+              error={errors.reason}
+              disabled={Boolean(pending)}
+              onChange={(event) => {
+                setReason(event.target.value);
+                setErrors((current) => ({ ...current, reason: undefined }));
+              }}
+            />
+            <div className="row wrap stack-sm">
+              <Button variant="primary" size="sm" onClick={reject} disabled={busy}>
+                {pending === "reject" && <span className="spinner" aria-hidden="true" />}
+                {pending === "reject" ? LOADING_LABELS.reject : "Xác nhận từ chối"}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={Boolean(pending)}
+                onClick={() => {
+                  setRejecting(false);
+                  setReason("");
+                  setErrors((current) => ({ ...current, reason: undefined }));
+                }}
+              >
+                Hủy
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="lc-pane__foot mod-actions">
+        <div className="row wrap stack-sm">
+          <Button variant="primary" size="sm" type="submit" disabled={busy || rejecting}>
+            {pending === "approve" && <span className="spinner" aria-hidden="true" />}
+            {pending === "approve" ? LOADING_LABELS.approve : "Phê duyệt"}
+          </Button>
+
+          {!rejecting && (
+            <Button variant="secondary" size="sm" disabled={busy} onClick={() => setRejecting(true)}>
+              Từ chối
+            </Button>
+          )}
+
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={busy || rejecting}
+            onClick={() => onAction("regenerate")}
+          >
+            {pending === "regenerate" && <span className="spinner" aria-hidden="true" />}
+            {pending === "regenerate" ? LOADING_LABELS.regenerate : "Yêu cầu AI đề xuất lại"}
+          </Button>
+        </div>
+        <RuleTag code="BR4">Kiểm duyệt</RuleTag>
       </div>
     </form>
   );
@@ -677,6 +734,7 @@ export default function AdminModerationScreen() {
         eyebrow="Quản trị hệ thống"
         title="Kiểm duyệt nội dung"
         subtitle="Rà soát câu hỏi và bài tập trước khi đưa vào ngân hàng chính thức."
+        actions={<RuleTag code="BR4">Nội dung đã phê duyệt</RuleTag>}
       />
 
       <Callout tone="brand">
@@ -698,18 +756,26 @@ export default function AdminModerationScreen() {
       )}
 
       {loading ? (
-        <div className="mod-layout grid">
-          <Card className="mod-card">
-            <Skeleton width="55%" height={16} />
-            <Skeleton width="100%" height={56} />
-            <Skeleton width="100%" height={56} />
-          </Card>
-          <Card className="mod-card">
-            <Skeleton width="40%" height={16} />
-            <Skeleton width="100%" height={40} />
-            <Skeleton width="100%" height={96} />
-            <Skeleton width="100%" height={96} />
-          </Card>
+        <div className="mod-layout">
+          <section className="lc-pane mod-pane">
+            <div className="lc-pane__head">
+              <Skeleton width="48%" height={14} />
+            </div>
+            <div className="mod-editor-body">
+              <Skeleton width="100%" height={56} />
+              <Skeleton width="100%" height={56} />
+            </div>
+          </section>
+          <section className="lc-pane mod-pane">
+            <div className="lc-pane__head">
+              <Skeleton width="40%" height={14} />
+            </div>
+            <div className="mod-editor-body">
+              <Skeleton width="100%" height={40} />
+              <Skeleton width="100%" height={96} />
+              <Skeleton width="100%" height={96} />
+            </div>
+          </section>
         </div>
       ) : queue.length === 0 ? (
         <EmptyState
@@ -722,8 +788,9 @@ export default function AdminModerationScreen() {
           }
         />
       ) : (
-        <div className="mod-layout grid">
+        <div className="mod-layout">
           <Queue
+            allItems={queue}
             items={visible}
             count={queue.length}
             filter={filter}
@@ -746,10 +813,12 @@ export default function AdminModerationScreen() {
               onAction={(action, reason) => void act(action, reason)}
             />
           ) : (
-            <Card className="mod-card">
-              <CardHead title="Chi tiết kiểm duyệt" />
+            <section className="lc-pane mod-pane">
+              <div className="lc-pane__head">
+                <span className="mod-pane-title">Chi tiết kiểm duyệt</span>
+              </div>
               <p className="empty">Không còn mục nào đang chờ duyệt trong bộ lọc hiện tại.</p>
-            </Card>
+            </section>
           )}
         </div>
       )}
@@ -758,20 +827,25 @@ export default function AdminModerationScreen() {
         {notice}
       </p>
 
-      <Card className="card--flush mod-history mod-card">
-        <CardHead title="Đã xử lý">
-          <span className="t-body-s c-ink2 mod-tabular">{processed.length} mục</span>
-        </CardHead>
+      {/* Processed History Zebra List Pane */}
+      <section className="lc-pane mod-pane mod-history" aria-label="Lịch sử đã xử lý">
+        <div className="lc-pane__head">
+          <span className="mod-pane-title">Đã xử lý</span>
+          <span className="t-mono c-ink2 mod-tabular">{processed.length} mục</span>
+        </div>
 
         {processed.length === 0 ? (
           <p className="mod-history-empty t-body-s c-ink2">Chưa có nội dung đã xử lý.</p>
         ) : (
-          <ul className="mod-history-list" role="list">
+          <ul className="lc-list mod-history-list" role="list">
             {processed.map((item) => {
               const approved = item.decision === "approved";
               return (
-                <li className="mod-history-entry" key={`${item.id}-${item.processedAt}`}>
-                  <div className="col" style={{ gap: "4px" }}>
+                <li
+                  className="lc-list__row mod-history-entry"
+                  key={`${item.id}-${item.processedAt}`}
+                >
+                  <div className="col mod-history-main">
                     <div className="row wrap stack-sm">
                       <span className="t-body-s c-ink2">{KIND_LABELS[item.kind]}</span>
                       <span className="t-mono c-ink2 mod-tabular">{item.processedAt}</span>
@@ -780,15 +854,15 @@ export default function AdminModerationScreen() {
                     {item.reason && <p className="t-body-s c-ink2">Lý do: {item.reason}</p>}
                   </div>
 
-                  <Badge tone={approved ? "success" : "danger"} dot>
+                  <span className={`lc-diff ${approved ? "lc-diff--easy" : "lc-diff--hard"}`}>
                     {approved ? "Đã phê duyệt" : "Đã từ chối"}
-                  </Badge>
+                  </span>
                 </li>
               );
             })}
           </ul>
         )}
-      </Card>
+      </section>
     </div>
   );
 }

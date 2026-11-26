@@ -3,8 +3,6 @@ import {
   Badge,
   Button,
   Callout,
-  Card,
-  CardHead,
   Chip,
   ErrorBanner,
   Field,
@@ -339,9 +337,7 @@ function TaxonomyTree({
               <span className="t-mono c-ink2 tax-tabular">{node.practiced}p</span>
             )}
             {node.hidden && (
-              <Badge tone="warning" dot>
-                Đã ẩn
-              </Badge>
+              <span className="lc-diff lc-diff--medium">Đã ẩn</span>
             )}
           </button>
         </div>
@@ -352,28 +348,31 @@ function TaxonomyTree({
   }
 
   return (
-    <Card className="card--tight tax-tree-card">
-      <CardHead title={label}>
+    <section className="lc-pane tax-pane" aria-label={label}>
+      <div className="lc-pane__head">
+        <span className="tax-pane-title">{label}</span>
         <button type="button" className="tax-add-root" onClick={() => onAddRoot(rootKind)}>
           + Thêm
         </button>
-      </CardHead>
+      </div>
 
-      {roots.length > 0 ? (
-        <ul role="tree" aria-label={label} className="tax-tree" onKeyDown={handleKeyDown}>
-          {roots.map(renderBranch)}
-        </ul>
-      ) : (
-        <div className="tax-empty col">
-          <p className="t-body-s c-ink2">Chưa có nút gốc nào.</p>
-          <Button variant="secondary" onClick={() => onAddRoot(rootKind)}>
-            Thêm {KIND_LABELS[rootKind].toLowerCase()}
-          </Button>
-        </div>
-      )}
+      <div className="lc-pane__body tax-tree-body">
+        {roots.length > 0 ? (
+          <ul role="tree" aria-label={label} className="tax-tree" onKeyDown={handleKeyDown}>
+            {roots.map(renderBranch)}
+          </ul>
+        ) : (
+          <div className="tax-empty col">
+            <p className="t-body-s c-ink2">Chưa có nút gốc nào.</p>
+            <Button variant="secondary" size="sm" onClick={() => onAddRoot(rootKind)}>
+              Thêm {KIND_LABELS[rootKind].toLowerCase()}
+            </Button>
+          </div>
+        )}
+      </div>
 
-      {footer}
-    </Card>
+      {footer && <div className="lc-pane__foot">{footer}</div>}
+    </section>
   );
 }
 
@@ -406,13 +405,17 @@ function TaxonomyEditor({
 }: TaxonomyEditorProps) {
   if (!editor) {
     return (
-      <Card className="tax-card">
-        <CardHead title="Chi tiết nút" />
-        <p className="empty">
-          Chọn một nút trong cây bên trái để chỉnh sửa, hoặc nhấn <strong>+ Thêm</strong> để tạo
-          Domain/Role mới.
-        </p>
-      </Card>
+      <section className="lc-pane tax-pane">
+        <div className="lc-pane__head">
+          <span className="tax-pane-title">Chi tiết nút</span>
+        </div>
+        <div className="lc-pane__body">
+          <p className="empty">
+            Chọn một nút trong cây bên trái để chỉnh sửa, hoặc nhấn <strong>+ Thêm</strong> để tạo
+            Domain/Role mới.
+          </p>
+        </div>
+      </section>
     );
   }
 
@@ -425,11 +428,12 @@ function TaxonomyEditor({
   const families = nodes.filter((item) => item.kind === "family");
 
   return (
-    <form className="card tax-editor tax-card" onSubmit={onSave} noValidate>
-      <CardHead title={creating ? "Thêm nút mới" : "Chi tiết nút"}>
+    <form className="lc-pane tax-pane tax-editor" onSubmit={onSave} noValidate>
+      <div className="lc-pane__head">
+        <span className="tax-pane-title">{creating ? "Thêm nút mới" : "Chi tiết nút"}</span>
         <div className="row stack-sm">
           {(node.practiced ?? 0) > 0 && (
-            <span className="t-body-s c-ink2 tax-tabular">{node.practiced} phiên</span>
+            <span className="t-mono c-ink2 tax-tabular">{node.practiced} phiên</span>
           )}
           {node.hidden && (
             <Badge tone="warning" dot>
@@ -437,131 +441,139 @@ function TaxonomyEditor({
             </Badge>
           )}
         </div>
-      </CardHead>
-
-      <div className="tax-inspector-head">
-        <p className="t-body-s c-ink2">
-          {KIND_LABELS[node.kind]}
-          {parent ? ` · Thuộc ${parent.name}` : ""}
-        </p>
-        <h3 className="t-heading-m">
-          {creating ? `Thêm ${KIND_LABELS[node.kind].toLowerCase()}` : node.name}
-        </h3>
       </div>
 
-      <Field
-        id="tax-name"
-        label="Tên"
-        required
-        placeholder={`Nhập tên ${KIND_LABELS[node.kind].toLowerCase()}…`}
-        value={draft.name}
-        onChange={(event) => onChange({ name: event.target.value })}
-        error={error?.field === "name" ? error.message : undefined}
-      />
+      <div className="lc-pane__body tax-editor-body">
+        <div className="tax-inspector-head">
+          <p className="t-body-s c-ink2">
+            {KIND_LABELS[node.kind]}
+            {parent ? ` · Thuộc ${parent.name}` : ""}
+          </p>
+          <h3 className="t-heading-m">
+            {creating ? `Thêm ${KIND_LABELS[node.kind].toLowerCase()}` : node.name}
+          </h3>
+        </div>
 
-      <Field
-        label="Mô tả"
-        multiline
-        placeholder="Mô tả phạm vi đánh giá hoặc chuẩn đầu ra năng lực…"
-        value={draft.description}
-        onChange={(event) => onChange({ description: event.target.value })}
-      />
+        <Field
+          id="tax-name"
+          label="Tên"
+          required
+          placeholder={`Nhập tên ${KIND_LABELS[node.kind].toLowerCase()}…`}
+          value={draft.name}
+          onChange={(event) => onChange({ name: event.target.value })}
+          error={error?.field === "name" ? error.message : undefined}
+        />
 
-      <div className="field">
-        <label className="field__label" htmlFor="tax-level">
-          Cấp độ
-        </label>
-        <select
-          id="tax-level"
-          className="select"
-          value={draft.level}
-          onChange={(event) => onChange({ level: event.target.value as CareerLevel | "" })}
-        >
-          <option value="">Chưa gán cấp độ</option>
-          {LEVELS.map((level) => (
-            <option key={level} value={level}>
-              {level}
-            </option>
-          ))}
-        </select>
-      </div>
+        <Field
+          label="Mô tả"
+          multiline
+          placeholder="Mô tả phạm vi đánh giá hoặc chuẩn đầu ra năng lực…"
+          value={draft.description}
+          onChange={(event) => onChange({ description: event.target.value })}
+        />
 
-      <fieldset className="tax-roles col stack-sm">
-        <legend className="field__label">Liên kết vai trò</legend>
-        {families.map((family) => {
-          const roles = nodes.filter((item) => item.parentId === family.id);
-          if (roles.length === 0) return null;
+        <div className="field">
+          <label className="field__label" htmlFor="tax-level">
+            Cấp độ
+          </label>
+          <select
+            id="tax-level"
+            className="select"
+            value={draft.level}
+            onChange={(event) => onChange({ level: event.target.value as CareerLevel | "" })}
+          >
+            <option value="">Chưa gán cấp độ</option>
+            {LEVELS.map((level) => (
+              <option key={level} value={level}>
+                {level}
+              </option>
+            ))}
+          </select>
+        </div>
 
-          return (
-            <div key={family.id} className="col stack-sm">
-              <p className="t-body-s c-ink2">{family.name}</p>
-              <div className="row wrap stack-sm">
-                {roles.map((role) => (
-                  <Chip
-                    key={role.id}
-                    active={draft.roles.includes(role.id)}
-                    onClick={() =>
-                      onChange({
-                        roles: draft.roles.includes(role.id)
-                          ? draft.roles.filter((id) => id !== role.id)
-                          : [...draft.roles, role.id],
-                      })
-                    }
-                  >
-                    {role.name}
-                    {role.hidden || family.hidden ? " · Đã ẩn" : ""}
-                  </Chip>
-                ))}
+        <fieldset className="tax-roles col stack-sm">
+          <legend className="field__label">Liên kết vai trò</legend>
+          {families.map((family) => {
+            const roles = nodes.filter((item) => item.parentId === family.id);
+            if (roles.length === 0) return null;
+
+            return (
+              <div key={family.id} className="col stack-sm">
+                <p className="t-body-s c-ink2">{family.name}</p>
+                <div className="row wrap stack-sm">
+                  {roles.map((role) => (
+                    <Chip
+                      key={role.id}
+                      active={draft.roles.includes(role.id)}
+                      onClick={() =>
+                        onChange({
+                          roles: draft.roles.includes(role.id)
+                            ? draft.roles.filter((id) => id !== role.id)
+                            : [...draft.roles, role.id],
+                        })
+                      }
+                    >
+                      {role.name}
+                      {role.hidden || family.hidden ? " · Đã ẩn" : ""}
+                    </Chip>
+                  ))}
+                </div>
               </div>
-            </div>
-          );
-        })}
-        {!nodes.some((item) => item.kind === "role") && (
-          <p className="t-body-s c-ink2">Chưa có vai trò để liên kết.</p>
-        )}
-      </fieldset>
+            );
+          })}
+          {!nodes.some((item) => item.kind === "role") && (
+            <p className="t-body-s c-ink2">Chưa có vai trò để liên kết.</p>
+          )}
+        </fieldset>
 
-      {error && !error.field && (
-        <div role="alert" className="col stack-sm">
-          <Callout tone="danger" title="Không thể xóa nút đang tham chiếu (E1)">
-            <p>{error.message}</p>
+        {error && !error.field && (
+          <div role="alert" className="col stack-sm">
+            <Callout tone="danger" title="Không thể xóa nút đang tham chiếu (E1)">
+              <p>{error.message}</p>
+            </Callout>
+            {!creating && !node.hidden && (
+              <div>
+                <Button variant="secondary" size="sm" onClick={onVisibility}>
+                  Vô hiệu hóa thay vì xóa (A1)
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {savedToast && !error && (
+          <Callout tone="success">
+            <p>{savedToast}</p>
           </Callout>
-          {!creating && !node.hidden && (
-            <div>
-              <Button variant="secondary" onClick={onVisibility}>
-                Vô hiệu hóa thay vì xóa (A1)
-              </Button>
-            </div>
+        )}
+
+        <div className="row wrap stack-sm">
+          <Button variant="primary" size="sm" type="submit">
+            Lưu
+          </Button>
+          {creating ? (
+            <Button variant="ghost" size="sm" onClick={onCancel}>
+              Hủy
+            </Button>
+          ) : (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={onAdd}
+              disabled={!CHILD_KINDS[node.kind]}
+            >
+              Thêm nút con
+            </Button>
           )}
         </div>
-      )}
-
-      {savedToast && !error && (
-        <Callout tone="success">
-          <p>{savedToast}</p>
-        </Callout>
-      )}
-
-      <div className="row wrap stack-sm">
-        <Button variant="primary" type="submit">
-          Lưu
-        </Button>
-        {creating ? (
-          <Button variant="ghost" onClick={onCancel}>
-            Hủy
-          </Button>
-        ) : (
-          <Button variant="secondary" onClick={onAdd} disabled={!CHILD_KINDS[node.kind]}>
-            Thêm nút con
-          </Button>
-        )}
       </div>
 
       {!creating && (
-        <div className="tax-tools row wrap between stack-sm">
+        <div className="lc-pane__foot tax-tools">
           <div className="row stack-sm" aria-label="Thứ tự nút" role="group">
             <Button
               variant="secondary"
+              size="sm"
               className="tax-order"
               aria-label="Chuyển lên"
               title="Chuyển lên"
@@ -572,6 +584,7 @@ function TaxonomyEditor({
             </Button>
             <Button
               variant="secondary"
+              size="sm"
               className="tax-order"
               aria-label="Chuyển xuống"
               title="Chuyển xuống"
@@ -582,10 +595,10 @@ function TaxonomyEditor({
             </Button>
           </div>
           <div className="row wrap stack-sm">
-            <Button variant="ghost" onClick={onVisibility}>
+            <Button variant="ghost" size="sm" onClick={onVisibility}>
               {node.hidden ? "Hiện lại" : "Vô hiệu hóa"}
             </Button>
-            <Button variant="ghost" onClick={onDelete}>
+            <Button variant="ghost" size="sm" onClick={onDelete}>
               Xóa
             </Button>
           </div>
@@ -789,7 +802,9 @@ export default function AdminTaxonomyScreen() {
     const orderedIds = nextNodes
       .filter((node) => node.kind === selected.kind && node.parentId === selected.parentId)
       .map((node) => node.id);
-    void adminService.reorderTaxonomyNodes(selected.parentId ?? null, orderedIds).catch(() => undefined);
+    void adminService
+      .reorderTaxonomyNodes(selected.parentId ?? null, orderedIds)
+      .catch(() => undefined);
 
     record(`Chuyển “${selected.name}” ${offset < 0 ? "lên" : "xuống"} một vị trí`);
   }
@@ -866,27 +881,27 @@ export default function AdminTaxonomyScreen() {
       )}
 
       {loading ? (
-        <div className="tax-layout grid">
+        <div className="tax-layout">
           {[0, 1, 2].map((idx) => (
-            <Card className="tax-card" key={idx}>
-              <Skeleton width="55%" height={16} />
-              <Skeleton width="100%" height={36} />
-              <Skeleton width="88%" height={36} />
-              <Skeleton width="92%" height={36} />
-            </Card>
+            <section className="lc-pane tax-pane" key={idx}>
+              <div className="lc-pane__head">
+                <Skeleton width="55%" height={14} />
+              </div>
+              <div className="tax-editor-body">
+                <Skeleton width="100%" height={36} />
+                <Skeleton width="88%" height={36} />
+                <Skeleton width="92%" height={36} />
+              </div>
+            </section>
           ))}
         </div>
       ) : (
-        <div className="tax-layout grid">
+        <div className="tax-layout">
           <TaxonomyTree
             label="Role Family → Role"
             rootKind="family"
             {...treeProps}
-            footer={
-              <div className="tax-levels-box">
-                <p className="t-body-s c-ink2">Cấp độ hệ thống: {LEVELS.join(", ")}</p>
-              </div>
-            }
+            footer={<span>Cấp độ hệ thống: {LEVELS.join(", ")}</span>}
           />
 
           <TaxonomyTree label="Domain → Topic → Competency" rootKind="domain" {...treeProps} />
@@ -927,26 +942,29 @@ export default function AdminTaxonomyScreen() {
         {notice}
       </p>
 
-      <Card className="card--flush tax-log tax-card">
-        <CardHead title="Nhật ký thay đổi">
-          <span className="t-body-s c-ink2 tax-tabular">{log.length} bản ghi</span>
-        </CardHead>
+      {/* Audit Log Pane with Zebra .lc-list */}
+      <section className="lc-pane tax-pane tax-log" aria-label="Nhật ký thay đổi">
+        <div className="lc-pane__head">
+          <span className="tax-pane-title">Nhật ký thay đổi</span>
+          <span className="t-mono c-ink2 tax-tabular">{log.length} bản ghi</span>
+        </div>
+
         {log.length === 0 ? (
           <p className="tax-log-empty t-body-s c-ink2">
             Chưa có thay đổi nào được ghi nhận trong nhật ký quản trị.
           </p>
         ) : (
-          <ol role="list">
+          <ol role="list" className="lc-list tax-log-list">
             {log.map(({ id, what, who, at }) => (
-              <li className="tax-log-entry" key={id ?? `${at}-${what}`}>
-                <p className="t-mono c-ink2 tax-tabular">{at}</p>
-                <p className="t-body-s t-strong">{what}</p>
-                <p className="t-body-s c-ink2">{who}</p>
+              <li className="lc-list__row tax-log-entry" key={id ?? `${at}-${what}`}>
+                <span className="t-mono c-ink2 tax-tabular">{at}</span>
+                <span className="t-body-s t-strong">{what}</span>
+                <span className="t-body-s c-ink2 tax-log-actor">{who}</span>
               </li>
             ))}
           </ol>
         )}
-      </Card>
+      </section>
     </div>
   );
 }

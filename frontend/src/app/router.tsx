@@ -38,14 +38,14 @@ export const router = createHashRouter([
       { path: "/knowledge", element: <KnowledgeScreen /> }, // UC04
       { path: "/practice/voice", element: <VoicePracticeScreen /> }, // UC05, UC06
       { path: "/problems", element: <ProblemsScreen /> }, // UC07
-      { path: "/problems/:id", element: <ProblemEditorScreen /> }, // UC08, UC09
       { path: "/interview/setup", element: <InterviewSetupScreen /> }, // UC10
       { path: "/reports", element: <ReportScreen /> }, // UC14, UC16
       { path: "/reports/:id", element: <ReportScreen /> },
       { path: "/roadmap", element: <RoadmapScreen /> }, // UC15
     ],
   },
-  // Phòng phỏng vấn: toàn màn hình, không sidebar
+  // Không gian làm việc toàn màn hình kiểu LeetCode Workbench (IDE + Phòng phỏng vấn)
+  { path: "/problems/:id", element: <ProblemEditorScreen /> }, // UC08, UC09
   { path: "/interview/hr", element: <HrInterviewScreen /> }, // UC11
   { path: "/interview/technical", element: <TechInterviewScreen /> }, // UC12
   { path: "/interview/ended", element: <SessionEndedScreen /> }, // UC13

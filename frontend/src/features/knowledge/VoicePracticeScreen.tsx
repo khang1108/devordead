@@ -4,13 +4,12 @@ import * as THREE from "three";
 import Waveform from "@shared/components/Waveform";
 import { getErrorMessage } from "@shared/services/apiClient";
 import { speakText, startMicrophoneStream, type LiveMicHandle } from "@shared/services/audioEngine";
+import { localStore } from "@shared/services/localStore";
 import type { VoiceAnswerEvaluation, VoiceSessionData } from "@shared/types";
 import {
   Badge,
   Button,
   Callout,
-  Card,
-  CardHead,
   EmptyState,
   ErrorBanner,
   Field,
@@ -23,6 +22,7 @@ import { knowledgeService, type EvaluateVoiceAnswerPayload } from "./knowledge.s
 import "./VoicePracticeScreen.css";
 
 type VoicePhase = "ready" | "recording" | "evaluating" | "feedback";
+type RightPaneTab = "rubric" | "notes";
 
 interface VoiceRouteState {
   topicId?: string;
@@ -161,7 +161,12 @@ interface VoiceOrbProps {
   size?: number;
 }
 
-function VoiceOrb({ speaking = false, listening = false, thinking = false, size = 92 }: VoiceOrbProps) {
+function VoiceOrb({
+  speaking = false,
+  listening = false,
+  thinking = false,
+  size = 92,
+}: VoiceOrbProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const stateRef = useRef({ speaking, listening, thinking });
   stateRef.current = { speaking, listening, thinking };
@@ -432,6 +437,7 @@ export default function VoicePracticeScreen() {
 
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<VoicePhase>("ready");
+  const [rightTab, setRightTab] = useState<RightPaneTab>("rubric");
   const [followUp, setFollowUp] = useState(false);
   const [followUpQuestion, setFollowUpQuestion] = useState<string | null>(null);
   const [skipped, setSkipped] = useState(0);
@@ -442,6 +448,7 @@ export default function VoicePracticeScreen() {
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
   const [micError, setMicError] = useState<string | null>(null);
   const [draftTranscript, setDraftTranscript] = useState("");
+  const [scratchNote, setScratchNote] = useState("");
   const [evaluation, setEvaluation] = useState<VoiceAnswerEvaluation | null>(null);
   const [evalError, setEvalError] = useState<string | null>(null);
 
@@ -507,6 +514,7 @@ export default function VoicePracticeScreen() {
     setEvaluation(null);
     setEvalError(null);
     setPhase("ready");
+    setRightTab("rubric");
     setCompleted(new Set());
 
     void knowledgeService
@@ -516,7 +524,9 @@ export default function VoicePracticeScreen() {
       })
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;
-        setSessionError(getErrorMessage(err, "Không thể tải phiên luyện giọng nói từ máy chủ API."));
+        setSessionError(
+          getErrorMessage(err, "Không thể tải phiên luyện giọng nói từ máy chủ API."),
+        );
       })
       .finally(() => {
         if (!controller.signal.aborted) {
@@ -553,7 +563,8 @@ export default function VoicePracticeScreen() {
   }, []);
 
   const questions = session?.questions ?? [];
-  const topicTitle = session?.topicName ?? routeState?.topicName ?? "Luyện kiến thức bằng giọng nói";
+  const topicTitle =
+    session?.topicName ?? routeState?.topicName ?? "Luyện kiến thức bằng giọng nói";
   const baseQuestion = questions[index] ?? "";
   const currentQuestion = followUp && followUpQuestion ? followUpQuestion : baseQuestion;
   const hasActiveSession = questions.length > 0 && Boolean(currentQuestion);
@@ -575,6 +586,8 @@ export default function VoicePracticeScreen() {
     lastPayloadRef.current = payload;
     setEvalError(null);
     setPhase("evaluating");
+    setRightTab("rubric");
+    localStore.recordTodayPractice();
 
     try {
       const result = await knowledgeService.evaluateVoiceAnswer(payload);
@@ -733,29 +746,26 @@ export default function VoicePracticeScreen() {
       />
 
       {sessionLoading ? (
-        <div className="col stack-lg" aria-busy="true" aria-label="Đang tải phiên luyện giọng nói">
-          <Card>
-            <Skeleton width="100%" height={40} />
-          </Card>
-          <div className="voice__grid">
-            <div className="col voice__left">
-              <Card>
-                <Skeleton width="42%" height={18} />
-                <Skeleton width="90%" height={28} />
-                <Skeleton width="35%" height={34} />
-              </Card>
-              <Card>
-                <Skeleton width="50%" height={20} />
-                <Skeleton width="100%" height={68} />
-                <Skeleton width="45%" height={36} />
-              </Card>
+        <div className="voice__grid" aria-busy="true" aria-label="Đang tải phiên luyện giọng nói">
+          <section className="lc-pane voice__pane">
+            <div className="lc-pane__head">
+              <Skeleton width="48%" height={18} />
             </div>
-            <Card className="voice__feedback">
-              <Skeleton width="60%" height={18} />
+            <div className="voice__pane-body">
+              <Skeleton width="88%" height={28} />
+              <Skeleton width="100%" height={72} />
+              <Skeleton width="42%" height={36} />
+            </div>
+          </section>
+          <section className="lc-pane voice__pane">
+            <div className="lc-pane__head">
+              <Skeleton width="58%" height={18} />
+            </div>
+            <div className="voice__pane-body">
               <Skeleton width="100%" height={140} />
               <Skeleton width="80%" height={24} />
-            </Card>
-          </div>
+            </div>
+          </section>
         </div>
       ) : (
         <>
@@ -789,40 +799,57 @@ export default function VoicePracticeScreen() {
             />
           )}
 
-          {hasActiveSession && (
-            <ol className="voice__stepper" aria-label={`Tiến độ ${questions.length} câu hỏi`}>
-              {questions.map((q, i) => {
-                const isDone = completed.has(i) && i !== index;
-                const isCurrent = i === index;
-                return (
-                  <li key={`${i}-${q.slice(0, 24)}`} className="voice__stepper-cell">
-                    <button
-                      type="button"
-                      onClick={() => selectQuestion(i)}
-                      aria-current={isCurrent ? "step" : undefined}
-                      className={`voice__step ${isDone ? "is-done" : isCurrent ? "is-current" : ""}`}
-                    >
-                      <span className="voice__step-dot" aria-hidden="true">
-                        {isDone ? "✓" : i + 1}
-                      </span>
-                      <span className="voice__step-label">
-                        Câu {i + 1}
-                        <span className="voice__step-sub">
-                          {isDone ? " · Đã xong" : isCurrent ? (followUp ? " · Đào sâu" : " · Đang mở") : ""}
-                        </span>
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ol>
-          )}
-
           {(hasActiveSession || sessionError) && (
             <div className="voice__grid">
-              <div className="col voice__left">
-                {hasActiveSession && (
-                  <Card className="voice__question">
+              {/* Left .lc-pane: Steps + 3D VoiceOrb + TTS + Real Web Audio Recorder + Typed Fallback */}
+              <section className="lc-pane voice__pane" aria-label="Phòng thu câu trả lời">
+                <div className="lc-pane__head">
+                  {hasActiveSession ? (
+                    <div
+                      className="lc-pane__tabs"
+                      role="navigation"
+                      aria-label={`Tiến độ ${questions.length} câu hỏi`}
+                    >
+                      {questions.map((q, i) => {
+                        const isDone = completed.has(i) && i !== index;
+                        const isCurrent = i === index;
+                        return (
+                          <button
+                            key={`${i}-${q.slice(0, 20)}`}
+                            type="button"
+                            onClick={() => selectQuestion(i)}
+                            aria-current={isCurrent ? "step" : undefined}
+                            className={`lc-pane__tab voice__step-tab ${isCurrent ? "is-active" : ""}`.trim()}
+                          >
+                            <span
+                              className={`voice__step-dot ${isDone ? "is-done" : isCurrent ? "is-current" : ""}`.trim()}
+                              aria-hidden="true"
+                            >
+                              {isDone ? "✓" : i + 1}
+                            </span>
+                            <span>Câu {i + 1}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <span className="voice__pane-title">Kiểm tra micro &amp; sóng âm</span>
+                  )}
+
+                  <div className="row stack-sm">
+                    {followUp && (
+                      <Badge tone="warning" dot>
+                        Đào sâu
+                      </Badge>
+                    )}
+                    {skipped > 0 && (
+                      <span className="t-mono c-ink2 voice__tabular">Bỏ qua {skipped}</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="lc-pane__body voice__pane-body">
+                  {hasActiveSession && (
                     <div className="voice__stage-row">
                       <div className="voice__orb-wrap">
                         <VoiceOrb
@@ -843,14 +870,11 @@ export default function VoicePracticeScreen() {
                       </div>
 
                       <div className="col grow voice__prompt">
-                        <div className="row between wrap stack-sm">
-                          <div className="row wrap stack-sm">
-                            <Badge tone={followUp ? "warning" : "brand"} dot>
-                              {followUp ? "Câu hỏi đào sâu" : `Câu ${index + 1} / ${questions.length}`}
-                            </Badge>
-                            <span className="t-body-s c-ink2">Có phụ đề TTS (NFR08)</span>
-                            {skipped > 0 && <span className="t-body-s c-ink2">· Đã bỏ qua {skipped}</span>}
-                          </div>
+                        <div className="row wrap stack-sm">
+                          <Badge tone={followUp ? "warning" : "brand"} dot>
+                            {followUp ? "Câu hỏi đào sâu" : `Câu ${index + 1} / ${questions.length}`}
+                          </Badge>
+                          <span className="t-body-s c-ink2">Có phụ đề TTS (NFR08)</span>
                         </div>
 
                         <h2 className="t-heading-m voice__q-text" aria-live="polite">
@@ -882,251 +906,314 @@ export default function VoicePracticeScreen() {
                         </div>
                       </div>
                     </div>
-                  </Card>
-                )}
-
-                {/* Bàn thu âm Studio nền sáng + Web Audio API FFT thật */}
-                <Card className="voice__recorder">
-                  <div className="row between wrap">
-                    <div className="row stack-sm">
-                      <span
-                        className={`voice__status-dot ${
-                          phase === "recording" ? "is-rec" : phase === "feedback" ? "is-done" : ""
-                        }`}
-                        aria-hidden="true"
-                      />
-                      <p className="t-heading-s">
-                        {phase === "recording"
-                          ? "Đang thu âm lượt trả lời"
-                          : phase === "evaluating"
-                            ? "Đang nhận dạng STT & phân tích rubric..."
-                            : phase === "feedback" && fb
-                              ? `Đã chấm xong · Phản hồi ${formatLatency(fb.latencyMs)}`
-                              : hasActiveSession
-                                ? "Thu âm theo lượt (Turn-based)"
-                                : "Kiểm tra micro & sóng âm trực tiếp"}
-                      </p>
-                    </div>
-                    <p className="t-mono voice__timer">{formatSeconds(elapsedSec)}</p>
-                  </div>
-
-                  <div className="voice__wave-well">
-                    <Waveform
-                      analyser={analyser}
-                      active={phase === "recording"}
-                      height={52}
-                      color="var(--ink)"
-                      idleColor="rgba(17, 20, 24, 0.14)"
-                      latencyLabel="Phản hồi ≤ 2,5s"
-                    />
-                  </div>
-
-                  {micError && (
-                    <Callout tone="danger" role="alert" title="Không thể truy cập micro">
-                      {micError}
-                    </Callout>
                   )}
 
-                  <div className="row between wrap">
-                    <div className="row wrap stack-sm">
-                      {phase === "ready" && (
-                        <Button variant="primary" onClick={() => void startRecording()}>
-                          <span className="voice__rec-dot" aria-hidden="true" />
-                          Bắt đầu ghi âm
-                        </Button>
-                      )}
-                      {phase === "recording" && (
-                        <>
-                          <Button variant="primary" onClick={() => void stopAndEvaluate()}>
-                            {hasActiveSession ? "Dừng & gửi câu trả lời" : "Dừng ghi âm"}
-                          </Button>
-                          <Button variant="secondary" onClick={() => void cancelRecording()}>
-                            Hủy &amp; ghi lại (A1)
-                          </Button>
-                        </>
-                      )}
-                      {phase === "evaluating" && (
-                        <Button variant="secondary" disabled>
-                          <span className="spinner" aria-hidden="true" /> Đang đánh giá câu trả lời...
-                        </Button>
-                      )}
-                      {phase === "feedback" && (
-                        <Button
-                          variant="secondary"
-                          onClick={() => {
-                            setElapsedSec(0);
-                            setEvaluation(null);
-                            setPhase("ready");
-                          }}
-                        >
-                          Trả lời lại câu này
-                        </Button>
-                      )}
-                    </div>
-
-                    <span className="t-body-s c-ink2">HTTPS/WSS mã hóa (NFR03)</span>
-                  </div>
-                </Card>
-
-                {/* Bản ghi giọng nói (STT) & ô nhập văn bản dự phòng */}
-                <Card className="voice__transcript">
-                  <CardHead title="Bản ghi giọng nói (STT) & nhập dự phòng">
-                    {phase === "feedback" ? (
-                      <Badge tone="success" dot>
-                        Đã nhận dạng
-                      </Badge>
-                    ) : phase === "recording" ? (
-                      <Badge tone="brand" dot>
-                        Đang thu âm
-                      </Badge>
-                    ) : (
-                      <Badge tone="neutral">Chờ trả lời</Badge>
-                    )}
-                  </CardHead>
-
-                  {phase === "feedback" && evaluation?.transcript ? (
-                    <p className="t-body-m voice__final-transcript">“{evaluation.transcript}”</p>
-                  ) : (
-                    <div className="voice__manual-form">
-                      <Field
-                        multiline
-                        label="Nhập câu trả lời bằng văn bản (hoặc bổ sung ghi chú kỹ thuật)"
-                        placeholder="Bạn có thể ghi âm trực tiếp ở trên hoặc nhập câu trả lời tại đây để gửi chấm theo rubric..."
-                        value={draftTranscript}
-                        onChange={(e) => setDraftTranscript(e.target.value)}
-                        disabled={phase === "evaluating"}
-                      />
-                      <div className="row between wrap">
-                        <span className="t-body-s c-ink2">
-                          Hỗ trợ chấm đồng thời từ tệp âm thanh hoặc bản ghi văn bản.
-                        </span>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          disabled={
-                            !hasActiveSession ||
-                            !draftTranscript.trim() ||
-                            phase === "evaluating" ||
+                  {/* Real Web Audio FFT Recorder Block */}
+                  <div className="voice__recorder">
+                    <div className="row between wrap">
+                      <div className="row stack-sm">
+                        <span
+                          className={`voice__status-dot ${
                             phase === "recording"
-                          }
-                          onClick={() => void handleSubmitTypedAnswer()}
-                        >
-                          Gửi câu trả lời văn bản
-                        </Button>
+                              ? "is-rec"
+                              : phase === "feedback"
+                                ? "is-done"
+                                : ""
+                          }`}
+                          aria-hidden="true"
+                        />
+                        <p className="t-heading-s">
+                          {phase === "recording"
+                            ? "Đang thu âm lượt trả lời"
+                            : phase === "evaluating"
+                              ? "Đang nhận dạng STT & phân tích rubric..."
+                              : phase === "feedback" && fb
+                                ? `Đã chấm xong · Phản hồi ${formatLatency(fb.latencyMs)}`
+                                : hasActiveSession
+                                  ? "Thu âm theo lượt (Turn-based)"
+                                  : "Kiểm tra micro & sóng âm trực tiếp"}
+                        </p>
                       </div>
+                      <p className="t-mono voice__timer">{formatSeconds(elapsedSec)}</p>
                     </div>
-                  )}
-                </Card>
-              </div>
 
-              {/* Cột phải: Đánh giá & phản hồi tức thì (UC06) */}
-              <Card as="aside" className="voice__feedback" aria-label="Đánh giá & phản hồi" aria-live="polite">
-                <CardHead title="Đánh giá & phản hồi (UC06)">
-                  {phase === "feedback" && fb && (
+                    <div className="voice__wave-well">
+                      <Waveform
+                        analyser={analyser}
+                        active={phase === "recording"}
+                        height={52}
+                        color="var(--ink)"
+                        idleColor="rgba(17, 20, 24, 0.14)"
+                        latencyLabel="Phản hồi ≤ 2,5s"
+                      />
+                    </div>
+
+                    {micError && (
+                      <Callout tone="danger" role="alert" title="Không thể truy cập micro">
+                        {micError}
+                      </Callout>
+                    )}
+
+                    <div className="row between wrap">
+                      <div className="row wrap stack-sm">
+                        {phase === "ready" && (
+                          <Button variant="primary" onClick={() => void startRecording()}>
+                            <span className="voice__rec-dot" aria-hidden="true" />
+                            Bắt đầu ghi âm
+                          </Button>
+                        )}
+                        {phase === "recording" && (
+                          <>
+                            <Button variant="primary" onClick={() => void stopAndEvaluate()}>
+                              {hasActiveSession ? "Dừng & gửi câu trả lời" : "Dừng ghi âm"}
+                            </Button>
+                            <Button variant="secondary" onClick={() => void cancelRecording()}>
+                              Hủy &amp; ghi lại (A1)
+                            </Button>
+                          </>
+                        )}
+                        {phase === "evaluating" && (
+                          <Button variant="secondary" disabled>
+                            <span className="spinner" aria-hidden="true" /> Đang đánh giá câu trả
+                            lời...
+                          </Button>
+                        )}
+                        {phase === "feedback" && (
+                          <Button
+                            variant="secondary"
+                            onClick={() => {
+                              setElapsedSec(0);
+                              setEvaluation(null);
+                              setPhase("ready");
+                            }}
+                          >
+                            Trả lời lại câu này
+                          </Button>
+                        )}
+                      </div>
+
+                      <span className="t-body-s c-ink2">HTTPS/WSS mã hóa (NFR03)</span>
+                    </div>
+                  </div>
+
+                  {/* Typed Transcript Fallback & STT Output */}
+                  <div className="voice__transcript">
+                    <div className="row between wrap">
+                      <h3 className="t-body-s t-strong">Bản ghi giọng nói (STT) &amp; nhập dự phòng</h3>
+                      {phase === "feedback" ? (
+                        <Badge tone="success" dot>
+                          Đã nhận dạng
+                        </Badge>
+                      ) : phase === "recording" ? (
+                        <Badge tone="brand" dot>
+                          Đang thu âm
+                        </Badge>
+                      ) : (
+                        <Badge tone="neutral">Chờ trả lời</Badge>
+                      )}
+                    </div>
+
+                    {phase === "feedback" && evaluation?.transcript ? (
+                      <p className="t-body-m voice__final-transcript">“{evaluation.transcript}”</p>
+                    ) : (
+                      <div className="voice__manual-form">
+                        <Field
+                          multiline
+                          label="Nhập câu trả lời bằng văn bản (hoặc bổ sung chi tiết kỹ thuật)"
+                          placeholder="Bạn có thể ghi âm trực tiếp ở trên hoặc nhập câu trả lời tại đây để gửi chấm theo rubric..."
+                          value={draftTranscript}
+                          onChange={(e) => setDraftTranscript(e.target.value)}
+                          disabled={phase === "evaluating"}
+                        />
+                        <div className="row between wrap">
+                          <span className="t-body-s c-ink2">
+                            Hỗ trợ chấm đồng thời từ tệp âm thanh hoặc bản ghi văn bản.
+                          </span>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            disabled={
+                              !hasActiveSession ||
+                              !draftTranscript.trim() ||
+                              phase === "evaluating" ||
+                              phase === "recording"
+                            }
+                            onClick={() => void handleSubmitTypedAnswer()}
+                          >
+                            Gửi câu trả lời văn bản
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </section>
+
+              {/* Right .lc-pane: Tabbed Rubric Feedback (UC06) | Answer Notes */}
+              <aside className="lc-pane voice__feedback" aria-label="Phản hồi và ghi chú">
+                <div className="lc-pane__head">
+                  <div className="lc-pane__tabs" role="tablist" aria-label="Chế độ xem bên phải">
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={rightTab === "rubric"}
+                      className={`lc-pane__tab ${rightTab === "rubric" ? "is-active" : ""}`.trim()}
+                      onClick={() => setRightTab("rubric")}
+                    >
+                      Phản hồi &amp; Rubric (UC06)
+                    </button>
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={rightTab === "notes"}
+                      className={`lc-pane__tab ${rightTab === "notes" ? "is-active" : ""}`.trim()}
+                      onClick={() => setRightTab("notes")}
+                    >
+                      Ghi chú câu trả lời
+                    </button>
+                  </div>
+
+                  {phase === "feedback" && fb ? (
                     <Badge tone="success" dot>
                       {formatLatency(fb.latencyMs)}
                     </Badge>
+                  ) : (
+                    <RuleTag code="NFR01">≤ 2,5s</RuleTag>
                   )}
-                </CardHead>
+                </div>
 
-                {evalError && (
-                  <ErrorBanner
-                    title="Không thể chấm câu trả lời"
-                    message={evalError}
-                    onRetry={() => void handleRetryEvaluation()}
-                  />
-                )}
-
-                {phase !== "feedback" || !fb ? (
-                  <div className="empty voice__empty">
-                    {phase === "evaluating" || phase === "recording" ? (
-                      <span className="spinner" aria-hidden="true" />
-                    ) : null}
-                    <p className="t-heading-s">
-                      {phase === "evaluating"
-                        ? "Đang phân tích điểm đúng & điểm thiếu..."
-                        : phase === "recording"
-                          ? "Đang ghi nhận câu trả lời từ micro..."
-                          : "Chưa có dữ liệu đánh giá"}
-                    </p>
-                    <p className="t-body-s c-ink2">
-                      Sau mỗi lượt trả lời, hệ thống chỉ rõ ý đúng (✓), phần còn thiếu (!), điểm sai (×) và đặt câu hỏi đào sâu để rèn phản xạ phỏng vấn.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="col voice__fb-body">
-                    <div className="voice__score-row">
-                      <div className="row between">
-                        <div className="row voice__score-inline">
-                          <p className="t-number">{fb.score}/10</p>
-                          <p className="t-body-s c-ink2">độ chính xác kỹ thuật</p>
-                        </div>
-                      </div>
-                      <ProgressBar
-                        value={fb.score / 10}
-                        tone={fb.score >= 7 ? "success" : fb.score >= 4 ? "brand" : "warning"}
-                        label="Điểm độ chính xác kỹ thuật"
-                      />
-                    </div>
-
-                    <FeedbackGroup
-                      tone="success"
-                      marker="✓"
-                      title="Điểm đúng về kỹ thuật"
-                      items={fb.correct}
-                    />
-
-                    <FeedbackGroup
-                      tone="warning"
-                      marker="!"
-                      title="Cần bổ sung"
-                      items={fb.missing}
-                    />
-
-                    <FeedbackGroup
-                      tone="danger"
-                      marker="×"
-                      title="Điểm chưa chính xác"
-                      items={fb.wrong}
-                    />
-
-                    <div className="voice__followup-section">
-                      {!followUp && fb.followUp ? (
-                        <Callout tone="brand" title="Câu hỏi đào sâu (Follow-up)">
-                          <p className="t-body-s t-strong voice__followup-text">{fb.followUp}</p>
-                        </Callout>
-                      ) : followUp ? (
-                        <Callout tone="success" title="Đã hoàn thành câu đào sâu">
-                          Bằng chứng của lượt chính và lượt đào sâu đã được lưu vào hồ sơ năng lực.
-                        </Callout>
-                      ) : null}
-                    </div>
-
-                    <div className="col stack-sm voice__actions">
-                      {!followUp && fb.followUp && (
-                        <Button variant="primary" block onClick={handleStartFollowUp}>
-                          Trả lời câu đào sâu
-                        </Button>
+                <div className="lc-pane__body voice__fb-wrap" aria-live="polite">
+                  {rightTab === "rubric" ? (
+                    <>
+                      {evalError && (
+                        <ErrorBanner
+                          title="Không thể chấm câu trả lời"
+                          message={evalError}
+                          onRetry={() => void handleRetryEvaluation()}
+                        />
                       )}
-                      <Button
-                        variant="secondary"
-                        block
-                        onClick={nextQuestion}
-                        disabled={index >= questions.length - 1}
-                      >
-                        {index < questions.length - 1
-                          ? `Sang câu ${index + 2} / ${questions.length}`
-                          : "Đã ở câu cuối"}
-                      </Button>
-                    </div>
-                  </div>
-                )}
 
-                <div className="row wrap stack-sm voice__rules">
+                      {phase !== "feedback" || !fb ? (
+                        <div className="empty voice__empty">
+                          {phase === "evaluating" || phase === "recording" ? (
+                            <span className="spinner" aria-hidden="true" />
+                          ) : null}
+                          <p className="t-heading-s">
+                            {phase === "evaluating"
+                              ? "Đang phân tích điểm đúng & điểm thiếu..."
+                              : phase === "recording"
+                                ? "Đang ghi nhận câu trả lời từ micro..."
+                                : "Chưa có dữ liệu đánh giá"}
+                          </p>
+                          <p className="t-body-s c-ink2">
+                            Sau mỗi lượt trả lời, hệ thống chỉ rõ ý đúng (✓), phần còn thiếu (!),
+                            điểm sai (×) và đặt câu hỏi đào sâu để rèn phản xạ phỏng vấn.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="col voice__fb-body">
+                          <div className="voice__score-row">
+                            <div className="row between">
+                              <div className="row voice__score-inline">
+                                <p className="t-number">{fb.score}/10</p>
+                                <p className="t-body-s c-ink2">độ chính xác kỹ thuật</p>
+                              </div>
+                            </div>
+                            <ProgressBar
+                              value={fb.score / 10}
+                              tone={
+                                fb.score >= 7 ? "success" : fb.score >= 4 ? "brand" : "warning"
+                              }
+                              label="Điểm độ chính xác kỹ thuật"
+                            />
+                          </div>
+
+                          <FeedbackGroup
+                            tone="success"
+                            marker="✓"
+                            title="Điểm đúng về kỹ thuật"
+                            items={fb.correct}
+                          />
+
+                          <FeedbackGroup
+                            tone="warning"
+                            marker="!"
+                            title="Cần bổ sung"
+                            items={fb.missing}
+                          />
+
+                          <FeedbackGroup
+                            tone="danger"
+                            marker="×"
+                            title="Điểm chưa chính xác"
+                            items={fb.wrong}
+                          />
+
+                          <div className="voice__followup-section">
+                            {!followUp && fb.followUp ? (
+                              <Callout tone="brand" title="Câu hỏi đào sâu (Follow-up)">
+                                <p className="t-body-s t-strong voice__followup-text">
+                                  {fb.followUp}
+                                </p>
+                              </Callout>
+                            ) : followUp ? (
+                              <Callout tone="success" title="Đã hoàn thành câu đào sâu">
+                                Bằng chứng của lượt chính và lượt đào sâu đã được lưu vào hồ sơ năng
+                                lực.
+                              </Callout>
+                            ) : null}
+                          </div>
+
+                          <div className="col stack-sm voice__actions">
+                            {!followUp && fb.followUp && (
+                              <Button variant="primary" block onClick={handleStartFollowUp}>
+                                Trả lời câu đào sâu
+                              </Button>
+                            )}
+                            <Button
+                              variant="secondary"
+                              block
+                              onClick={nextQuestion}
+                              disabled={index >= questions.length - 1}
+                            >
+                              {index < questions.length - 1
+                                ? `Sang câu ${index + 2} / ${questions.length}`
+                                : "Đã ở câu cuối"}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="col voice__notes-body">
+                      <Field
+                        multiline
+                        label="Dàn ý & ghi chú nhanh khi trả lời"
+                        placeholder="Ghi gạch đầu dòng ý chính: khái niệm cốt lõi, trade-off, độ phức tạp thời gian/bộ nhớ, ví dụ thực tế..."
+                        value={scratchNote}
+                        onChange={(e) => setScratchNote(e.target.value)}
+                      />
+                      <p className="t-body-s c-ink2">
+                        Ghi chú nháp chỉ giữ cục bộ trên phiên này để bạn cấu trúc ý nói mạch lạc
+                        trước khi bấm ghi âm.
+                      </p>
+                      {evaluation?.transcript && (
+                        <div className="voice__note-stt">
+                          <p className="voice__rubric-heading">Bản ghi STT lượt gần nhất</p>
+                          <p className="t-body-s voice__final-transcript">
+                            “{evaluation.transcript}”
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="lc-pane__foot voice__rules">
                   <RuleTag code="NFR01">Phản hồi ≤ 2,5s</RuleTag>
                   <RuleTag code="BR4">Câu đào sâu chỉ dùng tạm</RuleTag>
                 </div>
-              </Card>
+              </aside>
             </div>
           )}
         </>

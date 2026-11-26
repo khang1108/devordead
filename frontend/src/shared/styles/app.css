@@ -1168,3 +1168,714 @@ main:focus { outline: none; box-shadow: none; }
     flex-direction: column;
   }
 }
+
+/* ==========================================================================
+   LeetCode-Inspired Learning & Workbench Chrome (Anti-Slop Neutral Studio)
+   ========================================================================== */
+.lc-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+.lc-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  height: var(--topbar-h);
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.lc-topbar__left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-width: 0;
+  height: 100%;
+}
+
+.lc-topbar__menu-btn {
+  display: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-md);
+  color: var(--ink);
+  transition: background-color 140ms var(--ease-out);
+}
+.lc-topbar__menu-btn:hover {
+  background: var(--surface-2);
+}
+
+.lc-topnav {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  height: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.lc-topnav::-webkit-scrollbar {
+  display: none;
+}
+
+.lc-topnav__link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  font: 500 13.5px/1 var(--font-body);
+  color: var(--ink-2);
+  white-space: nowrap;
+  text-decoration: none;
+  transition: color 140ms var(--ease-out);
+}
+.lc-topnav__link:hover {
+  color: var(--ink);
+  text-decoration: none;
+}
+.lc-topnav__link.is-active {
+  color: var(--ink);
+  font-weight: 600;
+}
+.lc-topnav__link.is-active::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 0;
+  height: 2px;
+  background: var(--ink);
+  border-radius: 2px 2px 0 0;
+}
+
+.lc-topbar__right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+.lc-topbar__ide-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 7px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink);
+  font: 500 12.5px/1 var(--font-body);
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background-color 140ms var(--ease-out), border-color 140ms var(--ease-out);
+}
+.lc-topbar__ide-btn:hover {
+  background: var(--surface-3);
+  border-color: var(--line-strong);
+  text-decoration: none;
+}
+
+.lc-topbar__portal {
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(0, auto));
+  gap: 2px;
+  padding: 2px;
+  height: 30px;
+  border-radius: 7px;
+  background: var(--surface-2);
+  border: 1px solid var(--line-subtle);
+}
+
+.lc-topbar__portal-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 9px;
+  border-radius: 5px;
+  font: 500 12px/1 var(--font-body);
+  color: var(--ink-2);
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: background-color 140ms var(--ease-out), color 140ms var(--ease-out);
+}
+.lc-topbar__portal-btn:hover {
+  color: var(--ink);
+  text-decoration: none;
+}
+.lc-topbar__portal-btn.is-active {
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 600;
+  border-color: var(--line);
+}
+
+.lc-topbar__icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-2);
+  text-decoration: none;
+  transition: background-color 140ms var(--ease-out), color 140ms var(--ease-out), border-color 140ms var(--ease-out);
+}
+.lc-topbar__icon-btn:hover {
+  background: var(--surface-2);
+  border-color: var(--line-strong);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.lc-topbar__user {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  border-radius: var(--r-pill);
+}
+.lc-topbar__user:hover {
+  text-decoration: none;
+}
+
+.lc-shell__body {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  flex: 1 1 auto;
+  min-height: calc(100vh - var(--topbar-h));
+}
+
+.lc-shell.is-collapsed .lc-shell__body {
+  grid-template-columns: var(--sidebar-collapsed-w) minmax(0, 1fr);
+}
+
+.lc-rail {
+  position: sticky;
+  top: var(--topbar-h);
+  height: calc(100vh - var(--topbar-h));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 10px 14px;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 30;
+}
+
+.lc-rail.is-collapsed {
+  padding: 12px 8px 14px;
+  align-items: center;
+}
+
+.lc-rail__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 0 4px;
+  min-height: 28px;
+  width: 100%;
+}
+
+.lc-rail.is-collapsed .lc-rail__head {
+  justify-content: center;
+  padding: 0;
+}
+
+.lc-rail__context {
+  font: 500 12px/1.3 var(--font-body);
+  color: var(--ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lc-rail__collapse-btn {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  color: var(--ink-3);
+  transition: background-color 140ms var(--ease-out), color 140ms var(--ease-out);
+}
+.lc-rail__collapse-btn:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.lc-rail__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1 1 auto;
+  width: 100%;
+}
+
+.lc-rail.is-collapsed .nav-item {
+  justify-content: center;
+  padding: 8px;
+}
+
+.lc-rail.is-collapsed .sidebar__footer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.lc-rail.is-collapsed .sidebar__profile {
+  justify-content: center;
+  padding: 0;
+}
+
+.lc-shell .main {
+  padding: 24px 28px 48px;
+  gap: 20px;
+  max-width: 1440px;
+  width: 100%;
+  margin-inline: auto;
+}
+
+/* ——— LeetCode 2-Column Workspace + Right Progress/Calendar Rail ——— */
+.lc-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 20px;
+  align-items: start;
+}
+
+.lc-workspace__main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.lc-rail-right {
+  position: sticky;
+  top: calc(var(--topbar-h) + 20px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+/* ——— LeetCode Topic Pills & Category Filter Bar ——— */
+.lc-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.lc-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 13px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  border: 1px solid transparent;
+  color: var(--ink-2);
+  font: 500 13px/1 var(--font-body);
+  white-space: nowrap;
+  transition: background-color 140ms var(--ease-out), color 140ms var(--ease-out), border-color 140ms var(--ease-out);
+}
+.lc-pill:hover {
+  background: var(--surface-3);
+  color: var(--ink);
+}
+.lc-pill.is-active {
+  background: var(--ink);
+  color: var(--surface);
+  font-weight: 600;
+}
+
+.lc-pill__count {
+  font: 500 11.5px/1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.72;
+}
+
+/* ——— LeetCode Zebra-Striped Dense List ——— */
+.lc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 6px;
+}
+
+.lc-list__head {
+  display: grid;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px 10px;
+  border-bottom: 1px solid var(--line);
+  font: 500 12.5px/1.3 var(--font-body);
+  color: var(--ink-2);
+}
+
+.lc-list__row {
+  display: grid;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 9px 14px;
+  border-radius: var(--r-md);
+  color: var(--ink);
+  text-decoration: none;
+  transition: background-color 120ms var(--ease-out);
+}
+.lc-list__row:nth-child(even) {
+  background: var(--zebra-row);
+}
+.lc-list__row:hover {
+  background: var(--surface-2);
+  text-decoration: none;
+}
+.lc-list__row[aria-selected="true"] {
+  background: var(--surface-2);
+  box-shadow: inset 2px 0 0 var(--ink);
+}
+
+/* Unboxed LeetCode Difficulty Text */
+.lc-diff {
+  font: 500 13px/1.2 var(--font-body);
+  white-space: nowrap;
+}
+.lc-diff--easy { color: var(--diff-easy); }
+.lc-diff--medium { color: var(--diff-medium); }
+.lc-diff--hard { color: var(--diff-hard); }
+
+/* ——— Full-Viewport LeetCode Resizable Tiled Workbench (IDE + Live Interviews) ——— */
+.lc-workbench {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--workbench-bg);
+}
+
+.lc-wb-bar {
+  flex: none;
+  height: 48px;
+  padding: 0 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  background: var(--workbench-bg);
+}
+
+.lc-wb-bar__left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.lc-wb-bar__center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.lc-wb-bar__right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
+.lc-wb-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 7px;
+  color: var(--ink);
+  font: 500 13px/1 var(--font-body);
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background-color 120ms var(--ease-out);
+}
+.lc-wb-back:hover {
+  background: rgba(17, 20, 24, 0.06);
+  text-decoration: none;
+}
+
+/* LeetCode Top-Center Segmented Run / Submit Group */
+.lc-wb-actions {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.lc-wb-run,
+.lc-wb-submit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 13px;
+  font: 600 13px/1 var(--font-body);
+  white-space: nowrap;
+  transition: background-color 120ms var(--ease-out), color 120ms var(--ease-out), transform 90ms var(--ease-out);
+}
+
+.lc-wb-run {
+  color: var(--ink);
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+}
+.lc-wb-run:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+.lc-wb-submit {
+  color: var(--success);
+  background: var(--surface);
+}
+.lc-wb-submit:hover:not(:disabled) {
+  background: var(--success-soft);
+}
+
+.lc-wb-run:disabled,
+.lc-wb-submit:disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+}
+
+.lc-wb-body {
+  flex: 1 1 0;
+  min-height: 0;
+  padding: 0 8px 8px;
+  display: flex;
+}
+
+.lc-pane {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.lc-pane--dark {
+  background: var(--code-bg);
+  border-color: rgba(17, 20, 24, 0.14);
+}
+
+.lc-pane__head {
+  flex: none;
+  min-height: 38px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--panel-head-bg);
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.lc-pane__head::-webkit-scrollbar {
+  display: none;
+}
+
+.lc-pane__tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.lc-pane__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 6px;
+  font: 500 12.5px/1 var(--font-body);
+  color: var(--ink-2);
+  white-space: nowrap;
+  transition: background-color 120ms var(--ease-out), color 120ms var(--ease-out);
+}
+.lc-pane__tab:hover {
+  background: rgba(17, 20, 24, 0.04);
+  color: var(--ink);
+}
+.lc-pane__tab.is-active,
+.lc-pane__tab[aria-selected="true"] {
+  color: var(--ink);
+  font-weight: 600;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.lc-pane__subbar {
+  flex: none;
+  min-height: 36px;
+  padding: 4px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid var(--line-subtle);
+  background: var(--surface);
+}
+
+.lc-pane__body {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+.lc-pane__foot {
+  flex: none;
+  min-height: 32px;
+  padding: 4px 12px;
+  border-top: 1px solid var(--line-subtle);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font: 400 12px/1.3 var(--font-body);
+  color: var(--ink-3);
+}
+
+@media (max-width: 1180px) {
+  .lc-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lc-rail-right {
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+}
+
+@media (max-width: 1024px) {
+  .lc-topbar__menu-btn {
+    display: inline-grid;
+  }
+  .lc-topnav,
+  .lc-topbar__ide-btn {
+    display: none;
+  }
+  .lc-shell__body,
+  .lc-shell.is-collapsed .lc-shell__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lc-rail,
+  .lc-rail.is-collapsed {
+    position: fixed;
+    top: var(--topbar-h);
+    left: 0;
+    bottom: 0;
+    width: min(260px, calc(100vw - 48px));
+    height: calc(100dvh - var(--topbar-h));
+    padding: 14px 12px;
+    align-items: stretch;
+    box-shadow: var(--shadow-2);
+    z-index: 45;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(-104%);
+    transition: transform 240ms var(--ease-drawer), visibility 0s linear 240ms;
+  }
+  .lc-rail.is-open {
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(0);
+    transition: transform 240ms var(--ease-drawer), visibility 0s linear 0s;
+  }
+  .lc-rail__collapse-btn {
+    display: none;
+  }
+  .lc-shell .main {
+    padding: 20px 16px 40px;
+  }
+}
+
+@media (max-width: 960px) {
+  .lc-workbench {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+  .lc-wb-bar {
+    grid-template-columns: 1fr auto;
+    height: auto;
+    padding: 8px 10px;
+    flex-wrap: wrap;
+  }
+  .lc-wb-bar__right {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+  .lc-wb-body {
+    display: block;
+    overflow: visible;
+    padding-bottom: 16px;
+  }
+  .lc-workbench .lc-pane {
+    height: auto;
+  }
+  .lc-workbench .lc-pane__body {
+    overflow: visible;
+  }
+}
+
+@media (max-width: 560px) {
+  .lc-topbar {
+    padding: 0 10px;
+    gap: 8px;
+  }
+  .lc-topbar__left {
+    gap: 8px;
+  }
+  .lc-topbar .logo__word {
+    font-size: 15px;
+  }
+  .lc-topbar__icon-btn {
+    display: none;
+  }
+  .lc-topbar__portal-btn {
+    padding: 0 7px;
+    font-size: 11.5px;
+  }
+  .lc-topbar__right {
+    gap: 6px;
+  }
+}

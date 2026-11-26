@@ -1,13 +1,11 @@
 import { useState, type KeyboardEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import StudyCalendar from "@shared/components/StudyCalendar";
 import {
   Badge,
   Button,
   Callout,
-  Card,
-  CardHead,
   ErrorBanner,
-  PageHeader,
   RuleTag,
   Segmented,
   Toggle,
@@ -20,27 +18,29 @@ import type { Difficulty, InterviewConfig, InterviewDuration, InterviewMode } fr
 import { interviewService } from "./interview.service";
 import "./InterviewSetupScreen.css";
 
-interface SessionTypeOption {
+interface TrackOption {
   value: InterviewMode;
   title: string;
-  badge: string;
+  meta: string;
   detail: string;
   plan: readonly string[];
 }
 
-const SESSION_TYPES: readonly SessionTypeOption[] = [
+const ASSESSMENT_TRACKS: readonly TrackOption[] = [
   {
     value: "hr",
-    title: "HR — Behavioral",
-    badge: "Tiếng Anh",
-    detail: "Trao đổi kinh nghiệm dự án và câu hỏi hành vi theo mô hình STAR bằng tiếng Anh.",
+    title: "HR — Behavioral (EN)",
+    meta: "Tiếng Anh · STAR Framework · 5 chặng",
+    detail:
+      "Trao đổi kinh nghiệm dự án và câu hỏi hành vi bằng tiếng Anh theo cấu trúc Situation, Task, Action, Result.",
     plan: HR_INTERVIEW_PLAN,
   },
   {
     value: "technical",
     title: "Technical & Live Coding",
-    badge: "Sandbox",
-    detail: "Hỏi đáp kiến thức nền tảng kết hợp giải bài trực tiếp và chấm độc lập mã với lập luận.",
+    meta: "Monaco IDE · Docker Sandbox BR3 · Chấm độc lập BR2",
+    detail:
+      "Hỏi đáp kiến thức nền tảng kết hợp giải bài trực tiếp trong Monaco IDE; chấm độc lập tính đúng của mã và lập luận.",
     plan: TECH_INTERVIEW_PLAN,
   },
 ];
@@ -55,7 +55,7 @@ const DIFFICULTIES: readonly { value: Difficulty; label: string }[] = (
   ["easy", "medium", "hard"] as const
 ).map((value) => ({ value, label: DIFFICULTY_META[value].label }));
 
-const CONTEXT_LABEL = "Dùng CV/JD đã tải làm ngữ cảnh";
+const CONTEXT_LABEL = "Dùng CV/JD làm ngữ cảnh";
 
 interface MicState {
   status: "idle" | "checking" | "ready" | "error";
@@ -109,8 +109,8 @@ export default function InterviewSetupScreen() {
   const [startError, setStartError] = useState<string | null>(null);
 
   const microphoneReady = microphone.status === "ready";
-  const activeSession =
-    SESSION_TYPES.find((item) => item.value === sessionType) ?? SESSION_TYPES[1]!;
+  const activeTrack =
+    ASSESSMENT_TRACKS.find((item) => item.value === sessionType) ?? ASSESSMENT_TRACKS[1]!;
 
   async function checkMicrophone() {
     setMicrophone({ status: "checking", deviceLabel: "", message: "" });
@@ -188,255 +188,309 @@ export default function InterviewSetupScreen() {
   const cvContextDescription = useCv
     ? cvDraft.file
       ? `Đang dùng CV ${cvDraft.file.name} cùng mục tiêu ${targetProfile.role} (${targetProfile.level}${targetProfile.targetCompany ? ` · ${targetProfile.targetCompany}` : ""}).`
-      : `Đang dùng ngữ cảnh mục tiêu ${targetProfile.role} (${targetProfile.level}${targetProfile.targetCompany ? ` · ${targetProfile.targetCompany}` : ""}). Bạn có thể tải tệp CV tại mục Hồ sơ mục tiêu.`
-    : "Phiên phỏng vấn chỉ dùng ngân hàng câu hỏi chuẩn theo vai trò.";
+      : `Đang dùng hồ sơ mục tiêu ${targetProfile.role} (${targetProfile.level}${targetProfile.targetCompany ? ` · ${targetProfile.targetCompany}` : ""}). Tải thêm CV/JD tại trang Hồ sơ.`
+    : "Chỉ dùng ngân hàng câu hỏi chuẩn theo vai trò và độ khó đã chọn.";
 
   return (
-    <div className="col stack-lg setup-screen">
-      <PageHeader
-        eyebrow="Phỏng vấn mô phỏng"
-        title="Cấu hình phiên phỏng vấn"
-        subtitle="Chọn loại phiên, thời lượng hard-stop và xác nhận thiết bị âm thanh trước khi vào phòng."
-        actions={<RuleTag code="NFR01">Độ trễ AI ≤ 2,5s</RuleTag>}
-      />
+    <div className="setup-screen">
+      {/* Calm LeetCode Mock Assessment utility header */}
+      <header className="setup-header">
+        <div className="setup-header__top">
+          <div className="setup-header__copy">
+            <h1 className="t-display-l">Phỏng vấn mô phỏng</h1>
+            <p className="t-body-s c-ink2">
+              Chọn vòng đánh giá, thời lượng hard-stop và kiểm tra thiết bị âm thanh trước khi vào phòng.
+            </p>
+          </div>
+          <RuleTag code="NFR01">Độ trễ AI ≤ 2,5s</RuleTag>
+        </div>
+
+        <nav className="setup-quick-links" aria-label="Liên kết nhanh">
+          <Link to="/reports" className="setup-quick-link">
+            Xem báo cáo trước đây
+          </Link>
+          <span className="setup-quick-sep" aria-hidden="true">
+            |
+          </span>
+          <Link to="/profile" className="setup-quick-link">
+            Hồ sơ &amp; CV/JD
+          </Link>
+        </nav>
+      </header>
 
       {startError && (
         <ErrorBanner
-          title="Chưa thể khởi tạo phiên phỏng vấn từ máy chủ"
+          title="Chưa thể khởi tạo phiên phỏng vấn từ máy chủ API"
           message={startError}
           onRetry={handleStartInterview}
           retryLabel="Thử khởi tạo lại"
           actions={
             <Button variant="primary" size="sm" onClick={handleOpenLocalStudio}>
-              Mở phòng cục bộ (kiểm thử thiết bị/IDE)
+              Mở phòng cục bộ (Local Studio)
             </Button>
           }
         />
       )}
 
-      <div className="grid setup-layout">
-        <div className="col setup-options">
-          <Card className="setup-card">
-            <CardHead title="Loại phiên" />
-
-            <div className="grid setup-types" role="radiogroup" aria-label="Loại phiên">
-              {SESSION_TYPES.map(({ value, title, badge, detail }) => {
-                const checked = sessionType === value;
+      <div className="lc-workspace setup-workspace">
+        <div className="lc-workspace__main">
+          {/* 2 Flat Assessment Track Cards */}
+          <section aria-labelledby="setup-tracks-heading">
+            <h2 id="setup-tracks-heading" className="sr-only">
+              Chọn vòng phỏng vấn mô phỏng
+            </h2>
+            <div className="setup-tracks" role="radiogroup" aria-label="Loại vòng phỏng vấn">
+              {ASSESSMENT_TRACKS.map((track) => {
+                const checked = sessionType === track.value;
                 return (
-                  <label className="setup-type" key={value}>
+                  <label className="setup-track" key={track.value}>
                     <input
                       className="sr-only"
                       type="radio"
                       name="setup-session-type"
-                      value={value}
+                      value={track.value}
                       checked={checked}
-                      onChange={() => setSessionType(value)}
+                      onChange={() => setSessionType(track.value)}
                     />
-                    <span className="col stack-sm setup-type-card">
-                      <span className="row between">
-                        <Badge tone={checked ? "brand" : "neutral"} dot>
-                          {badge}
-                        </Badge>
+                    <span className="setup-track__card">
+                      <span className="setup-track__top">
+                        <span className="setup-track__meta">{track.meta}</span>
                         <span className="setup-radio-mark" aria-hidden="true" />
                       </span>
-                      <span className="t-heading-s">{title}</span>
-                      <span className="t-body-s c-ink2">{detail}</span>
+
+                      <span className="setup-track__title">{track.title}</span>
+                      <span className="t-body-s c-ink2 setup-track__detail">{track.detail}</span>
+
+                      <span className="setup-track__stages">
+                        {track.plan.join(" → ")}
+                      </span>
                     </span>
                   </label>
                 );
               })}
             </div>
+          </section>
 
-            <p className="t-body-s c-ink2 setup-agenda-line">
-              Trình tự dự kiến: {activeSession.plan.join(" → ")}.
-            </p>
-          </Card>
-
-          <Card className="setup-card" aria-label="Thời lượng, độ khó và ngữ cảnh">
-            <div className="grid setup-segments">
-              <div className="col stack-sm" onKeyDown={handleSegmentKeys}>
-                <CardHead title="Thời lượng" />
-                <Segmented
-                  label="Thời lượng"
-                  options={DURATIONS}
-                  value={duration}
-                  onChange={setDuration}
-                />
-              </div>
-              <div className="col stack-sm" onKeyDown={handleSegmentKeys}>
-                <CardHead title="Độ khó" />
-                <Segmented
-                  label="Độ khó"
-                  options={DIFFICULTIES}
-                  value={difficulty}
-                  onChange={setDifficulty}
-                />
-              </div>
-            </div>
-
-            <div className="col stack-sm setup-context-wrap">
-              <div className="row between setup-context">
-                <div className="col" style={{ gap: "2px" }}>
-                  <span className="t-body-s t-strong">{CONTEXT_LABEL}</span>
-                  <span className="t-body-s c-ink2">{cvContextDescription}</span>
-                </div>
-                <Toggle label={CONTEXT_LABEL} checked={useCv} onChange={setUseCv} />
-              </div>
-
-              {useCv && (
-                <div className="row wrap stack-sm">
-                  <RuleTag code="NFR04">Mã hóa khi lưu</RuleTag>
-                  <span className="t-body-s c-ink2">
-                    Câu hỏi sinh riêng từ CV/JD không tự động đưa vào kho dùng chung (BR4).{" "}
-                    {!cvDraft.file && (
-                      <Link to="/profile" className="c-brand">
-                        Cập nhật CV/JD →
-                      </Link>
-                    )}
-                  </span>
-                </div>
+          {/* Unified Pane: Cấu hình phiên + Kiểm tra thiết bị */}
+          <section className="lc-pane setup-pane" aria-label="Cấu hình phiên và kiểm tra thiết bị">
+            <div className="lc-pane__head">
+              <span className="setup-pane__title">Cấu hình phiên &amp; kiểm tra thiết bị</span>
+              {microphoneReady ? (
+                <Badge tone="success" dot>
+                  Micro sẵn sàng
+                </Badge>
+              ) : microphone.status === "error" ? (
+                <Badge tone="danger" dot>
+                  Lỗi micro (E2)
+                </Badge>
+              ) : (
+                <Badge tone="neutral" dot>
+                  Chưa kiểm tra micro
+                </Badge>
               )}
             </div>
-          </Card>
 
-          <Card className="setup-card">
-            <CardHead title="Kiểm tra thiết bị">
-              <div className="setup-microphone-status" role="status">
-                {microphoneReady ? (
-                  <Badge tone="success" dot>
-                    Hoạt động
-                  </Badge>
-                ) : microphone.status === "error" ? (
-                  <Badge tone="danger" dot>
-                    Chưa cấp quyền
-                  </Badge>
-                ) : (
-                  <Badge tone="neutral" dot>
-                    Chưa kiểm tra
-                  </Badge>
+            <div className="setup-pane__section">
+              <div className="setup-segments">
+                <div className="col stack-sm" onKeyDown={handleSegmentKeys}>
+                  <span className="field__label">Thời lượng phiên</span>
+                  <Segmented
+                    label="Thời lượng phiên"
+                    options={DURATIONS}
+                    value={duration}
+                    onChange={setDuration}
+                  />
+                </div>
+
+                <div className="col stack-sm" onKeyDown={handleSegmentKeys}>
+                  <span className="field__label">Độ khó câu hỏi</span>
+                  <Segmented
+                    label="Độ khó câu hỏi"
+                    options={DIFFICULTIES}
+                    value={difficulty}
+                    onChange={setDifficulty}
+                  />
+                </div>
+              </div>
+
+              <div className="setup-context-block">
+                <div className="row between setup-context-row">
+                  <div className="col" style={{ gap: "2px", minWidth: 0 }}>
+                    <span className="t-body-s t-strong">{CONTEXT_LABEL}</span>
+                    <span className="t-body-s c-ink2">{cvContextDescription}</span>
+                  </div>
+                  <Toggle label={CONTEXT_LABEL} checked={useCv} onChange={setUseCv} />
+                </div>
+
+                {useCv && (
+                  <div className="row wrap stack-sm">
+                    <RuleTag code="NFR04">Mã hóa khi lưu</RuleTag>
+                    <span className="t-body-s c-ink2">
+                      Câu hỏi sinh riêng từ CV/JD không tự động đưa vào kho dùng chung (BR4).{" "}
+                      {!cvDraft.file && (
+                        <Link to="/profile" className="c-brand">
+                          Cập nhật CV/JD →
+                        </Link>
+                      )}
+                    </span>
+                  </div>
                 )}
               </div>
-            </CardHead>
-
-            <div className="row wrap setup-device-actions">
-              <Button
-                variant="secondary"
-                onClick={() => void checkMicrophone()}
-                disabled={microphone.status === "checking"}
-              >
-                {microphone.status === "checking" && <span className="spinner" aria-hidden="true" />}
-                {microphone.status === "checking" ? "Đang kiểm tra micro…" : "Kiểm tra micro"}
-              </Button>
-
-              <Button
-                variant="secondary"
-                onClick={() => void handlePlayTestSound()}
-                disabled={audioStatus === "playing"}
-              >
-                {audioStatus === "playing" ? "Đang phát âm thanh…" : "Phát âm thanh thử"}
-              </Button>
             </div>
 
-            {microphoneReady && (
-              <p className="t-body-s c-success" role="status">
-                Micro đã xác nhận hoạt động ({microphone.deviceLabel}) — luồng thu thử đã được ngắt ngay sau khi kiểm tra.
-              </p>
-            )}
+            <div className="setup-pane__section setup-pane__section--bordered">
+              <div className="row between wrap stack-sm">
+                <div className="col" style={{ gap: "2px" }}>
+                  <h2 className="t-heading-s">Kiểm tra thiết bị</h2>
+                  <p className="t-body-s c-ink2">
+                    Xác nhận quyền Microphone (Web Audio API) và loa trước khi bắt đầu tính giờ.
+                  </p>
+                </div>
+                <div className="row wrap setup-device-actions">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => void checkMicrophone()}
+                    disabled={microphone.status === "checking"}
+                  >
+                    {microphone.status === "checking" && (
+                      <span className="spinner" aria-hidden="true" />
+                    )}
+                    {microphone.status === "checking" ? "Đang kiểm tra…" : "Kiểm tra micro"}
+                  </Button>
 
-            {microphone.status === "error" && (
-              <div role="alert" className="col stack-sm">
-                <Callout tone="danger" title="Không thể truy cập micro (E2)">
-                  <p>{microphone.message}</p>
-                </Callout>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => void handlePlayTestSound()}
+                    disabled={audioStatus === "playing"}
+                  >
+                    {audioStatus === "playing" ? "Đang phát…" : "Phát âm thanh thử"}
+                  </Button>
+                </div>
               </div>
-            )}
 
-            {audioStatus === "played" && (
-              <p className="t-body-s c-ink2" role="status">
-                Đã phát âm báo thử qua loa (C5 → E5 · Web Audio API).
-              </p>
-            )}
+              {microphoneReady && (
+                <p className="t-body-s c-success" role="status">
+                  Micro đã xác nhận hoạt động ({microphone.deviceLabel}) — luồng thu thử đã được
+                  ngắt ngay sau khi kiểm tra.
+                </p>
+              )}
 
-            {audioStatus === "error" && audioError && (
-              <p className="t-body-s c-accent" role="alert">
-                {audioError}
-              </p>
-            )}
-          </Card>
+              {microphone.status === "error" && (
+                <div role="alert">
+                  <Callout tone="danger" title="Không thể truy cập micro (E2)">
+                    <p>{microphone.message}</p>
+                  </Callout>
+                </div>
+              )}
+
+              {audioStatus === "played" && (
+                <p className="t-body-s c-ink2" role="status">
+                  Đã phát âm báo thử qua loa (C5 → E5 · Web Audio API).
+                </p>
+              )}
+
+              {audioStatus === "error" && audioError && (
+                <p className="t-body-s c-accent" role="alert">
+                  {audioError}
+                </p>
+              )}
+            </div>
+          </section>
         </div>
 
-        <Card className="setup-summary">
-          <CardHead title="Tóm tắt phiên">
-            <Badge tone={microphoneReady ? "success" : "warning"} dot>
-              {microphoneReady ? "Sẵn sàng" : "Chờ micro"}
-            </Badge>
-          </CardHead>
+        {/* Sticky 280px Right Rail: Pre-flight Summary + StudyCalendar */}
+        <aside className="lc-rail-right" aria-label="Tóm tắt phiên và lịch luyện tập">
+          <section className="lc-pane setup-pane setup-summary-pane">
+            <div className="lc-pane__head">
+              <span className="setup-pane__title">Tóm tắt phiên</span>
+              <Badge tone={microphoneReady ? "success" : "warning"} dot>
+                {microphoneReady ? "Sẵn sàng" : "Chờ micro"}
+              </Badge>
+            </div>
 
-          <dl className="setup-details">
-            <div className="kv">
-              <dt>Loại phiên</dt>
-              <dd>{activeSession.title}</dd>
-            </div>
-            <div className="kv">
-              <dt>Vai trò mục tiêu</dt>
-              <dd>
-                {targetProfile.role} · {targetProfile.level}
-              </dd>
-            </div>
-            <div className="kv">
-              <dt>Thời lượng</dt>
-              <dd className="setup-tabular">
-                {duration} phút ({duration}:00)
-              </dd>
-            </div>
-            <div className="kv">
-              <dt>Độ khó</dt>
-              <dd>{DIFFICULTY_META[difficulty].label}</dd>
-            </div>
-            <div className="kv">
-              <dt>Ngữ cảnh CV/JD</dt>
-              <dd>{useCv ? (cvDraft.file ? cvDraft.file.name : "Hồ sơ mục tiêu") : "Không"}</dd>
-            </div>
-            <div className="kv">
-              <dt>Micro</dt>
-              <dd className={microphoneReady ? "c-success" : "c-warning"}>
-                {microphoneReady ? "Hoạt động" : "Chưa xác nhận"}
-              </dd>
-            </div>
-          </dl>
+            <div className="setup-summary__body">
+              <dl className="setup-details">
+                <div className="kv">
+                  <dt>Vòng</dt>
+                  <dd>{activeTrack.title}</dd>
+                </div>
+                <div className="kv">
+                  <dt>Mục tiêu</dt>
+                  <dd>
+                    {targetProfile.role} · {targetProfile.level}
+                  </dd>
+                </div>
+                <div className="kv">
+                  <dt>Thời lượng</dt>
+                  <dd className="setup-tabular">
+                    {duration} phút ({duration}:00)
+                  </dd>
+                </div>
+                <div className="kv">
+                  <dt>Độ khó</dt>
+                  <dd className={`lc-diff lc-diff--${difficulty}`}>
+                    {DIFFICULTY_META[difficulty].label}
+                  </dd>
+                </div>
+                <div className="kv">
+                  <dt>CV/JD</dt>
+                  <dd className="setup-details__ellipsis" title={cvDraft.file?.name || undefined}>
+                    {useCv ? (cvDraft.file ? cvDraft.file.name : "Hồ sơ mục tiêu") : "Không dùng"}
+                  </dd>
+                </div>
+                <div className="kv">
+                  <dt>Micro</dt>
+                  <dd className={microphoneReady ? "c-success" : "c-warning"}>
+                    {microphoneReady ? "Hoạt động" : "Chưa xác nhận"}
+                  </dd>
+                </div>
+              </dl>
 
-          <Callout tone="warning">
-            <div className="col stack-sm">
-              <span>
-                <RuleTag code="BR1">Hard-stop</RuleTag>
-              </span>
-              <p>
-                Phiên tự kết thúc đúng <strong className="t-mono setup-tabular">{duration}:00</strong>,
-                không kéo dài dù câu hỏi hoặc bài code đang dang dở. Hệ thống tự lưu snapshot mã và
-                transcript ngay khi hết giờ.
-              </p>
-            </div>
-          </Callout>
+              <Callout tone="warning">
+                <div className="col stack-sm">
+                  <span>
+                    <RuleTag code="BR1">Hard-stop</RuleTag>
+                  </span>
+                  <p>
+                    Phiên tự kết thúc đúng{" "}
+                    <strong className="t-mono setup-tabular">{duration}:00</strong> và tự niêm phong
+                    snapshot mã, transcript ngay khi hết giờ.
+                  </p>
+                </div>
+              </Callout>
 
-          <div className="col stack-sm">
-            <Button
-              variant="primary"
-              block
-              disabled={!microphoneReady || starting}
-              aria-describedby={microphoneReady ? undefined : "setup-mic-required"}
-              onClick={() => void handleStartInterview()}
-            >
-              {starting && <span className="spinner" aria-hidden="true" />}
-              {starting ? "Đang khởi tạo phiên…" : "Bắt đầu phỏng vấn"}
-              {!starting && <span aria-hidden="true">→</span>}
-            </Button>
-            {!microphoneReady && (
-              <p className="t-body-s c-ink2 setup-mic-required" id="setup-mic-required">
-                Kiểm tra micro thành công để mở khóa nút bắt đầu phiên.
-              </p>
-            )}
-          </div>
-        </Card>
+              <div className="col stack-sm">
+                <Button
+                  variant="primary"
+                  block
+                  disabled={!microphoneReady || starting}
+                  aria-describedby={microphoneReady ? undefined : "setup-mic-required"}
+                  onClick={() => void handleStartInterview()}
+                >
+                  {starting && <span className="spinner" aria-hidden="true" />}
+                  {starting ? "Đang khởi tạo phiên…" : "Bắt đầu phỏng vấn"}
+                  {!starting && <span aria-hidden="true">→</span>}
+                </Button>
+
+                {startError && (
+                  <Button variant="secondary" size="sm" block onClick={handleOpenLocalStudio}>
+                    Vào phòng cục bộ (Local Studio)
+                  </Button>
+                )}
+
+                {!microphoneReady && (
+                  <p className="t-body-s c-ink2 setup-mic-required" id="setup-mic-required">
+                    Kiểm tra micro thành công để mở khóa nút bắt đầu.
+                  </p>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <StudyCalendar />
+        </aside>
       </div>
     </div>
   );

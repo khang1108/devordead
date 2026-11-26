@@ -1,120 +1,78 @@
-/* 05 · Luyện giọng nói (UC05, UC06) — Calm Light Studio, Two-Level Containment */
+/* 05 · Luyện giọng nói (UC05, UC06) — Clean 2-Pane .lc-pane Tiled Studio */
 .voice {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-width: 0;
 }
 
 .voice .btn {
   text-decoration: none;
 }
 
-/* ——— Unified 1px Question Stepper Strip ——— */
-.voice__stepper {
-  list-style: none;
+.voice__tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.voice__pane {
+  height: auto;
+}
+
+.voice__pane-title {
+  font: 600 13px/1.3 var(--font-body);
+  color: var(--ink);
+}
+
+/* ——— Main 2-Pane Tiled Studio Grid ——— */
+.voice__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--r-lg);
-  overflow: hidden;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+  gap: 16px;
+  align-items: start;
 }
 
-.voice__stepper-cell {
-  min-width: 0;
-  border-left: 1px solid var(--line-subtle);
-}
-
-.voice__stepper-cell:first-child {
-  border-left: 0;
-}
-
-.voice__step {
-  width: 100%;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  color: var(--ink-2);
-  text-align: left;
-  transition: background-color 140ms var(--ease-out, ease), color 140ms var(--ease-out, ease);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .voice__step:hover {
-    background: var(--bg);
-    color: var(--ink);
-  }
+.voice__step-tab {
+  gap: 6px;
 }
 
 .voice__step-dot {
   display: grid;
   place-items: center;
   flex: none;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: var(--surface-2);
   border: 1px solid var(--line);
-  font: 600 11px/1 var(--font-mono);
+  font: 600 10.5px/1 var(--font-mono);
   color: var(--ink-2);
 }
 
-.voice__step-label {
-  font: 500 13px/1.3 var(--font-body);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.voice__step-sub {
-  color: var(--ink-3);
-  font-weight: 400;
-}
-
-.voice__step.is-done .voice__step-dot {
+.voice__step-dot.is-done {
   background: var(--success-soft);
   border-color: var(--success-border);
   color: var(--success);
 }
 
-.voice__step.is-current {
-  background: var(--surface-2);
-  color: var(--ink);
-  box-shadow: inset 0 -2px 0 var(--ink);
-}
-
-.voice__step.is-current .voice__step-label {
-  font-weight: 600;
-}
-
-.voice__step.is-current .voice__step-sub {
-  color: var(--ink-2);
-}
-
-.voice__step.is-current .voice__step-dot {
+.voice__step-dot.is-current {
   background: var(--ink);
   border-color: var(--ink);
   color: var(--surface);
 }
 
-/* ——— Main 2-Column Layout ——— */
-.voice__grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 388px;
-  gap: 20px;
-  align-items: start;
-}
-
-.voice__left {
-  gap: 16px;
+.voice__pane-body {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
 .voice__stage-row {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line-subtle);
 }
 
 .voice__orb-wrap {
@@ -178,18 +136,22 @@
 }
 
 .voice__prompt {
-  --gap: 12px;
+  --gap: 10px;
 }
 
 .voice__q-text {
-  font-size: 19px;
+  font-size: 18px;
   line-height: 1.45;
   color: var(--ink);
 }
 
-/* ——— Light Studio Recording Card (Full-bleed #F6F7F8 Waveform Well, Zero Dark Slab) ——— */
+/* ——— Light Studio Recorder Section ——— */
 .voice__recorder {
-  gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line-subtle);
 }
 
 .voice__status-dot {
@@ -210,15 +172,15 @@
 }
 
 .voice__timer {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 600;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
 }
 
 .voice__wave-well {
-  margin: 0 -24px;
-  padding: 14px 24px;
+  margin: 0 -20px;
+  padding: 12px 20px;
   background: var(--bg);
   border-top: 1px solid var(--line-subtle);
   border-bottom: 1px solid var(--line-subtle);
@@ -234,7 +196,9 @@
 
 /* ——— Transcript & Typed Fallback ——— */
 .voice__transcript {
-  min-height: 128px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .voice__final-transcript {
@@ -248,21 +212,29 @@
   gap: 10px;
 }
 
-/* ——— Right Rubric Feedback Panel (Hairline Sections, Zero Pastel Sub-Boxes) ——— */
+/* ——— Right Rubric & Notes Pane ——— */
 .voice__feedback {
   position: sticky;
-  top: 24px;
-  min-height: 480px;
+  top: calc(var(--topbar-h) + 20px);
+  height: auto;
+  min-height: 460px;
+}
+
+.voice__fb-wrap {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .voice__empty {
   flex: 1;
-  padding: 28px 12px;
+  padding: 28px 10px;
 }
 
 .voice__fb-body {
   flex: 1;
-  gap: 16px;
+  gap: 14px;
   animation: voice-fade-in 180ms var(--ease-out, ease);
 }
 
@@ -359,14 +331,30 @@
   margin-top: auto;
 }
 
-.voice__rules {
+.voice__notes-body {
+  gap: 12px;
+}
+
+.voice__notes-body .textarea {
+  min-height: 180px;
+}
+
+.voice__note-stt {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   padding-top: 12px;
   border-top: 1px solid var(--line-subtle);
 }
 
-@media (max-width: 1180px) {
+.voice__rules {
+  padding: 8px 14px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 1120px) {
   .voice__grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .voice__feedback {
     position: static;
@@ -374,18 +362,13 @@
   }
 }
 
-@media (max-width: 820px) {
-  .voice__stepper {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+@media (max-width: 680px) {
+  .voice__pane-body {
+    padding: 14px 16px;
   }
-  .voice__stepper-cell {
-    border-top: 1px solid var(--line-subtle);
-  }
-  .voice__stepper-cell:nth-child(-n + 2) {
-    border-top: 0;
-  }
-  .voice__stepper-cell:nth-child(odd) {
-    border-left: 0;
+  .voice__wave-well {
+    margin: 0 -16px;
+    padding: 12px 16px;
   }
   .voice__stage-row {
     flex-direction: column;

@@ -77,6 +77,16 @@
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 
-  /* Clean Linear-Width Sidebar */
-  --sidebar-w: 228px;
+  /* Clean LeetCode-Inspired Hybrid Shell & Workbench Tokens */
+  --sidebar-w: 204px;
+  --sidebar-collapsed-w: 56px;
+  --topbar-h: 50px;
+  --workbench-bg: #F0F1F4;
+  --panel-head-bg: #FAFAFB;
+  --zebra-row: #F7F8FA;
+
+  /* Unboxed Semantic Difficulty Typography (LeetCode-clean, WCAG AA) */
+  --diff-easy: #0E8A5D;
+  --diff-medium: #B4690E;
+  --diff-hard: #C92A22;
 }

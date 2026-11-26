@@ -1,5 +1,9 @@
+/* UC10 · Phỏng vấn mô phỏng — LeetCode Mock Assessment + 93% Neutral Studio */
 .setup-screen {
   --setup-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
   min-width: 0;
 }
 
@@ -7,50 +11,133 @@
   font-variant-numeric: tabular-nums;
 }
 
-.setup-layout {
-  --gap: 20px;
-  grid-template-columns: minmax(0, 1.65fr) minmax(295px, 1fr);
-  align-items: start;
+/* ——— Calm LeetCode Mock Assessment Utility Header ——— */
+.setup-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.setup-options {
-  --gap: 16px;
+.setup-header__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
-.setup-card,
-.setup-summary {
-  box-shadow: none;
+.setup-header__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
 }
 
-.setup-types,
-.setup-segments {
-  --gap: 12px;
+.setup-quick-links {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  font: 500 13.5px/1.4 var(--font-body);
+}
+
+.setup-quick-link {
+  color: var(--brand-text);
+  text-decoration: none;
+  transition: color 130ms var(--setup-ease);
+}
+
+.setup-quick-link:hover {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.setup-quick-sep {
+  color: var(--line-strong);
+  user-select: none;
+}
+
+/* ——— 2 Flat Assessment Track Cards (1px rest border, 1.5px ink selected, zero shadows) ——— */
+.setup-tracks {
+  display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
 }
 
-.setup-type {
+.setup-track {
   position: relative;
+  display: flex;
   min-width: 0;
   cursor: pointer;
 }
 
-.setup-type-card {
-  height: 100%;
-  padding: 16px;
+.setup-track__card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
   border: 1px solid var(--line);
-  border-radius: var(--r-md);
+  border-radius: 10px;
   background: var(--surface);
-  transition: background-color 150ms var(--setup-ease), border-color 150ms var(--setup-ease);
+  box-shadow: none;
+  transition:
+    border-color 140ms var(--setup-ease),
+    background-color 140ms var(--setup-ease),
+    transform 140ms var(--setup-ease);
 }
 
-.setup-type input:checked + .setup-type-card {
-  background: var(--surface-2);
-  border-color: var(--ink);
-  box-shadow: inset 0 0 0 0.5px var(--ink);
+@media (hover: hover) and (pointer: fine) {
+  .setup-track__card:hover {
+    border-color: var(--line-strong);
+    transform: translateY(-1px);
+  }
 }
 
-.setup-type input:focus-visible + .setup-type-card {
+.setup-track input:checked + .setup-track__card {
+  padding: 17.5px;
+  border: 1.5px solid var(--ink);
+  background: var(--surface);
+  box-shadow: none;
+}
+
+.setup-track input:focus-visible + .setup-track__card {
   box-shadow: var(--focus);
+}
+
+.setup-track__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.setup-track__meta {
+  font: 500 12px/1.4 var(--font-body);
+  color: var(--ink-2);
+}
+
+.setup-track input:checked + .setup-track__card .setup-track__meta {
+  color: var(--brand-text);
+}
+
+.setup-track__title {
+  font: 600 17px/1.3 var(--font-display);
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.setup-track__detail {
+  line-height: 1.55;
+}
+
+.setup-track__stages {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--line-subtle);
+  font: 400 12px/1.5 var(--font-body);
+  color: var(--ink-3);
 }
 
 .setup-radio-mark {
@@ -62,13 +149,14 @@
   border: 1.5px solid var(--ink-3);
   border-radius: 50%;
   background: var(--surface);
+  transition: border-color 140ms var(--setup-ease);
 }
 
-.setup-type input:checked + .setup-type-card .setup-radio-mark {
+.setup-track input:checked + .setup-track__card .setup-radio-mark {
   border-color: var(--ink);
 }
 
-.setup-type input:checked + .setup-type-card .setup-radio-mark::after {
+.setup-track input:checked + .setup-track__card .setup-radio-mark::after {
   content: "";
   width: 8px;
   height: 8px;
@@ -76,33 +164,57 @@
   background: var(--ink);
 }
 
-.setup-agenda-line {
-  padding-top: 12px;
-  border-top: 1px solid var(--line-subtle, var(--line));
+/* ——— Unified Configuration & Device Pane ——— */
+.setup-pane {
+  height: auto;
 }
 
-/* ——— Segments & CV Toggle ——— */
-.setup-segments .segmented__opt {
-  min-height: 44px;
-  padding-inline: 6px;
+.setup-pane__title {
+  font: 600 13px/1.3 var(--font-body);
+  color: var(--ink);
 }
 
-.setup-context-wrap {
-  padding-top: 14px;
+.setup-pane__section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px;
+}
+
+.setup-pane__section--bordered {
   border-top: 1px solid var(--line);
 }
 
-.setup-context {
+.setup-segments {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.setup-segments .segmented__opt {
+  min-height: 40px;
+  padding-inline: 8px;
+}
+
+.setup-context-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-subtle);
+}
+
+.setup-context-row {
   gap: 16px;
 }
 
-.setup-context .toggle {
+.setup-context-row .toggle {
   height: 44px;
   background: transparent;
   border: 0;
 }
 
-.setup-context .toggle::before {
+.setup-context-row .toggle::before {
   content: "";
   position: absolute;
   inset: 11px 0;
@@ -111,75 +223,78 @@
   transition: background-color 150ms var(--setup-ease);
 }
 
-.setup-context .toggle[aria-checked="true"]::before {
+.setup-context-row .toggle[aria-checked="true"]::before {
   background: var(--ink);
 }
 
-.setup-context .toggle::after {
+.setup-context-row .toggle::after {
   top: 14px;
 }
 
-/* ——— Hardware Check ——— */
 .setup-device-actions {
-  --gap: 10px;
+  --gap: 8px;
 }
 
-.setup-microphone-status:not(:empty) {
+/* ——— Right Rail Pre-flight Summary Pane ——— */
+.setup-summary__body {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px 16px 16px;
 }
 
-/* ——— Sticky Summary ——— */
-.setup-summary {
-  position: sticky;
-  top: 24px;
+.setup-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.setup-details .kv {
+  padding: 8px 0;
+  font-size: 13px;
 }
 
 .setup-details .kv:first-child {
-  border-top: 1px solid var(--line);
+  padding-top: 0;
+}
+
+.setup-details .kv:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
 }
 
 .setup-details .kv dt {
   flex: none;
 }
 
+.setup-details__ellipsis {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .setup-mic-required {
   text-align: center;
+  font-size: 12.5px;
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .setup-type-card:hover {
-    border-color: var(--line-strong, var(--ink-3));
-  }
-}
-
-@media (max-width: 1120px) and (min-width: 1025px) {
+@media (max-width: 760px) {
+  .setup-tracks,
   .setup-segments {
     grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-@media (max-width: 1024px) {
-  .setup-layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .setup-summary {
-    position: static;
   }
 }
 
 @media (max-width: 560px) {
-  .setup-types,
-  .setup-segments {
-    grid-template-columns: minmax(0, 1fr);
+  .setup-pane__section {
+    padding: 14px;
   }
 
-  .setup-layout .card {
-    padding: 16px;
+  .setup-device-actions {
+    width: 100%;
   }
 
   .setup-device-actions .btn {
-    width: 100%;
+    flex: 1 1 auto;
   }
 }

@@ -83,6 +83,41 @@ export const localStore = {
     writeJson(window.localStorage, "editor.fontSize", size);
   },
 
+  getEditorTheme(): "light" | "dark" {
+    return readJson<"light" | "dark">(window.localStorage, "editor.theme") ?? "light";
+  },
+  setEditorTheme(theme: "light" | "dark"): void {
+    writeJson(window.localStorage, "editor.theme", theme);
+  },
+
+  getSidebarCollapsed(): boolean {
+    return readJson<boolean>(window.localStorage, "ui.sidebarCollapsed") ?? false;
+  },
+  setSidebarCollapsed(collapsed: boolean): void {
+    writeJson(window.localStorage, "ui.sidebarCollapsed", collapsed);
+  },
+
+  getSplitRatio(key: string, fallback: number): number {
+    const val = readJson<number>(window.localStorage, `split.${key}`);
+    return typeof val === "number" && Number.isFinite(val) ? val : fallback;
+  },
+  setSplitRatio(key: string, ratio: number): void {
+    writeJson(window.localStorage, `split.${key}`, ratio);
+  },
+
+  getPracticeDates(): string[] {
+    return readJson<string[]>(window.localStorage, "study.practiceDates") ?? [];
+  },
+  recordTodayPractice(): string[] {
+    const now = new Date();
+    const iso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    const existing = readJson<string[]>(window.localStorage, "study.practiceDates") ?? [];
+    if (existing.includes(iso)) return existing;
+    const next = [...existing, iso].slice(-90);
+    writeJson(window.localStorage, "study.practiceDates", next);
+    return next;
+  },
+
   getLastSnapshot(): SessionSnapshot | null {
     return readJson<SessionSnapshot>(window.sessionStorage, "interview.lastSnapshot");
   },

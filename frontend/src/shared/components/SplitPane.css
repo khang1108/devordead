@@ -1,0 +1,111 @@
+.lc-split {
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.lc-split--horizontal {
+  flex-direction: row;
+}
+
+.lc-split--vertical {
+  flex-direction: column;
+}
+
+.lc-split__first {
+  flex: 0 0 auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.lc-split__second {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.lc-split__gutter {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  touch-action: none;
+  outline: none;
+}
+
+.lc-split--horizontal > .lc-split__gutter {
+  width: 10px;
+  cursor: col-resize;
+}
+
+.lc-split--vertical > .lc-split__gutter {
+  height: 10px;
+  cursor: row-resize;
+}
+
+.lc-split__pill {
+  border-radius: 999px;
+  background: rgba(17, 20, 24, 0.16);
+  transition: background-color 140ms ease, transform 140ms ease;
+}
+
+.lc-split--horizontal > .lc-split__gutter .lc-split__pill {
+  width: 3px;
+  height: 28px;
+}
+
+.lc-split--vertical > .lc-split__gutter .lc-split__pill {
+  width: 32px;
+  height: 3px;
+}
+
+.lc-split__gutter:hover .lc-split__pill,
+.lc-split__gutter:focus-visible .lc-split__pill,
+.lc-split.is-dragging > .lc-split__gutter .lc-split__pill {
+  background: var(--brand);
+}
+
+.lc-split--horizontal > .lc-split__gutter:hover .lc-split__pill,
+.lc-split--horizontal.is-dragging > .lc-split__gutter .lc-split__pill {
+  height: 44px;
+}
+
+.lc-split--vertical > .lc-split__gutter:hover .lc-split__pill,
+.lc-split--vertical.is-dragging > .lc-split__gutter .lc-split__pill {
+  width: 52px;
+}
+
+@media (max-width: 960px) {
+  .lc-split--horizontal,
+  .lc-split--vertical {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .lc-split--horizontal > .lc-split__first,
+  .lc-split--vertical > .lc-split__first,
+  .lc-split--horizontal > .lc-split__second,
+  .lc-split--vertical > .lc-split__second {
+    flex: none !important;
+    flex-basis: auto !important;
+    height: auto;
+  }
+
+  .lc-split--horizontal > .lc-split__gutter,
+  .lc-split--vertical > .lc-split__gutter {
+    display: none;
+  }
+
+  .lc-split--horizontal > .lc-split__second,
+  .lc-split--vertical > .lc-split__second {
+    margin-top: 8px;
+  }
+}
