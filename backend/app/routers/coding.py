@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from ..database import get_db
 from ..sandbox import execute_sandbox
 from ..security import get_active_user
+from .exam import finalize_session, require_active_session
 
 router = APIRouter(prefix="/problems", tags=["Coding & Sandbox (UC07–UC09, BR3)"])
 
@@ -18,6 +19,11 @@ router = APIRouter(prefix="/problems", tags=["Coding & Sandbox (UC07–UC09, BR3
 class ExecuteCodePayload(BaseModel):
     language: str
     code: str
+
+
+class SubmitCodePayload(ExecuteCodePayload):
+    # Có giá trị khi nộp trong Chế độ thi: bài chỉ được nhận khi phiên còn hiệu lực.
+    examSessionId: str | None = None
 
 
 def _problem_status_map(conn: Any, user_id: str) -> dict[str, str]:
@@ -86,10 +92,14 @@ def run_sample_tests(problem_id: str, payload: ExecuteCodePayload, _user: dict =
 
 
 @router.post("/{problem_id}/submit")
-def submit_solution(problem_id: str, payload: ExecuteCodePayload, user: dict = Depends(get_active_user)):
+def submit_solution(problem_id: str, payload: SubmitCodePayload, user: dict = Depends(get_active_user)):
     if not payload.code.strip():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Mã nguồn không được để trống.")
     canonical_id = _resolve_problem_id(problem_id)
+    if payload.examSessionId:
+        # Kiểm tra trước khi chấm để không tốn thời gian chạy Sandbox cho phiên đã hết hạn.
+        with get_db() as conn:
+            require_active_session(conn, payload.examSessionId, user["id"], canonical_id)
     result = execute_sandbox(canonical_id, payload.language, payload.code, mode="submit")
 
     tests = result.get("tests", [])
@@ -102,7 +112,11 @@ def submit_solution(problem_id: str, payload: ExecuteCodePayload, user: dict = D
     except ValueError:
         mem_mb = 0.0
 
+    submission_id = f"sub-{uuid.uuid4().hex[:10]}"
     with get_db() as conn:
+        if payload.examSessionId:
+            # Kiểm tra lại trong cùng giao dịch ghi bài: phiên có thể vừa hết hạn trong lúc chấm.
+            require_active_session(conn, payload.examSessionId, user["id"], canonical_id)
         conn.execute(
             """
             INSERT INTO submissions
@@ -110,7 +124,7 @@ def submit_solution(problem_id: str, payload: ExecuteCodePayload, user: dict = D
             VALUES (?, ?, ?, ?, ?, 'submit', ?, ?, ?, ?, ?, ?, ?)
             """,
             (
-                f"sub-{uuid.uuid4().hex[:10]}",
+                submission_id,
                 user["id"],
                 canonical_id,
                 payload.language,
@@ -124,4 +138,6 @@ def submit_solution(problem_id: str, payload: ExecuteCodePayload, user: dict = D
                 datetime.now(timezone.utc).isoformat(),
             ),
         )
+        if payload.examSessionId:
+            result = {**result, "exam": finalize_session(conn, payload.examSessionId, submission_id)}
     return result

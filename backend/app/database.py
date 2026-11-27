@@ -134,6 +134,33 @@ def init_db() -> None:
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             );
 
+            -- Chế độ thi (Exam mode): mỗi lượt thi là một phiên có giới hạn thời gian,
+            -- mọi dấu hiệu gian lận phía trình duyệt được ghi vào exam_events.
+            CREATE TABLE IF NOT EXISTS exam_sessions (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                problem_id TEXT NOT NULL,
+                status TEXT NOT NULL,              -- active | submitted | abandoned | expired
+                duration_sec INTEGER NOT NULL,
+                started_at TEXT NOT NULL,
+                ended_at TEXT,
+                submission_id TEXT,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS exam_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT NOT NULL,
+                type TEXT NOT NULL,
+                client_at TEXT,
+                received_at TEXT NOT NULL,
+                duration_ms INTEGER NOT NULL DEFAULT 0,
+                chars INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY (session_id) REFERENCES exam_sessions(id) ON DELETE CASCADE
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_exam_events_session ON exam_events(session_id);
+
             CREATE TABLE IF NOT EXISTS interview_sessions (
                 id TEXT PRIMARY KEY,
                 user_id TEXT NOT NULL,
