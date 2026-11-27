@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { LogoMark } from "@shared/components/Logo";
 import SplitPane from "@shared/components/SplitPane";
 import {
@@ -29,6 +29,8 @@ import {
   type ButtonVariant,
 } from "@shared/ui";
 import { codingService } from "./coding.service";
+import { ExamHud, ExamLockOverlay, ExamNotice, ExamResultDialog, ExamStartDialog } from "./ExamMode";
+import { useExamMode } from "./useExamMode";
 import "./ProblemEditorScreen.css";
 
 const CodeEditor = lazy(() => import("@shared/components/CodeEditor"));
@@ -192,6 +194,25 @@ export default function ProblemEditorScreen() {
   const stepTimerRef = useRef<number | null>(null);
   const execAbortRef = useRef<AbortController | null>(null);
 
+  // ——— Chế độ thi ———
+  const exam = useExamMode({ problemId, enabled: !isStandaloneSandbox });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [examDialogOpen, setExamDialogOpen] = useState(
+    () => !isStandaloneSandbox && searchParams.get("mode") === "exam",
+  );
+  const [examResult, setExamResult] = useState<SandboxExecutionResult | null>(null);
+  const [confirmExamSubmit, setConfirmExamSubmit] = useState(false);
+  const [confirmAbandon, setConfirmAbandon] = useState(false);
+  const autoSubmittedRef = useRef(false);
+
+  // Bài thi dùng bản nháp riêng theo phiên: không mang được mã đã dán sẵn ở chế độ luyện tập vào phòng thi.
+  const draftKey =
+    exam.session && exam.phase !== "idle" ? `${problemId}@${exam.session.id}` : problemId;
+  const draftKeyRef = useRef(draftKey);
+  draftKeyRef.current = draftKey;
+  const problemRef = useRef<CodingProblem | null>(problem);
+  problemRef.current = problem;
+
   const clearStepTimer = useCallback(() => {
     if (stepTimerRef.current !== null) {
       window.clearInterval(stepTimerRef.current);
@@ -203,11 +224,13 @@ export default function ProblemEditorScreen() {
     setReloadTick((n) => n + 1);
   }, []);
 
-  // Nạp lại bản nháp cục bộ khi chuyển bài tập
+  // Nạp lại bản nháp cục bộ khi chuyển bài tập hoặc khi vào/ra Chế độ thi
   useEffect(() => {
     const currentLang = langRef.current;
-    const draft = localStore.getCodeDraft(problemId, currentLang);
-    setCode(draft ?? DEFAULT_CODE_TEMPLATES[currentLang]);
+    const draft = localStore.getCodeDraft(draftKey, currentLang);
+    setCode(
+      draft ?? problemRef.current?.starter?.[currentLang] ?? DEFAULT_CODE_TEMPLATES[currentLang],
+    );
     setSavedAt(draft !== null ? formatClockTime(new Date()) : null);
     setResultsByMode({});
     setExecError(null);
@@ -216,7 +239,7 @@ export default function ProblemEditorScreen() {
     setSelectedCaseIdx(0);
     setLeftTab("description");
     setBottomTab("testcase");
-  }, [problemId]);
+  }, [draftKey]);
 
   // Nạp đề bài từ API (trừ chế độ sandbox độc lập)
   useEffect(() => {
@@ -236,7 +259,7 @@ export default function ProblemEditorScreen() {
       .then((data) => {
         setProblem(data);
         const currentLang = langRef.current;
-        const existingDraft = localStore.getCodeDraft(problemId, currentLang);
+        const existingDraft = localStore.getCodeDraft(draftKeyRef.current, currentLang);
         const starterCode = data.starter?.[currentLang];
         if (existingDraft === null && starterCode) {
           setCode(starterCode);
@@ -269,7 +292,7 @@ export default function ProblemEditorScreen() {
   const handleCodeChange = (nextCode: string) => {
     setCode(nextCode);
     if (emptyError && nextCode.trim()) setEmptyError("");
-    localStore.setCodeDraft(problemId, lang, nextCode);
+    localStore.setCodeDraft(draftKey, lang, nextCode);
     setSavedAt(formatClockTime(new Date()));
   };
 
@@ -291,7 +314,7 @@ export default function ProblemEditorScreen() {
 
   const applyLanguageSwitch = (nextLang: ProgrammingLanguage) => {
     setLang(nextLang);
-    const savedDraft = localStore.getCodeDraft(problemId, nextLang);
+    const savedDraft = localStore.getCodeDraft(draftKey, nextLang);
     setCode(savedDraft ?? getStarter(nextLang));
     setSavedAt(savedDraft !== null ? formatClockTime(new Date()) : null);
     setEmptyError("");
@@ -316,12 +339,20 @@ export default function ProblemEditorScreen() {
   const handleResetCode = () => {
     const starter = getStarter(lang);
     setCode(starter);
-    localStore.setCodeDraft(problemId, lang, starter);
+    localStore.setCodeDraft(draftKey, lang, starter);
     setSavedAt(formatClockTime(new Date()));
     setEmptyError("");
   };
 
   const triggerExecution = async (mode: SandboxRunMode) => {
+    const examSessionId =
+      mode === "submit" && exam.inExam && exam.session ? exam.session.id : undefined;
+
+    if (!code.trim() && examSessionId && exam.timeUp && exam.session) {
+      // Hết giờ mà chưa viết gì: không có gì để chấm, phiên được đóng ở trạng thái hết giờ.
+      exam.finish({ ...exam.session, status: "expired", endedAt: exam.session.endsAt });
+      return;
+    }
     if (!code.trim()) {
       setEmptyError(
         "Mã nguồn đang trống — vui lòng nhập lời giải trước khi chạy thử hoặc nộp bài (UC08 · E1).",
@@ -360,18 +391,25 @@ export default function ProblemEditorScreen() {
     }
 
     try {
+      if (examSessionId) await exam.flush();
       const result =
         mode === "run"
           ? await codingService.runSampleTests(problemId, lang, code, controller.signal)
-          : await codingService.submitSolution(problemId, lang, code, controller.signal);
+          : await codingService.submitSolution(problemId, lang, code, controller.signal, examSessionId);
 
       if (controller.signal.aborted) return;
       clearStepTimer();
       setActiveStep(SANDBOX_STEPS.length);
       setResultsByMode((prev) => ({ ...prev, [mode]: result }));
+      if (examSessionId && result.exam) {
+        setExamResult(result);
+        exam.finish(result.exam);
+      }
     } catch (err) {
       if (controller.signal.aborted) return;
       clearStepTimer();
+      // Phiên có thể vừa hết hạn / đã đóng ở máy chủ: đồng bộ lại để hiện báo cáo.
+      if (examSessionId) void exam.refresh();
       setExecError(
         getErrorMessage(
           err,
@@ -384,6 +422,45 @@ export default function ProblemEditorScreen() {
         setRunningMode(null);
       }
     }
+  };
+
+  // Hết giờ: tự động nộp phần đang làm (một lần duy nhất cho mỗi phiên).
+  useEffect(() => {
+    if (!exam.timeUp || autoSubmittedRef.current) return;
+    autoSubmittedRef.current = true;
+    setConfirmExamSubmit(false);
+    void triggerExecution("submit");
+    // triggerExecution đọc mã mới nhất qua closure của lần render này
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exam.timeUp]);
+
+  // Link "?mode=exam" từ trang danh sách bài chỉ dùng để mở hộp thoại; gỡ ngay khỏi URL trước khi vào thi
+  // để việc đổi URL sau này không bị bộ chặn điều hướng của bài thi giữ lại.
+  useEffect(() => {
+    if (searchParams.get("mode") === "exam") {
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
+  const requestSubmit = () => {
+    if (exam.inExam) {
+      setConfirmExamSubmit(true);
+      return;
+    }
+    void triggerExecution("submit");
+  };
+
+  const handleExamStart = async (minutes: number) => {
+    autoSubmittedRef.current = false;
+    setExamResult(null);
+    const started = await exam.start(minutes);
+    if (started) setExamDialogOpen(false);
+  };
+
+  const handleAbandonConfirmed = async () => {
+    setConfirmAbandon(false);
+    execAbortRef.current?.abort();
+    await exam.abandon();
   };
 
   const activeResult = resultsByMode[resultMode] ?? null;
@@ -800,6 +877,8 @@ export default function ProblemEditorScreen() {
             onChange={handleCodeChange}
             fontSize={fontSize}
             themeMode={editorTheme}
+            readOnly={exam.locked || exam.phase === "finished"}
+            pasteGuard={exam.pasteGuard}
           />
         </Suspense>
       </div>
@@ -1127,20 +1206,28 @@ export default function ProblemEditorScreen() {
       {/* 48px LeetCode Workbench Top Bar */}
       <header className="lc-wb-bar">
         <div className="lc-wb-bar__left">
-          <Link
-            to="/dashboard"
-            className="pe-wb-brand"
-            title="DevOrDead — về trang tổng quan"
-            aria-label="DevOrDead — về trang tổng quan"
-          >
-            <LogoMark size={22} />
-          </Link>
+          {exam.inExam ? (
+            <span className="pe-wb-brand" aria-hidden="true">
+              <LogoMark size={22} />
+            </span>
+          ) : (
+            <>
+              <Link
+                to="/dashboard"
+                className="pe-wb-brand"
+                title="DevOrDead — về trang tổng quan"
+                aria-label="DevOrDead — về trang tổng quan"
+              >
+                <LogoMark size={22} />
+              </Link>
 
-          <span className="pe-wb-sep" aria-hidden="true" />
+              <span className="pe-wb-sep" aria-hidden="true" />
 
-          <Link to="/problems" className="lc-wb-back">
-            ← Danh sách bài
-          </Link>
+              <Link to="/problems" className="lc-wb-back">
+                ← Danh sách bài
+              </Link>
+            </>
+          )}
 
           <span className="pe-wb-title-pill" title={titlePillText}>
             {titlePillText}
@@ -1166,7 +1253,7 @@ export default function ProblemEditorScreen() {
               type="button"
               className="lc-wb-submit"
               disabled={running}
-              onClick={() => void triggerExecution("submit")}
+              onClick={requestSubmit}
               title="Nộp bài chấm toàn bộ test case trong Sandbox"
             >
               <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -1184,7 +1271,35 @@ export default function ProblemEditorScreen() {
         </div>
 
         <div className="lc-wb-bar__right">
-          <RuleTag code="BR3">Zero-trust</RuleTag>
+          {exam.inExam ? (
+            <ExamHud
+              remainingSec={exam.remainingSec}
+              violations={exam.violations}
+              onAbandon={() => setConfirmAbandon(true)}
+            />
+          ) : (
+            <>
+              <RuleTag code="BR3">Zero-trust</RuleTag>
+              {!isStandaloneSandbox && (
+                <button
+                  type="button"
+                  className="exam-entry-btn"
+                  disabled={!problem || running || exam.phase === "finished"}
+                  onClick={() => {
+                    exam.clearError();
+                    setExamDialogOpen(true);
+                  }}
+                  title="Làm bài trong Chế độ thi: toàn màn hình, giới hạn thời gian, giám sát rời trang và chặn dán mã từ ngoài"
+                >
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <circle cx="8" cy="8.75" r="5.25" stroke="currentColor" strokeWidth="1.4" />
+                    <path d="M8 6v3l1.75 1.25M6.5 1.75h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                  </svg>
+                  <span>Chế độ thi</span>
+                </button>
+              )}
+            </>
+          )}
 
           <button
             type="button"
@@ -1197,19 +1312,21 @@ export default function ProblemEditorScreen() {
             <span>{isDarkEditor ? "Tối" : "Sáng"}</span>
           </button>
 
-          <Link
-            to="/dashboard"
-            className="lc-topbar__icon-btn"
-            title="Về trang tổng quan"
-            aria-label="Về trang tổng quan"
-          >
-            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <rect x="2" y="2" width="5" height="5" rx="1.2" stroke="currentColor" strokeWidth="1.4" />
-              <rect x="9" y="2" width="5" height="5" rx="1.2" stroke="currentColor" strokeWidth="1.4" />
-              <rect x="2" y="9" width="5" height="5" rx="1.2" stroke="currentColor" strokeWidth="1.4" />
-              <rect x="9" y="9" width="5" height="5" rx="1.2" stroke="currentColor" strokeWidth="1.4" />
-            </svg>
-          </Link>
+          {!exam.inExam && (
+            <Link
+              to="/dashboard"
+              className="lc-topbar__icon-btn"
+              title="Về trang tổng quan"
+              aria-label="Về trang tổng quan"
+            >
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <rect x="2" y="2" width="5" height="5" rx="1.2" stroke="currentColor" strokeWidth="1.4" />
+                <rect x="9" y="2" width="5" height="5" rx="1.2" stroke="currentColor" strokeWidth="1.4" />
+                <rect x="2" y="9" width="5" height="5" rx="1.2" stroke="currentColor" strokeWidth="1.4" />
+                <rect x="9" y="9" width="5" height="5" rx="1.2" stroke="currentColor" strokeWidth="1.4" />
+              </svg>
+            </Link>
+          )}
         </div>
       </header>
 
@@ -1249,6 +1366,80 @@ export default function ProblemEditorScreen() {
         Bản nháp hiện tại của <strong>{activeLangLabel}</strong> đã được lưu cục bộ. Chuyển sang{" "}
         <strong>{LANGUAGES.find((l) => l.value === pendingLang)?.label}</strong> sẽ nạp bản nháp hoặc mẫu khởi tạo của ngôn ngữ mới (UC08 · A1).
       </ConfirmDialog>
+
+      {/* ——— Chế độ thi ——— */}
+      <ExamStartDialog
+        open={examDialogOpen}
+        problem={problem}
+        starting={exam.phase === "starting"}
+        error={exam.error}
+        onStart={(minutes) => void handleExamStart(minutes)}
+        onCancel={() => setExamDialogOpen(false)}
+      />
+
+      {!examDialogOpen &&
+        (exam.phase === "starting" ||
+          exam.phase === "resume" ||
+          (exam.phase === "active" && !exam.isFullscreen)) && (
+          <ExamLockOverlay
+            mode={exam.phase === "active" ? "fullscreen" : exam.phase}
+            violations={exam.violations}
+            remainingSec={exam.remainingSec}
+            error={exam.error}
+            onContinue={() => void (exam.phase === "resume" ? exam.resume() : exam.reenterFullscreen())}
+            onAbandon={() => setConfirmAbandon(true)}
+          />
+        )}
+
+      <ExamNotice message={exam.inExam ? exam.notice : null} />
+
+      <ConfirmDialog
+        open={confirmExamSubmit}
+        title="Nộp bài và kết thúc bài thi?"
+        confirmLabel="Nộp bài"
+        onCancel={() => setConfirmExamSubmit(false)}
+        onConfirm={() => {
+          setConfirmExamSubmit(false);
+          void triggerExecution("submit");
+        }}
+      >
+        Trong Chế độ thi bạn chỉ được nộp <strong>một lần</strong>. Sau khi nộp, phiên thi đóng lại và báo cáo tính trung
+        thực được lưu cùng bài nộp.
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={confirmAbandon}
+        title="Bỏ bài thi?"
+        confirmLabel="Bỏ bài thi"
+        confirmVariant="danger"
+        onCancel={() => setConfirmAbandon(false)}
+        onConfirm={() => void handleAbandonConfirmed()}
+      >
+        Phiên thi sẽ được ghi là <strong>bỏ dở</strong> và không tính kết quả. Bản nháp luyện tập của bạn vẫn còn nguyên.
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={exam.blocker.state === "blocked"}
+        title="Rời khỏi bài thi?"
+        confirmLabel="Rời trang và bỏ thi"
+        confirmVariant="danger"
+        onCancel={() => exam.blocker.reset?.()}
+        onConfirm={() => {
+          void exam.abandon().then(() => exam.blocker.proceed?.());
+        }}
+      >
+        Bạn đang trong Chế độ thi. Rời trang lúc này sẽ đóng phiên thi ở trạng thái <strong>bỏ dở</strong>.
+      </ConfirmDialog>
+
+      <ExamResultDialog
+        open={exam.phase === "finished"}
+        session={exam.session}
+        result={examResult}
+        onClose={() => {
+          setExamResult(null);
+          exam.dismiss();
+        }}
+      />
     </div>
   );
 }

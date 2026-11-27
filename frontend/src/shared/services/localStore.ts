@@ -118,6 +118,22 @@ export const localStore = {
     return next;
   },
 
+  // Chế độ thi: bật/tắt ở trang danh sách bài (tùy chọn riêng của người dùng)
+  getPracticeExamMode(): boolean {
+    return readJson<boolean>(window.localStorage, "practice.examMode") ?? false;
+  },
+  setPracticeExamMode(enabled: boolean): void {
+    writeJson(window.localStorage, "practice.examMode", enabled);
+  },
+
+  // Phiên thi đang mở của tab hiện tại — để tiếp tục khi lỡ tải lại trang
+  getActiveExam(): { sessionId: string; problemId: string } | null {
+    return readJson<{ sessionId: string; problemId: string }>(window.sessionStorage, "exam.active");
+  },
+  setActiveExam(value: { sessionId: string; problemId: string } | null): void {
+    writeJson(window.sessionStorage, "exam.active", value);
+  },
+
   getLastSnapshot(): SessionSnapshot | null {
     return readJson<SessionSnapshot>(window.sessionStorage, "interview.lastSnapshot");
   },

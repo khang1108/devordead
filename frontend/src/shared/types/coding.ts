@@ -48,4 +48,49 @@ export interface SandboxExecutionResult {
   coachTitle?: string;
   coachBody?: string;
   tests: SandboxTestCaseResult[];
+  /** Chỉ có khi nộp trong Chế độ thi: phiên thi đã đóng kèm đánh giá tính trung thực. */
+  exam?: ExamSession;
+}
+
+// ——— Chế độ thi (Exam mode) ———
+
+export type ExamEventType =
+  | "fullscreen_exit"
+  | "tab_hidden"
+  | "window_blur"
+  | "paste_blocked"
+  | "drop_blocked"
+  | "large_insert"
+  | "resumed";
+
+export interface ExamEvent {
+  type: ExamEventType;
+  at: string;
+  durationMs: number;
+  chars: number;
+}
+
+export type ExamIntegrityLevel = "clean" | "warning" | "suspicious";
+
+export interface ExamIntegrity {
+  level: ExamIntegrityLevel;
+  score: number;
+  counts: Record<ExamEventType, number>;
+  awayMs: number;
+  events: ExamEvent[];
+}
+
+export type ExamSessionStatus = "active" | "submitted" | "abandoned" | "expired";
+
+export interface ExamSession {
+  id: string;
+  problemId: string;
+  status: ExamSessionStatus;
+  durationSec: number;
+  startedAt: string;
+  endsAt: string;
+  endedAt: string | null;
+  submissionId: string | null;
+  serverNow: string;
+  integrity: ExamIntegrity;
 }

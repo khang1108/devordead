@@ -5,7 +5,7 @@ import { DIFFICULTY_META, PROBLEM_STATUS_META } from "@shared/constants";
 import { getErrorMessage } from "@shared/services/apiClient";
 import { localStore } from "@shared/services/localStore";
 import type { CodingProblem, Difficulty, ProblemStatus } from "@shared/types";
-import { EmptyState, ErrorBanner, RuleTag, Skeleton } from "@shared/ui";
+import { EmptyState, ErrorBanner, RuleTag, Skeleton, Toggle } from "@shared/ui";
 import { codingService } from "./coding.service";
 import "./ProblemsScreen.css";
 
@@ -148,6 +148,14 @@ export default function ProblemsScreen() {
   const [statusFilter, setStatusFilter] = useState<"" | ProblemStatus>("");
   const [selectedTopic, setSelectedTopic] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
+  const [examMode, setExamMode] = useState<boolean>(() => localStore.getPracticeExamMode());
+
+  const toggleExamMode = (next: boolean) => {
+    setExamMode(next);
+    localStore.setPracticeExamMode(next);
+  };
+  const problemHref = (problemId: string) =>
+    `/problems/${problemId}${examMode ? "?mode=exam" : ""}`;
   const [topicsExpanded, setTopicsExpanded] = useState(false);
 
   const targetProfile = useMemo(() => localStore.getTargetProfile(), []);
@@ -265,7 +273,7 @@ export default function ProblemsScreen() {
     if (pool.length === 0) return;
     const picked = pool[Math.floor(Math.random() * pool.length)];
     if (picked) {
-      navigate(`/problems/${picked.id}`);
+      navigate(problemHref(picked.id));
     }
   }
 
@@ -452,6 +460,14 @@ export default function ProblemsScreen() {
           )}
 
           <div className="prob-toolbar__right">
+            <div
+              className={`prob-exam-toggle ${examMode ? "is-on" : ""}`.trim()}
+              title="Bật để mỗi bài mở trong Chế độ thi: toàn màn hình, giới hạn thời gian, ghi nhận rời trang và chặn dán mã từ bên ngoài"
+            >
+              <Toggle checked={examMode} onChange={toggleExamMode} label="Chế độ thi" />
+              <span aria-hidden="true">Chế độ thi</span>
+            </div>
+
             <div className="prob-solved-ratio" title="Tỷ lệ hoàn thành ngân hàng bài tập">
               <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
                 <circle
@@ -586,7 +602,7 @@ export default function ProblemsScreen() {
               {matchingProblems.map((problem) => (
                 <Link
                   key={problem.id}
-                  to={`/problems/${problem.id}`}
+                  to={problemHref(problem.id)}
                   role="listitem"
                   className="lc-list__row prob-list__grid prob-row"
                 >
@@ -605,7 +621,7 @@ export default function ProblemsScreen() {
                   </span>
 
                   <span className="prob-row__cta prob-col-action" aria-hidden="true">
-                    Làm bài →
+                    {examMode ? "Thi →" : "Làm bài →"}
                   </span>
                 </Link>
               ))}

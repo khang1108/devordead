@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import CORS_ORIGINS
 from .database import init_db
-from .routers import admin, assessment, auth, coding, interview, knowledge, profile
+from .routers import admin, assessment, auth, coding, exam, interview, knowledge, profile
 
 
 @asynccontextmanager
@@ -42,6 +42,7 @@ app.include_router(auth.router, prefix=API_PREFIX)
 app.include_router(profile.router, prefix=API_PREFIX)
 app.include_router(knowledge.router, prefix=API_PREFIX)
 app.include_router(coding.router, prefix=API_PREFIX)
+app.include_router(exam.router, prefix=API_PREFIX)
 app.include_router(interview.router, prefix=API_PREFIX)
 app.include_router(assessment.router, prefix=API_PREFIX)
 app.include_router(admin.router, prefix=API_PREFIX)

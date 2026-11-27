@@ -27,10 +27,11 @@ export function submitSolution(
   language: ProgrammingLanguage,
   code: string,
   signal?: AbortSignal,
+  examSessionId?: string,
 ): Promise<SandboxExecutionResult> {
   return apiPost<SandboxExecutionResult>(
     `/problems/${encodeURIComponent(problemId)}/submit`,
-    { language, code },
+    examSessionId ? { language, code, examSessionId } : { language, code },
     signal,
   );
 }
